@@ -59,7 +59,8 @@
       white-space:nowrap;
     }
 
-    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex-wrap:nowrap;align-items:center;margin-top:10px;}
+
     .btn{
       appearance:none;border:1px solid rgba(9,167,212,.35);
       background: rgba(9,167,212,.12); color:var(--text);
@@ -149,32 +150,112 @@ canvas{width:100% !important; height:320px !important}
     /* subtle clear search */
     #clearSearch:hover{ color:#e8f0ff; }
     #clearSearch:focus{ outline:none; }
+
+    .avatarMissing{
+      position:relative;
+      width:34px;height:34px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      font-weight:700;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 34px;
+    }
+    .avatarMissing:before{ content:"—"; }
+
+    .avatarBox{ position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    .avatarInitials{
+      width:100%; height:100%;
+      display:flex; align-items:center; justify-content:center;
+      color:var(--muted);
+      font-weight:800;
+      font-size:12px;
+      letter-spacing:.5px;
+      user-select:none;
+    }
+
+
+/* Link-style controls (from v1.0.110 look) */
+.linkBtn{
+  background:transparent !important;
+  border:none !important;
+  padding:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  font-weight:600;
+  color:var(--muted);
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.linkBtn:hover{ color:var(--text); }
+.btnIcon svg{width:13px;height:13px;flex:0 0 13px;}
+.controlsSpacer{flex:1 1 auto;min-width:0px;}
+
+
+.btn svg{width:13px;height:13px;vertical-align:-2px;margin-right:6px;}
+
+.kv .k, .contactLabel{font-weight:800;}
+
+.controlsRight{display:flex;gap:10px;align-items:center;}
+
+
+/* Header height lock */
+header{height:128px;min-height:128px;padding-bottom:10px;}
+header .wrap.title{height:128px;align-items:flex-start;padding-top:18px;}
+header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:760px;}
 </style>
+
 
 </head>
 <body>
 <header>
   <div class="wrap title">
     <div>
-      <h1>Athlete Combine Dashboard (Local) <span class="small muted" style="font-weight:700;margin-left:8px">v8.1</span></h1>
+      <h1>Athlete Combine Dashboard (Local) <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.110</span></h1>
       <div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
     </div>
 
     <div class="controls">
       <div class="searchWrap" style="position:relative">
       <input class="input" id="search" placeholder="Search athlete name…" />
-      <button id="clearSearch" aria-label="Clear search" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--muted);font-size:14px;font-weight:400;cursor:pointer;padding:0;line-height:1">x</button>
+      <button type="button" class="linkBtn btnIcon" id="clearSearch" aria-label="Clear search" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--muted);font-size:14px;font-weight:400;cursor:pointer;padding:0;line-height:1">x</button>
     </div>
-      <button class="btn" id="loadDefault">Load results.csv (same folder)</button>
       <button class="btn" id="toggleScout">Scout Mode: Off</button>
       <button class="btn" id="toggleCoach">Coach Mode: Off</button>
-      <label class="btn" for="photos">Load Photos Folder</label>
+      <label class="btn" for="photos">Load Photos</label>
       <input id="photos" type="file" accept="image/*" multiple webkitdirectory style="display:none" />
       <label class="btn" for="file">Load CSV</label>
       <input id="file" type="file" accept=".csv,text/csv" style="display:none" />
-    
-      <button class="btn" id="aboutBtn" title="About" style="padding:9px 10px;border-radius:999px">About ?</button>
-      <button class="btn" id="versionBtn" title="Version & Changelog" style="padding:9px 10px;border-radius:999px">❗</button>
+      
+
+      <div class="controlsSpacer"></div>
+      <div class="controlsRight">
+        <button type="button" class="linkBtn btnIcon" id="loadDefault"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+    d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-14.9-2M4 16a8 8 0 0014.9 2"></path>
+</svg><span>Refresh</span></button>
+        <button id="githubBtn" type="button" class="btn linkBtn btnIcon" title="Open project"
+  onclick="window.open('https://github.com/Eddy0412/athlete-dashboard','_blank')">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12 .5C5.73.5.75 5.6.75 12.1c0 5.2 3.44 9.62 8.2 11.18.6.12.82-.27.82-.58v-2.1c-3.34.75-4.04-1.67-4.04-1.67-.55-1.45-1.34-1.84-1.34-1.84-1.1-.78.08-.76.08-.76 1.22.09 1.86 1.3 1.86 1.3 1.08 1.91 2.84 1.36 3.53 1.04.11-.81.42-1.36.76-1.67-2.66-.31-5.46-1.37-5.46-6.1 0-1.35.46-2.45 1.22-3.31-.12-.31-.53-1.57.12-3.27 0 0 1.01-.33 3.3 1.26.96-.27 1.98-.4 3-.4 1.02 0 2.05.14 3 .4 2.28-1.59 3.29-1.26 3.29-1.26.65 1.7.24 2.96.12 3.27.76.86 1.22 1.96 1.22 3.31 0 4.75-2.81 5.78-5.48 6.09.43.39.81 1.1.81 2.22v3.29c0 .32.22.7.83.58 4.76-1.56 8.19-5.98 8.19-11.18C23.25 5.6 18.27.5 12 .5z"/>
+  </svg>
+  <span>GitHub</span>
+</button>
+        <button class="btn linkBtn btnIcon" id="aboutBtn" title="About" style="padding:9px 10px;border-radius:999px" type="button"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+</svg><span>About</span></button>
+        <button class="btn linkBtn btnIcon" id="versionBtn" title="Version & Changelog" style="padding:9px 10px;border-radius:999px" type="button"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+    d="M9 12h6M9 16h6M14 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V8l-5-6z"></path>
+</svg><span>Changelog</span></button>
+      
+      </div>
 </div>
   </div>
 </header>
@@ -393,6 +474,7 @@ canvas{width:100% !important; height:320px !important}
 </div>
 
 <script>
+
 /** ---------- Config: map your CSV columns here ---------- **/
 const COL = {
   id: "Formulario#",
@@ -421,6 +503,20 @@ const COL = {
   bench_2: "BENCH PRESS 2da Vuelta",
 };
 
+// Photo CDN (Bluehost) - expects filenames like 002.jpg
+const PHOTO_BASE_URL = "https://media.kkmsports.xyz/athletes/";
+
+function padId(id){
+  const s = String(id).trim();
+  if (!s) return s;
+  if (/^0\d+/.test(s)) return s;
+  const n = Number(s);
+  if (Number.isFinite(n) && n >= 0) return String(Math.trunc(n)).padStart(3, "0");
+  return s;
+}
+
+
+
 const METRICS = [
   { key:"dash40", label:"40yd", unit:"s", better:"lower", a1:COL.dash40_1, a2:COL.dash40_2 },
   { key:"broad",  label:"Broad Jump", unit:"in", better:"higher", a1:COL.broad_1, a2:COL.broad_2 },
@@ -448,33 +544,56 @@ function keyFromFilename(name){
 }
 
 function photoKeyForRow(r){
-  // Recommended: match by Formulario# (e.g., 5.jpg, 19.png)
-  const id = String(r[COL.id] ?? "").trim();
-  return id ? id.toLowerCase() : "";
+  // Match by Formulario#.
+  const idRaw = String(r[COL.id] ?? "").trim();
+  if (!idRaw) return "";
+  // Prefer 3-digit padding to match CDN filenames like 002.jpg
+  return padId(idRaw).toLowerCase();
 }
 
 function photoUrlForRow(r){
-  const key = photoKeyForRow(r);
-  return key ? (photoMap.get(key) || null) : null;
+  const idRaw = String(r[COL.id] ?? "").trim();
+  if (!idRaw) return null;
+
+  // 1) Local folder photos (if loaded)
+  const keyPadded = padId(idRaw).toLowerCase();
+  const keyRaw = idRaw.toLowerCase();
+  const local = photoMap.get(keyPadded) || photoMap.get(keyRaw);
+  if (local) return local;
+
+  // 2) CDN fallback
+  if (typeof PHOTO_BASE_URL === "string" && PHOTO_BASE_URL.trim().length){
+    return PHOTO_BASE_URL + padId(idRaw) + ".jpg";
+  }
+
+  return null;
 }
 
 
 function updateLargePhoto(r){
   const url = photoUrlForRow(r);
 
-  const box1 = document.getElementById("athletePhotoLarge");
-  if (box1){
-    box1.innerHTML = url
-      ? `<img src="${url}" style="width:100%;height:100%;object-fit:cover" />`
-      : `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">No photo</div>`;
+  const placeholder = `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">No photo</div>`;
+
+  function fillBox(box){
+    if (!box) return;
+    if (!url){
+      box.innerHTML = placeholder;
+      return;
+    }
+    box.innerHTML = "";
+    const img = new Image();
+    img.src = url;
+    img.alt = "Athlete photo";
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.objectFit = "cover";
+    img.onerror = () => { box.innerHTML = placeholder; };
+    box.appendChild(img);
   }
 
-  const box2 = document.getElementById("athletePhotoScout");
-  if (box2){
-    box2.innerHTML = url
-      ? `<img src="${url}" style="width:100%;height:100%;object-fit:cover" />`
-      : `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">No photo</div>`;
-  }
+  fillBox(document.getElementById("athletePhotoLarge"));
+  fillBox(document.getElementById("athletePhotoScout"));
 }
 
 /** ---------- Helpers ---------- **/
@@ -597,6 +716,16 @@ function applyFilter(){
   renderTable();
 }
 
+
+function initialsForRow(r){
+  const full = String(r[COL.name] ?? "").trim();
+  if (!full) return "—";
+  const parts = full.split(/\s+/).filter(Boolean);
+  const a = (parts[0] || "").slice(0,1).toUpperCase();
+  const b = (parts.length>1 ? parts[parts.length-1] : "").slice(0,1).toUpperCase();
+  return (a + b) || a || "—";
+}
+
 function renderTable(){
   const tb = $("athleteTable");
   tb.innerHTML = "";
@@ -609,8 +738,8 @@ function renderTable(){
     tr.innerHTML = `
       <td>
         <div style="display:flex;gap:10px;align-items:center">
-          <div style="width:34px;height:34px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)">
-            ${url ? `<img src="${url}" style="width:100%;height:100%;object-fit:cover" />` : ``}
+          <div class="avatarBox" style="width:34px;height:34px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)">
+            ${url ? `<img class="avatarImg" data-initials="${initialsForRow(r)}" src="${url}" style="width:100%;height:100%;object-fit:cover" />` : `<div class="avatarInitials">${initialsForRow(r)}</div>`}
           </div>
           <strong>${safe(r[COL.name])}</strong>
         </div>
@@ -622,6 +751,7 @@ function renderTable(){
     tr.addEventListener("click", () => selectAthlete(x.idx));
     tb.appendChild(tr);
   });
+  applyAvatarFallback();
 }
 
 function bestAttemptValue(r, m){
@@ -1061,7 +1191,7 @@ function initModalWiring(){
       openModal("How to use this dashboard", `
         <div style="display:grid;gap:10px">
           <div><b>1) Load CSV:</b> Click <span class="mono">Choose CSV</span> and select your combine results CSV.</div>
-          <div><b>2) Load photos:</b> Click <span class="mono">Load Photos Folder</span> and select the folder containing athlete photos named by <span class="mono">Formulario#</span> (example: <span class="mono">75.jpg</span>).</div>
+          <div><b>2) Load photos:</b> Click <span class="mono">Load Photos</span> and select the folder containing athlete photos named by <span class="mono">Formulario#</span> (example: <span class="mono">75.jpg</span>).</div>
           <div><b>3) Browse athletes:</b> Use the left list to filter and select a player.</div>
           <div><b>4) Modes:</b>
             <ul style="margin:6px 0 0 18px">
@@ -1077,21 +1207,61 @@ function initModalWiring(){
 
   if (versionBtn){
     versionBtn.addEventListener("click", ()=>{
-      openModal("Version & Changelog", `
-        <div style="display:grid;gap:10px">
-          <div><b>Current version:</b> <span class="mono">v8.1</span></div>
-          <div style="border:1px solid rgba(30,42,60,.9);border-radius:14px;padding:12px;background:rgba(255,255,255,.02)">
-            <div style="font-weight:900;margin-bottom:8px">What’s in this version</div>
-            <ul style="margin:0 0 0 18px">
-              <li>Coach Mode toggle (hides only Athlete Profile row; keeps Scout Profile + charts below).</li>
-              <li>Scout Profile row with contact fields mapped from CSV (DOB/Height/Weight/Phone).</li>
-              <li>Formulario badge + position tag on Scout Profile.</li>
-              <li>About & Version modals (close works).</li>
-              <li>Load results.csv button kept (works on http://).</li>
-            </ul>
-          </div>
-        </div>
-      `);
+      openModal("Version & Changelog", `<div style="display:grid;gap:10px">
+  <div style="font-weight:900">What’s new</div>
+  <div><b>v1.0.110</b> — Changelog modal now includes full v1.x history (newest first).</div>
+
+  <div style="margin-top:10px;font-weight:900">Changelog</div>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.110</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Added complete version history (v1.0.104 → v1.0.110) inside the Changelog modal.</li>
+    <li>Kept About/Changelog modal behavior identical to the stable build.</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.110</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Locked header height to 128px (prevents layout jumps).</li>
+    <li>Improved toolbar spacing (no overlap with content).</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.108</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Refresh control switched to link-style to match About/Changelog group.</li>
+    <li>Initial header height lock introduced (later refined in v1.0.110).</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.107</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>controlsSpacer min-width set to 0px.</li>
+    <li>“Load Photos Folder” renamed to “Load Photos”.</li>
+    <li>GitHub link updated to repository URL.</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.106</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Header right-side control order finalized: Refresh | GitHub | About | Changelog.</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.105</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Navigation layout fixes (single-row header).</li>
+    <li>GitHub button added to header controls.</li>
+    <li>controlsSpacer tuned for better alignment.</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.104</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Merged stable modal system from v8.1j-alpha with updated header link-style controls.</li>
+    <li>Standardized small SVG icon sizing for header controls.</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v8.1j-alpha</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Baseline build with smooth working About/Changelog modals.</li>
+    <li>Left list initials fallback for missing photos.</li>
+  </ul>
+</div>`);
     });
   }
 }
@@ -1120,7 +1290,20 @@ if (clearBtn && searchEl){
   });
 }
 
+
+function applyAvatarFallback(){
+  // Replace broken avatar <img> with a subtle placeholder (no broken image icon)
+  document.querySelectorAll("img.avatarImg").forEach(img=>{
+    if (img.dataset.fallbackBound) return;
+    img.dataset.fallbackBound = "1";
+    img.addEventListener("error", ()=>{
+      const ph=document.createElement("div"); ph.className="avatarInitials"; ph.textContent=img.dataset.initials||"—"; img.replaceWith(ph);
+    });
+  });
+}
+
 setStatus("Ready");
+
 </script>
 
 <!-- Modals -->
