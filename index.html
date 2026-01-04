@@ -690,7 +690,7 @@ function parseCsvText(csvText, label){
 async function loadDefaultCsv(){
   try{
     setStatus("Loading…");
-    const res = await fetch("./app/results.csv", { cache: "no-store" });
+    const res = await fetch("/app/results.csv", { cache: "no-store" });
     if(!res.ok) throw new Error("results.csv not found");
     const text = await res.text();
     parseCsvText(text, "results.csv");
