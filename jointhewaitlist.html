@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Athlete Combine Dashboard — Early Access Waitlist</title>
+  <meta name="description" content="Join the early access waitlist for Athlete Combine Dashboard — fast, browser-based athlete analysis built for coaches & scouts." />
+
+  <style>
+    :root{
+      --bg:#0b1220;
+      --text:#e8eefc;
+      --muted:#9bb0d1;
+      --border:rgba(158,190,240,.18);
+      --radius:14px;
+      --max:1120px;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit;text-decoration:none}
+
+    .topbar{
+      position:sticky;top:0;
+      background:rgba(11,18,32,.9);
+      border-bottom:1px solid var(--border);
+      padding:14px 18px;
+      z-index:20;
+    }
+    .topbar-inner{
+      max-width:var(--max);
+      margin:0 auto;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+    .badge{
+      font-family:var(--mono);
+      font-size:12px;
+      border:1px solid var(--border);
+      padding:4px 8px;
+      border-radius:999px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:28px 18px 80px;
+    }
+
+    h1{
+      font-size:40px;
+      margin:0 0 10px;
+      letter-spacing:-.6px;
+    }
+    .sub{
+      color:var(--muted);
+      max-width:62ch;
+      line-height:1.6;
+      margin:0 0 16px;
+    }
+
+    .cta-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:16px;
+    }
+
+    .btn{
+      padding:12px 16px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      cursor:pointer;
+      font-weight:800;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--text);
+      line-height:1;
+      user-select:none;
+    }
+    .btn.primary{
+      background:linear-gradient(135deg,#4da3ff,#7dd3fc);
+      color:#061021;
+      border:none;
+    }
+    .btn.ghost{
+      background:transparent;
+    }
+
+    .card{
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:22px;
+      margin-top:24px;
+    }
+
+    .grid{display:grid; gap:14px;}
+    .grid-3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+
+    label{
+      font-size:12px;
+      color:var(--muted);
+      display:block;
+      margin-bottom:6px;
+    }
+
+    input, select{
+      width:100%;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      outline:none;
+    }
+
+    /* Fix: dropdown options readability across browsers */
+    select option{
+      color:#0b1220;
+      background:#ffffff;
+    }
+
+    input:focus, select:focus{
+      border-color: rgba(125,211,252,.55);
+      box-shadow: 0 0 0 4px rgba(125,211,252,.14);
+    }
+
+    .fine{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:10px;
+      line-height:1.5;
+    }
+
+    .founder{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(158,190,240,.14);
+      background:rgba(255,255,255,.02);
+      color:rgba(232,238,252,.9);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .img{
+      width:100%;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      margin-top:12px;
+      display:block;
+    }
+    .zoomable{cursor:zoom-in;}
+
+    /* Image zoom modal */
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.82);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+    .modal.show{display:flex;}
+    .modal img{
+      max-width:min(1200px, 96vw);
+      max-height:92vh;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 24px 80px rgba(0,0,0,.55);
+      cursor:zoom-out;
+    }
+    .modal .hint{
+      position:fixed;
+      top:14px;
+      left:50%;
+      transform:translateX(-50%);
+      color:rgba(232,238,252,.85);
+      font-size:12px;
+      background:rgba(11,18,32,.75);
+      border:1px solid rgba(158,190,240,.18);
+      padding:6px 10px;
+      border-radius:999px;
+      font-family:var(--mono);
+    }
+
+    footer{
+      margin-top:40px;
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div>Athlete Combine Dashboard</div>
+      <div class="badge">v1.0.110 • waitlist</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <h1>Analyze Combine Athletes in seconds.</h1>
+    <p class="sub">
+      A fast, browser-based dashboard built specifically for <b>Coaches & Scouts</b>.
+      No backend. No uploads. Immediate athlete analysis.
+    </p>
+
+    <div class="cta-row">
+      <a href="#waitlist" class="btn primary">→ Join Early Access Waitlist</a>
+      <a href="https://eddy0412.github.io/athlete-dashboard/" target="_blank" rel="noopener" class="btn ghost">View live demo</a>
+    </div>
+
+    <div class="fine" style="margin-top:10px;">
+      <b>Instant athlete analysis, zero setup — early access for serious coaches only.</b>
+    </div>
+
+    <div class="founder">
+      Built by an athlete and coach who understands what coaches, scouts, and athletes need to become top performers.
+    </div>
+
+    <div class="card">
+      <h2>Why this tool exists</h2>
+      <div class="grid grid-3">
+        <div>⚡ Modern, fast & stable</div>
+        <div>📊 Instant Athlete Analysis</div>
+        <div>🎯 Built for coaches & scouts</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Live Dashboard Preview</h2>
+      <p class="sub" style="margin-bottom:0;">
+        Real screenshot from the Athlete Combine Dashboard (v1.0.110). This is the actual interface used during evaluations.
+      </p>
+      <img class="img zoomable" id="previewImg" src="DashboardDemo.png" alt="Athlete Combine Dashboard preview" title="Click to zoom">
+      <div class="fine">
+        Athlete list, scout profile, percentiles, attempts, and performance radar —
+        <a href="https://eddy0412.github.io/athlete-dashboard/" target="_blank" rel="noopener" style="text-decoration:underline;">see the live demo →</a>
+      </div>
+    </div>
+
+    <div class="card" id="waitlist">
+      <h2>Join the Waitlist</h2>
+
+      <form id="waitlistForm" class="grid">
+        <div>
+          <label for="name">Name</label>
+          <input id="name" name="name" required />
+        </div>
+
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required />
+        </div>
+
+        <div>
+          <label for="role">Role</label>
+          <select id="role" name="role" required>
+            <option value="">Select your role…</option>
+            <option>Coach</option>
+            <option>Scout</option>
+            <option>Parent</option>
+            <option>Trainer</option>
+            <option>Athlete</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="level">Sport / Level (optional)</label>
+          <input id="level" name="level" placeholder="Flag football, HS, College…" />
+        </div>
+
+        <button class="btn primary" type="submit">Join Waitlist</button>
+
+        <div class="fine">
+          Submitting sends your signup to Formspree and emails <b>combine@kkmsports.xyz</b>.
+        </div>
+      </form>
+    </div>
+
+    <footer>
+      Early access is limited • One email when access opens
+    </footer>
+  </div>
+
+  <div class="modal" id="imgModal" aria-hidden="true">
+    <div class="hint">Click image or press ESC to close</div>
+    <img id="modalImg" src="DashboardDemo.png" alt="Zoomed dashboard preview">
+  </div>
+
+<script>
+  const FORM_ENDPOINT = "https://formspree.io/f/xzdzvlge";
+  const form = document.getElementById("waitlistForm");
+  const btn = form.querySelector('button[type="submit"]');
+
+  function setBusy(isBusy){
+    if(!btn) return;
+    btn.disabled = isBusy;
+    btn.style.opacity = isBusy ? "0.75" : "1";
+    btn.textContent = isBusy ? "Sending..." : "Join Waitlist";
+  }
+
+  function buildPayload(){
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const role = document.getElementById("role").value;
+    const level = document.getElementById("level").value.trim();
+
+    return {
+      name,
+      email,
+      role,
+      level: level || "-",
+      timestamp: new Date().toISOString(),
+      source: "waitlist.html"
+    };
+  }
+
+  async function submitToFormspree(payload){
+    const fd = new FormData();
+    fd.append("name", payload.name);
+    fd.append("email", payload.email);
+    fd.append("role", payload.role);
+    fd.append("level", payload.level);
+    fd.append("timestamp", payload.timestamp);
+    fd.append("source", payload.source);
+    fd.append("_subject", "Athlete Combine Dashboard — Waitlist Signup");
+
+    const res = await fetch(FORM_ENDPOINT, {
+      method: "POST",
+      headers: { "Accept": "application/json" },
+      body: fd
+    });
+
+    if(!res.ok){
+      let msg = "Submit failed.";
+      try{
+        const data = await res.json();
+        msg = data?.error || data?.errors?.[0]?.message || msg;
+      }catch{}
+      throw new Error(msg);
+    }
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const payload = buildPayload();
+    if (!payload.name || !payload.email || !payload.role) return;
+
+    try{
+      setBusy(true);
+      await submitToFormspree(payload);
+      alert("✅ You're on the waitlist. We received your signup.");
+      form.reset();
+    }catch(err){
+      alert("⚠️ Could not send your signup.\n\n" + (err?.message || "Please try again."));
+    }finally{
+      setBusy(false);
+    }
+  });
+
+  // Image zoom (lightbox)
+  const previewImg = document.getElementById("previewImg");
+  const imgModal = document.getElementById("imgModal");
+
+  function openModal(){
+    if(!imgModal) return;
+    imgModal.classList.add("show");
+    imgModal.setAttribute("aria-hidden","false");
+  }
+  function closeModal(){
+    if(!imgModal) return;
+    imgModal.classList.remove("show");
+    imgModal.setAttribute("aria-hidden","true");
+  }
+
+  if(previewImg && imgModal){
+    previewImg.addEventListener("click", openModal);
+    imgModal.addEventListener("click", closeModal);
+    document.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape") closeModal();
+    });
+  }
+</script>
+
+</body>
+</html>
