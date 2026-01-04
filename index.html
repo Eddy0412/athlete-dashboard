@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Athlete Combine Dashboard (Demo)</title>
+  <title>Athlete Combine Dashboard</title>
 
   <!-- Libraries (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -26,6 +26,7 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
     *{box-sizing:border-box}
+    html, body{overflow-x:hidden;}
     body{margin:0;background:radial-gradient(1200px 800px at 20% 10%, rgba(9,167,212,.18), transparent 55%),
                  radial-gradient(1000px 700px at 80% 20%, rgba(84,113,183,.18), transparent 55%),
                  var(--bg); color:var(--text);}
@@ -120,6 +121,33 @@
     .muted{color:var(--muted)}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
 canvas{width:100% !important; height:320px !important}
+
+    /* --- Responsive modals (iPhone-safe) --- */
+    #modalOverlay{
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+    }
+    #modalBox{
+      -webkit-overflow-scrolling: touch;
+      width: min(860px, calc(100vw - 32px)) !important;
+      max-height: calc(100vh - 32px) !important;
+      overflow: hidden !important; /* keep rounded corners clean */
+    }
+    #modalContent{
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      word-break: break-word;
+      max-height: calc(100vh - 190px);
+    }
+    body.modalOpen{overflow:hidden;}
+    @media (max-width: 520px){
+      #modalOverlay{padding:12px !important;}
+      #modalBox{width:calc(100vw - 24px) !important; max-height:calc(100vh - 24px) !important; border-radius:16px !important;}
+      #modalContent{padding:12px !important;}
+      /* Stack modal buttons on very small screens */
+      #modalContent .modalActions{flex-direction:column !important; align-items:stretch !important;}
+      #modalContent .modalActions .btn{width:100% !important; justify-content:center !important;}
+    }
   
     /* --- Scout Mode (single-page layout switch) --- */
     #scoutPhotoBlock{display:none;}
@@ -208,6 +236,143 @@ canvas{width:100% !important; height:320px !important}
 header{height:128px;min-height:128px;padding-bottom:10px;}
 header .wrap.title{height:128px;align-items:flex-start;padding-top:18px;}
 header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:760px;}
+
+/* --- Mobile nav (hamburger) --- */
+.menuBtn{display:none;}
+.mobileTopActions{display:none;}
+.navOverlay{display:none;}
+
+@media (max-width: 820px){
+  /* Let header grow on small screens */
+  /*
+    IMPORTANT: The drawer (.controls) lives inside <header>. Since header has a z-index,
+    it creates a stacking context. If the overlay sits outside the header with a higher z-index,
+    it will block clicks inside the drawer.
+    Fix: raise header above the overlay, keep overlay behind, and hide the header title block
+    when the drawer is open so the drawer visually overlays the header.
+  */
+  header{height:auto;min-height:unset;padding-bottom:8px;position:relative;z-index:2200}
+  header .wrap.title{height:auto;align-items:center;padding-top:14px;gap:12px;}
+  header .sub{white-space:normal;max-width:unset;}
+
+  .menuBtn{display:inline-flex;}
+  .mobileTopActions{display:flex;gap:10px;align-items:center;;position:relative;z-index:1001}
+
+  /* Keep Refresh + Waitlist visible outside the drawer on mobile */
+  .controlsRight #loadDefault,
+  .controlsRight #githubBtn{display:none !important;}
+
+  /* Turn the existing controls row into a right-side drawer */
+  .controls{
+    position:fixed;
+    top:0;right:0;
+    height:100vh;
+    width:min(420px, 92vw);
+    padding:16px;
+    background:var(--bg);
+    border-left:1px solid rgba(255,255,255,.08);
+    box-shadow:-24px 0 48px rgba(0,0,0,.35);
+    z-index:2300;
+
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:10px;
+
+    transform:translateX(100%);
+    transition:transform .18s ease, visibility 0s linear .18s;
+    visibility:hidden;
+    pointer-events:none;
+  }
+  body.navOpen{overflow:hidden;}
+  body.navOpen .controls{
+    transform:translateX(0);
+    transition:transform .18s ease;
+    visibility:visible;
+    pointer-events:auto;
+  }
+
+  .controls .controlsSpacer{display:none;}
+  .controlsRight{flex-direction:column;align-items:stretch;gap:10px;}
+
+  /* Make buttons easier to tap */
+  .controls .btn, .controls .linkBtn{justify-content:flex-start;}
+  .controls .searchWrap{width:100%;}
+  .controls .input{width:100%;}
+
+  #mobileMenuHeader{display:flex !important;}
+
+  .navOverlay{
+    display:block;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    z-index:2100;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease;
+  }
+  body.navOpen .navOverlay{opacity:1;pointer-events:auto;}
+
+	  /* Allow clicks inside the drawer while letting the overlay capture taps everywhere else (including the header area) */
+	  body.navOpen header{pointer-events:none;}
+	  body.navOpen header .controls{pointer-events:auto;}
+
+  /* When nav is open, hide the header title block so the drawer truly overlays the header */
+  body.navOpen header .wrap.title > div:first-child{
+    opacity:0;
+    pointer-events:none;
+  }
+}
+
+
+/* DEMO badge */
+.demoBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:22px;
+  padding:0 6px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);
+  color:var(--text);
+  margin-left:10px;
+  transform: translateY(1px);
+}
+
+/* Athlete table mobile optimizations */
+.athleteTableWrap{
+  overflow-x:hidden; /* prevent sideways reveal on small screens */
+}
+
+.nameStack{display:flex;flex-direction:column;line-height:1.15}
+.schoolInline{color:var(--muted);font-size:12px;margin-top:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+@media (max-width: 640px){
+  .athleteTableWrap{ max-height: 62vh !important; }
+  table{ width:100%; }
+  th, td{ padding:10px 10px; font-size:13px; }
+  .avatarBox{ width:32px !important; height:32px !important; border-radius:10px !important; }
+  .athName{ font-size:13px; }
+}
+
+@media (max-width: 520px){
+  /* Remove extra columns on phones; keep the information via inline School under the name */
+  .thWeight, .thSchool, .colWeight, .colSchool{ display:none; }
+  .thAge, .colAge{ width:64px; text-align:right; }
+  .thName{ width:auto; }
+  .schoolInline{ display:block; }
+}
+
+@media (min-width: 521px){
+  /* On larger screens, keep the original 4-column look; hide the inline School to avoid duplication */
+  .schoolInline{ display:none; }
+}
 </style>
 
 
@@ -216,11 +381,45 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:
 <header>
   <div class="wrap title">
     <div>
-      <h1>Athlete Combine Dashboard (Demo) <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.110</span></h1>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <h1 style="margin:0">Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.110</span><span class="demoBadge" aria-label="Demo badge">DEMO</span></h1>
+        <button type="button" class="btn linkBtn btnIcon menuBtn" id="menuOpenBtn" aria-label="Open menu" title="Menu">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+          <span>Menu</span>
+        </button>
+        <!-- Mobile-only quick actions (kept visible outside the drawer) -->
+        <div class="mobileTopActions" aria-label="Quick actions">
+          <button type="button" class="linkBtn btnIcon" id="mobileRefreshBtn" title="Refresh">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-14.9-2M4 16a8 8 0 0014.9 2"></path>
+            </svg>
+            <span>Refresh</span>
+          </button>
+          <button type="button" class="btn linkBtn btnIcon" id="mobileWaitlistBtn" title="Join the waitlist">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l9 6 9-6" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z" />
+            </svg>
+            <span>Waitlist</span>
+          </button>
+        </div>
+      </div>
       <div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
     </div>
 
-    <div class="controls">
+    <div class="controls" role="dialog" aria-label="Dashboard menu">
+      <div style="display:none;justify-content:space-between;align-items:center;gap:10px" id="mobileMenuHeader">
+        <div style="font-weight:800">Menu</div>
+        <button type="button" class="btn linkBtn btnIcon" id="menuCloseBtn" aria-label="Close menu" title="Close">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+          <span>Close</span>
+        </button>
+      </div>
       <div class="searchWrap" style="position:relative">
       <input class="input" id="search" placeholder="Search athlete name…" />
       <button type="button" class="linkBtn btnIcon" id="clearSearch" aria-label="Clear search" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--muted);font-size:14px;font-weight:400;cursor:pointer;padding:0;line-height:1">x</button>
@@ -241,8 +440,9 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:
 </svg><span>Refresh</span></button>
         <button id="githubBtn" type="button" class="btn linkBtn btnIcon" title="Join the waitlist"
   onclick="openWaitlistModal()">
-  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M12 .5C5.73.5.75 5.6.75 12.1c0 5.2 3.44 9.62 8.2 11.18.6.12.82-.27.82-.58v-2.1c-3.34.75-4.04-1.67-4.04-1.67-.55-1.45-1.34-1.84-1.34-1.84-1.1-.78.08-.76.08-.76 1.22.09 1.86 1.3 1.86 1.3 1.08 1.91 2.84 1.36 3.53 1.04.11-.81.42-1.36.76-1.67-2.66-.31-5.46-1.37-5.46-6.1 0-1.35.46-2.45 1.22-3.31-.12-.31-.53-1.57.12-3.27 0 0 1.01-.33 3.3 1.26.96-.27 1.98-.4 3-.4 1.02 0 2.05.14 3 .4 2.28-1.59 3.29-1.26 3.29-1.26.65 1.7.24 2.96.12 3.27.76.86 1.22 1.96 1.22 3.31 0 4.75-2.81 5.78-5.48 6.09.43.39.81 1.1.81 2.22v3.29c0 .32.22.7.83.58 4.76-1.56 8.19-5.98 8.19-11.18C23.25 5.6 18.27.5 12 .5z"/>
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l9 6 9-6" />
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z" />
   </svg>
   <span>Join the Waitlist</span>
 </button>
@@ -259,6 +459,8 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:
 </div>
   </div>
 </header>
+
+<div class="navOverlay" id="navOverlay" aria-hidden="true"></div>
 
 <div class="wrap">
   <div class="row">
@@ -278,14 +480,14 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:
           </div>
         </div>
         <div style="height:12px"></div>
-        <div style="max-height:560px;overflow:auto;border:1px solid rgba(30,42,60,.9);border-radius:14px">
+        <div class="athleteTableWrap" style="max-height:560px;overflow:auto;border:1px solid rgba(30,42,60,.9);border-radius:14px">
           <table>
             <thead>
               <tr>
-                <th style="width:54%">Name</th>
-                <th style="width:10%">Age</th>
-                <th style="width:18%">Weight</th>
-                <th style="width:18%">School</th>
+                <th class="thName" style="width:54%">Name</th>
+                <th class="thAge" style="width:10%">Age</th>
+                <th class="thWeight" style="width:18%">Weight</th>
+                <th class="thSchool" style="width:18%">School</th>
               </tr>
             </thead>
             <tbody id="athleteTable"></tbody>
@@ -690,7 +892,7 @@ function parseCsvText(csvText, label){
 async function loadDefaultCsv(){
   try{
     setStatus("Loading…");
-    const res = await fetch("/app/results.csv", { cache: "no-store" });
+    const res = await fetch("./results.csv", { cache: "no-store" });
     if(!res.ok) throw new Error("results.csv not found");
     const text = await res.text();
     parseCsvText(text, "results.csv");
@@ -736,17 +938,20 @@ function renderTable(){
     if (x.idx === activeIndex) tr.classList.add("active");
     const url = photoUrlForRow(r);
     tr.innerHTML = `
-      <td>
+      <td class="colName">
         <div style="display:flex;gap:10px;align-items:center">
           <div class="avatarBox" style="width:34px;height:34px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)">
             ${url ? `<img class="avatarImg" data-initials="${initialsForRow(r)}" src="${url}" style="width:100%;height:100%;object-fit:cover" />` : `<div class="avatarInitials">${initialsForRow(r)}</div>`}
           </div>
-          <strong>${safe(r[COL.name])}</strong>
+          <div class="nameStack">
+            <strong class="athName">${safe(r[COL.name])}</strong>
+            <div class="sub schoolInline">${safe(r[COL.school])}</div>
+          </div>
         </div>
       </td>
-      <td>${safe(r[COL.age])}</td>
-      <td>${safe(r[COL.weight])}</td>
-      <td>${safe(r[COL.school])}</td>
+      <td class="colAge">${safe(r[COL.age])}</td>
+      <td class="colWeight">${safe(r[COL.weight])}</td>
+      <td class="colSchool">${safe(r[COL.school])}</td>
     `;
     tr.addEventListener("click", () => selectAthlete(x.idx));
     tb.appendChild(tr);
@@ -1050,7 +1255,7 @@ function openWaitlistModal(){
     <div style="display:grid;gap:10px">
       <div style="font-weight:800">Unlock the full Athlete Combine Dashboard</div>
       <div class="muted">Scout Mode, Coach Mode, exports, comparisons, and contact details are available in the full version.</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+      <div class="modalActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
         <button class="btn" onclick="window.open('${WAITLIST_URL}','_blank')">Open Waitlist Page</button>
         <button class="btn" onclick="closeModal()">Close</button>
       </div>
@@ -1063,7 +1268,7 @@ function openScoutDemoModal(){
     <div style="display:grid;gap:10px">
       <div style="font-weight:800">This is a demo.</div>
       <div>“This is a demo. The full version unlocks Scout Mode with contact details, athlete comparison, and exports.”</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+      <div class="modalActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
         <button class="btn" onclick="window.open('${WAITLIST_URL}','_blank')">Join the Waitlist</button>
         <button class="btn" onclick="closeModal()">Close</button>
       </div>
@@ -1076,7 +1281,7 @@ function openCoachDemoModal(){
     <div style="display:grid;gap:10px">
       <div style="font-weight:800">This is a demo.</div>
       <div>“This is a demo. The full version unlocks Coach Mode with practice planning, performance tracking, and shareable reports for athletes and parents.”</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+      <div class="modalActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
         <button class="btn" onclick="window.open('${WAITLIST_URL}','_blank')">Join the Waitlist</button>
         <button class="btn" onclick="closeModal()">Close</button>
       </div>
@@ -1096,6 +1301,51 @@ if (IS_DEMO){
   if (scout) scout.textContent = "Scout Mode";
   if (coach) coach.textContent = "Coach Mode";
 }
+
+// Mobile nav (hamburger) — uses the existing header controls as a drawer on small screens
+(function setupMobileNav(){
+  const openBtn = document.getElementById("menuOpenBtn");
+  const closeBtn = document.getElementById("menuCloseBtn");
+  const overlay = document.getElementById("navOverlay");
+  const mobileRefreshBtn = document.getElementById("mobileRefreshBtn");
+  const mobileWaitlistBtn = document.getElementById("mobileWaitlistBtn");
+  const refreshBtn = document.getElementById("loadDefault");
+
+  function isMobile(){ return window.matchMedia && window.matchMedia("(max-width: 820px)").matches; }
+  function openNav(){
+    if (!isMobile()) return;
+    document.body.classList.add("navOpen");
+  }
+  function closeNav(){
+    document.body.classList.remove("navOpen");
+  }
+
+  if (openBtn) openBtn.addEventListener("click", openNav);
+  if (closeBtn) closeBtn.addEventListener("click", closeNav);
+  if (overlay) overlay.addEventListener("click", closeNav);
+
+  // Mobile quick actions (outside the drawer)
+  if (mobileRefreshBtn){
+    mobileRefreshBtn.addEventListener("click", ()=>{
+      // Trigger the existing refresh logic without duplicating code
+      if (refreshBtn) refreshBtn.click();
+    });
+  }
+  if (mobileWaitlistBtn){
+    mobileWaitlistBtn.addEventListener("click", ()=>{
+      if (typeof openWaitlistModal === "function") openWaitlistModal();
+      else window.open(WAITLIST_URL, "_blank");
+    });
+  }
+
+  window.addEventListener("resize", ()=>{
+    if (!isMobile()) closeNav();
+  });
+
+  document.addEventListener("keydown", (e)=>{
+    if (e.key === "Escape") closeNav();
+  });
+})();
 
 // Position tooltip toggle
 const posInfoBtn = document.getElementById("posInfoBtn");
@@ -1228,6 +1478,9 @@ function openModal(title, htmlContent){
   const t = document.getElementById("modalTitle");
   const c = document.getElementById("modalContent");
   if (!ov || !t || !c) return;
+  // Ensure mobile drawer doesn't interfere with modal stacking on iOS
+  document.body.classList.remove("navOpen");
+  document.body.classList.add("modalOpen");
   t.textContent = title;
   c.innerHTML = htmlContent;
   ov.style.display = "flex";
@@ -1235,6 +1488,7 @@ function openModal(title, htmlContent){
 function closeModal(){
   const ov = document.getElementById("modalOverlay");
   if (ov) ov.style.display = "none";
+  document.body.classList.remove("modalOpen");
 }
 
 
