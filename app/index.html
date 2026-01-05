@@ -208,6 +208,169 @@ canvas{width:100% !important; height:320px !important}
 header{height:128px;min-height:128px;padding-bottom:10px;}
 header .wrap.title{height:128px;align-items:flex-start;padding-top:18px;}
 header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:760px;}
+
+/* --- Responsive Drawer Nav + Mobile Modal Upgrades (v1.0.110 FULL) --- */
+html, body{overflow-x:hidden;}
+#menuBtn{display:none;} /* desktop hidden */
+
+#drawerOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  z-index:10020; /* above header */
+}
+#navDrawer{
+  position:fixed;
+  inset:0;
+  width:min(420px, 92vw);
+  height:100vh;
+  right:0;
+  left:auto;
+  transform: translateX(110%);
+  transition: transform .18s ease;
+  background: rgba(11,15,23,.92);
+  border-left:1px solid rgba(30,42,60,.9);
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  z-index:10030; /* above overlay */
+  display:flex;
+  flex-direction:column;
+}
+.drawerHd{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:14px;
+  border-bottom:1px solid rgba(30,42,60,.9);
+  background: rgba(18,26,39,.65);
+  backdrop-filter: blur(10px);
+}
+.drawerTitle{font-weight:900;letter-spacing:.2px}
+.drawerBody{
+  padding:14px;
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.drawerBody{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:14px;
+}
+/* Keep original button/link styles; only align items nicely in the drawer */
+.drawerBody .btn,
+.drawerBody .linkBtn{justify-content:flex-start;}
+
+/* Primary actions inside drawer should be centered like Scout/Coach */
+.drawerBody .drawerPrimary{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+/* Scout Profile responsiveness */
+@media (max-width: 820px){
+  #scoutPhotoBlock .twoCol{grid-template-columns:1fr !important;}
+  #athletePhotoScout{width:100% !important; max-width:340px; aspect-ratio:1/1; height:auto !important; margin:0 auto;}
+}
+
+#athletePhotoScout{width:min(340px, 100%); height:340px;}
+
+
+body.drawerOpen #drawerOverlay{display:block;}
+body.drawerOpen #navDrawer{transform: translateX(0);}
+
+body.scrollLocked{overscroll-behavior: none;}
+
+@media (max-width: 980px){
+  /* show Menu button + keep Refresh visible; everything else moves into drawer via JS */
+  #menuBtn{display:inline-flex;}
+  header{height:auto;min-height:auto;}
+  header .wrap.title{height:auto;padding-top:14px;}
+  .controls{width:100%;}
+  .controlsRight{gap:12px; width:100%; justify-content:space-between;}
+  .controlsRight #searchWrap{flex:1 1 auto; min-width:0;}
+  .controlsRight #search{width:100%;}
+  /* slightly tighter header spacing on mobile */
+  .btn{padding:9px 11px;}
+  .input{width:240px;}
+}
+
+/* Modal upgrades */
+#modalOverlay{z-index:10100 !important;}
+#modalBox{
+  width:min(860px, 96vw) !important;
+  max-height: min(86vh, 720px) !important;
+  overflow:hidden !important;
+  display:flex !important;
+  flex-direction:column !important;
+}
+#modalContent{
+  overflow:auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+@media (max-width: 520px){
+  #modalOverlay{padding:12px !important;}
+  #modalBox{width:96vw !important; max-height: 90vh !important; border-radius:16px !important;}
+  #modalBox > div:first-child{flex-direction:column !important; align-items:stretch !important;}
+  #modalClose{width:100%;}
+}
+
+/* Mobile athlete table: stack rows into readable cards */
+@media (max-width: 720px){
+  table{font-size:14px}
+  thead{display:none}
+  tbody tr{
+    display:block;
+    padding:10px 12px;
+    border-bottom:1px solid rgba(30,42,60,.7);
+  }
+  tbody td{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    padding:6px 0;
+    border-bottom:0;
+  }
+  tbody td::before{
+    content: attr(data-label);
+    color:var(--muted);
+    font-weight:700;
+    flex: 0 0 auto;
+  }
+  tbody td:first-child{
+    display:block;
+    padding:0 0 8px 0;
+  }
+  tbody td:first-child::before{content:""}
+}
+
+/* Scout contact card (was missing explicit layout styles) */
+.contactCard{
+  border:1px solid rgba(30,42,60,.9);
+  border-radius:16px;
+  padding:12px;
+  background: rgba(255,255,255,.02);
+}
+.contactGrid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+.contactItem .label{color:var(--muted);font-size:12px;font-weight:800;}
+.contactItem .value{font-weight:800;word-break:break-word;}
+@media (max-width: 520px){
+  .contactGrid{grid-template-columns:1fr;}
+}
+
 </style>
 
 
@@ -221,20 +384,21 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:
     </div>
 
     <div class="controls">
-      <div class="searchWrap" style="position:relative">
+      <div class="searchWrap" id="searchWrap" style="position:relative">
       <input class="input" id="search" placeholder="Search athlete name…" />
       <button type="button" class="linkBtn btnIcon" id="clearSearch" aria-label="Clear search" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--muted);font-size:14px;font-weight:400;cursor:pointer;padding:0;line-height:1">x</button>
     </div>
-      <button class="btn" id="toggleScout">Scout Mode: Off</button>
-      <button class="btn" id="toggleCoach">Coach Mode: Off</button>
-      <label class="btn" for="photos">Load Photos</label>
+      <button class="btn drawerPrimary" id="toggleScout">Scout Mode: Off</button>
+      <button class="btn drawerPrimary" id="toggleCoach">Coach Mode: Off</button>
+      <label class="btn drawerPrimary" id="photosLabel" for="photos">Load Photos</label>
       <input id="photos" type="file" accept="image/*" multiple webkitdirectory style="display:none" />
-      <label class="btn" for="file">Load CSV</label>
+      <label class="btn drawerPrimary" id="csvLabel" for="file">Load CSV</label>
       <input id="file" type="file" accept=".csv,text/csv" style="display:none" />
       
 
       <div class="controlsSpacer"></div>
       <div class="controlsRight">
+        <button type="button" class="linkBtn btnIcon" id="menuBtn" title="Menu" aria-label="Open menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg><span>Menu</span></button>
         <button type="button" class="linkBtn btnIcon" id="loadDefault"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
     d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-14.9-2M4 16a8 8 0 0014.9 2"></path>
@@ -259,6 +423,16 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:
 </div>
   </div>
 </header>
+
+<!-- Mobile Drawer (responsive navbar) -->
+<div id="drawerOverlay" aria-hidden="true"></div>
+<aside id="navDrawer" aria-label="Menu drawer">
+  <div class="drawerHd">
+    <div class="drawerTitle">Menu</div>
+    <button type="button" class="btn" id="drawerCloseBtn" style="padding:8px 10px;border-radius:12px">Close</button>
+  </div>
+  <div id="drawerBody" class="drawerBody"></div>
+</aside>
 
 <div class="wrap">
   <div class="row">
@@ -474,6 +648,9 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:
 </div>
 
 <script>
+
+// FULL production build (v1.0.110 baseline)
+const IS_DEMO = false;
 
 /** ---------- Config: map your CSV columns here ---------- **/
 const COL = {
@@ -744,9 +921,9 @@ function renderTable(){
           <strong>${safe(r[COL.name])}</strong>
         </div>
       </td>
-      <td>${safe(r[COL.age])}</td>
-      <td>${safe(r[COL.weight])}</td>
-      <td>${safe(r[COL.school])}</td>
+      <td data-label="Age">${safe(r[COL.age])}</td>
+      <td data-label="Weight">${safe(r[COL.weight])}</td>
+      <td data-label="School">${safe(r[COL.school])}</td>
     `;
     tr.addEventListener("click", () => selectAthlete(x.idx));
     tb.appendChild(tr);
@@ -1136,6 +1313,7 @@ if (coachBtn){
   coachBtn.addEventListener("click", ()=>{
     const on = !document.body.classList.contains("coachMode");
     setCoachMode(on);
+    if (document.body.classList.contains("drawerOpen")) closeDrawer();
   });
 }
 try{ setCoachMode(sessionStorage.getItem("coachModeOn")==="1"); }catch(e){}
@@ -1153,28 +1331,155 @@ if (toggleBtn){
   toggleBtn.addEventListener("click", ()=>{
     const on = !document.body.classList.contains("scoutMode");
     setScoutMode(on);
+    if (document.body.classList.contains("drawerOpen")) closeDrawer();
   });
 }
 // restore mode
 try{ setScoutMode(sessionStorage.getItem("scoutModeOn")==="1"); }catch(e){}
 
 
+let __scrollLockCount = 0;
+let __scrollLockY = 0;
+function lockScroll(){
+  __scrollLockCount += 1;
+  if (__scrollLockCount !== 1) return;
+  __scrollLockY = window.scrollY || window.pageYOffset || 0;
+  document.body.classList.add("scrollLocked");
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${__scrollLockY}px`;
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.width = "100%";
+}
+function unlockScroll(){
+  __scrollLockCount = Math.max(0, __scrollLockCount - 1);
+  if (__scrollLockCount !== 0) return;
+  document.body.classList.remove("scrollLocked");
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
+  window.scrollTo(0, __scrollLockY || 0);
+}
+
 function openModal(title, htmlContent){
   const ov = document.getElementById("modalOverlay");
   const t = document.getElementById("modalTitle");
   const c = document.getElementById("modalContent");
   if (!ov || !t || !c) return;
+
+  // Ensure drawer isn't trapping focus/scroll when modal opens
+  closeDrawer();
+
   t.textContent = title;
   c.innerHTML = htmlContent;
   ov.style.display = "flex";
+  lockScroll();
 }
 function closeModal(){
   const ov = document.getElementById("modalOverlay");
-  if (ov) ov.style.display = "none";
+  if (ov && ov.style.display !== "none"){
+    ov.style.display = "none";
+    unlockScroll();
+  }
 }
 
 
 
+
+
+/* --- Responsive hamburger + drawer nav (FULL) --- */
+function initResponsiveNav(){
+  const mq = window.matchMedia("(max-width: 980px)");
+  const drawer = document.getElementById("navDrawer");
+  const overlay = document.getElementById("drawerOverlay");
+  const menuBtn = document.getElementById("menuBtn");
+  const closeBtn = document.getElementById("drawerCloseBtn");
+  const drawerBody = document.getElementById("drawerBody");
+  const controlsRight = document.querySelector(".controlsRight");
+  const searchWrap = document.getElementById("searchWrap");
+
+  if (!drawer || !overlay || !menuBtn || !closeBtn || !drawerBody) return;
+
+  const moveEls = [
+    document.getElementById("toggleScout"),
+    document.getElementById("toggleCoach"),
+    document.getElementById("photosLabel"),
+    document.getElementById("csvLabel"),
+    document.getElementById("githubBtn"),
+    document.getElementById("aboutBtn"),
+    document.getElementById("versionBtn"),
+  ].filter(Boolean);
+
+  const searchOriginalSpot = searchWrap ? { parent: searchWrap.parentNode, next: searchWrap.nextSibling } : null;
+
+  const originalSpots = moveEls.map(el=>({
+    el,
+    parent: el.parentNode,
+    next: el.nextSibling
+  }));
+
+  function moveToDrawer(){
+    moveEls.forEach(el=> drawerBody.appendChild(el));
+  }
+  function restoreFromDrawer(){
+    originalSpots.forEach(({el,parent,next})=>{
+      if (!parent) return;
+      if (next && next.parentNode === parent) parent.insertBefore(el, next);
+      else parent.appendChild(el);
+    });
+  }
+
+  function setMobileLayout(isMobile){
+    if (isMobile){
+      moveToDrawer();
+      // Keep athlete search outside the drawer; place it next to Menu/Refresh on mobile
+      if (searchWrap && controlsRight && !controlsRight.contains(searchWrap)){
+        controlsRight.insertBefore(searchWrap, controlsRight.firstChild);
+      }
+      overlay.setAttribute("aria-hidden", document.body.classList.contains("drawerOpen") ? "false" : "true");
+    } else {
+      closeDrawer(true);
+      restoreFromDrawer();
+      // Restore search to its original position
+      if (searchWrap && searchOriginalSpot && searchOriginalSpot.parent){
+        const { parent, next } = searchOriginalSpot;
+        if (next && next.parentNode === parent) parent.insertBefore(searchWrap, next);
+        else parent.appendChild(searchWrap);
+      }
+    }
+  }
+
+  menuBtn.addEventListener("click", ()=>{
+    closeModal();
+    openDrawer();
+  });
+  closeBtn.addEventListener("click", ()=> closeDrawer());
+  overlay.addEventListener("click", ()=> closeDrawer());
+  document.addEventListener("keydown", (e)=>{ if (e.key === "Escape") closeDrawer(); });
+
+  if (mq.addEventListener) mq.addEventListener("change", (e)=> setMobileLayout(e.matches));
+  else mq.addListener((e)=> setMobileLayout(e.matches));
+
+  setMobileLayout(mq.matches);
+}
+
+function openDrawer(){
+  const mq = window.matchMedia("(max-width: 980px)");
+  if (!mq.matches) return;
+  const overlay = document.getElementById("drawerOverlay");
+  document.body.classList.add("drawerOpen");
+  if (overlay) overlay.setAttribute("aria-hidden","false");
+  lockScroll();
+}
+function closeDrawer(skipUnlock){
+  const overlay = document.getElementById("drawerOverlay");
+  if (!document.body.classList.contains("drawerOpen")) return;
+  document.body.classList.remove("drawerOpen");
+  if (overlay) overlay.setAttribute("aria-hidden","true");
+  if (!skipUnlock) unlockScroll();
+}
 
 function initModalWiring(){
   const modalClose = document.getElementById("modalClose");
@@ -1301,6 +1606,8 @@ function applyAvatarFallback(){
     });
   });
 }
+
+initResponsiveNav();
 
 setStatus("Ready");
 
