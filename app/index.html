@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Athlete Combine Dashboard</title>
+  <title>Athlete Combine Dashboard (Local)</title>
 
   <!-- Libraries (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -323,34 +323,41 @@ body.scrollLocked{overscroll-behavior: none;}
   #modalClose{width:100%;}
 }
 
-/* Mobile athlete table: stack rows into readable cards */
+/* Mobile athlete list: show only photo + name (compact) */
 @media (max-width: 720px){
   table{font-size:14px}
   thead{display:none}
   tbody tr{
-    display:block;
+    display:flex;
+    align-items:center;
     padding:10px 12px;
     border-bottom:1px solid rgba(30,42,60,.7);
   }
-  tbody td{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:12px;
-    padding:6px 0;
-    border-bottom:0;
+  tbody td{padding:0;border-bottom:0;}
+  /* Keep first cell only */
+  tbody td:nth-child(n+2){display:none !important;}
+  tbody td:first-child{flex:1 1 auto; min-width:0;}
+  tbody td:first-child strong{display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+}
+
+/* Extra-small phones (iPhone SE width-ish): fix Athlete Profile photo sizing */
+@media (max-width: 420px){
+  html, body{overflow-x:hidden;}
+  /* Tighten padding so the photo card never overflows on 375px widths */
+  #dashPhotoBlock .bd{padding-left:12px !important; padding-right:12px !important;}
+  /* Wrapper around the photo + badges */
+  #dashPhotoBlock .bd > div{
+    width:100% !important;
+    max-width:340px !important;
   }
-  tbody td::before{
-    content: attr(data-label);
-    color:var(--muted);
-    font-weight:700;
-    flex: 0 0 auto;
+  /* Photo box itself */
+  #athletePhotoLarge{
+    width:100% !important;
+    max-width:none !important;
+    height:auto !important;
+    aspect-ratio:1/1;
+    box-sizing:border-box;
   }
-  tbody td:first-child{
-    display:block;
-    padding:0 0 8px 0;
-  }
-  tbody td:first-child::before{content:""}
 }
 
 /* Scout contact card (was missing explicit layout styles) */
@@ -371,6 +378,11 @@ body.scrollLocked{overscroll-behavior: none;}
   .contactGrid{grid-template-columns:1fr;}
 }
 
+
+
+/* Ensure Position dropdown options remain readable across browsers */
+#posSelect, #posSelect option { color: #111 !important; }
+#posSelect option { background: #fff; }
 </style>
 
 
@@ -379,7 +391,7 @@ body.scrollLocked{overscroll-behavior: none;}
 <header>
   <div class="wrap title">
     <div>
-      <h1>Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.110</span></h1>
+      <h1>Athlete Combine Dashboard (Local) <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.112</span></h1>
       <div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
     </div>
 
@@ -597,7 +609,7 @@ body.scrollLocked{overscroll-behavior: none;}
                   </div>
                 </div>
                 <div class="small muted" style="margin-top:10px">
-                  Tip: add an <span class="mono">Email</span> column to your CSV to populate email here.
+                  Tip: take note of your preferred athlete to contact them on draft day.
                 </div>
               </div>
             </div>
@@ -640,8 +652,7 @@ body.scrollLocked{overscroll-behavior: none;}
 
         <div style="height:8px"></div>
         <div class="hint">
-          <strong>Next step:</strong> Once this looks right locally, we can turn it into a WordPress page (shortcode/plugin) or a separate app (React/Next.js) and connect it to Google Sheets via a secure backend.
-        </div>
+          <strong>Next step:</strong> After reviewing the data, shortlist your top athletes, compare them against your position benchmarks, write down follow‑up questions, and mark who you want to contact before draft day.</div>
       </div>
     </div>
   </div>
@@ -1064,9 +1075,20 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
     if (!el) return;
     el.textContent = (val === null || val === undefined || String(val).trim() === "") ? "—" : String(val).trim();
   };
+
+  const formatLbs = (val) => {
+    if (val === null || val === undefined) return "—";
+    const s = String(val).trim();
+    if (!s) return "—";
+    // Avoid double-units if CSV already includes them
+    if (/\b(lb|lbs|pounds|kg|kgs)\b/i.test(s)) return s;
+    // If numeric-ish, append lbs
+    return s + " lbs";
+  };
+
   setText("scoutDob", r[COL.dob]);
   setText("scoutHeight", r[COL.height]);
-  setText("scoutWeight", r[COL.weight]);
+  setText("scoutWeight", formatLbs(r[COL.weight]));
   setText("scoutPhone", r[COL.phone]);
   setText("scoutEmail", r[COL.email]);
 
@@ -1514,9 +1536,21 @@ function initModalWiring(){
     versionBtn.addEventListener("click", ()=>{
       openModal("Version & Changelog", `<div style="display:grid;gap:10px">
   <div style="font-weight:900">What’s new</div>
-  <div><b>v1.0.110</b> — Changelog modal now includes full v1.x history (newest first).</div>
+  <div><b>v1.0.112</b> — UI fixes (responsive controls, mobile table, small-phone layout, readability).</div>
 
   <div style="margin-top:10px;font-weight:900">Changelog</div>
+
+<div style="margin-top:6px;font-weight:900">v1.0.112</div>
+<ul style="margin:6px 0 0 18px">
+  <li>Added responsive hamburger drawer nav (overlay header, tap-to-close, click-safe buttons).</li>
+  <li>Mobile modals improved: max-size, internal scroll, iOS-safe scrolling, background scroll lock.</li>
+  <li>Kept Athlete Search visible outside drawer next to Menu + Refresh on mobile.</li>
+  <li>Optimized Athlete List on mobile to show only photo + name (compact rows).</li>
+  <li>Improved small-phone (≈375px) Athlete Profile responsiveness; fixed photo box clipping.</li>
+  <li>Improved Position dropdown option readability.</li>
+  <li>Scout/Coach contact details: added <span class="mono">lbs</span> unit for weight.</li>
+  <li>Updated guidance text to draft-day coaching suggestions.</li>
+</ul>
 
   <div style="margin-top:6px;font-weight:900">v1.0.110</div>
   <ul style="margin:6px 0 0 18px">
