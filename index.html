@@ -382,7 +382,7 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:
   <div class="wrap title">
     <div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <h1 style="margin:0">Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.110</span><span class="demoBadge" aria-label="Demo badge">DEMO</span></h1>
+        <h1 style="margin:0">Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px"></span><span class="demoBadge" aria-label="Demo badge">DEMO</span></h1>
         <button type="button" class="btn linkBtn btnIcon menuBtn" id="menuOpenBtn" aria-label="Open menu" title="Menu">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -449,12 +449,7 @@ header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:
         <button class="btn linkBtn btnIcon" id="aboutBtn" title="About" style="padding:9px 10px;border-radius:999px" type="button"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-</svg><span>About</span></button>
-        <button class="btn linkBtn btnIcon" id="versionBtn" title="Version & Changelog" style="padding:9px 10px;border-radius:999px" type="button"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-    d="M9 12h6M9 16h6M14 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V8l-5-6z"></path>
-</svg><span>Changelog</span></button>
-      
+</svg><span>About</span></button>      
       </div>
 </div>
   </div>
@@ -1508,14 +1503,14 @@ function initModalWiring(){
     aboutBtn.addEventListener("click", ()=>{
       openModal("How to use this dashboard", `
         <div style="display:grid;gap:10px">
-          <div><b>1) Load CSV:</b> Click <span class="mono">Choose CSV</span> and select your combine results CSV.</div>
-          <div><b>2) Load photos:</b> Click <span class="mono">Load Photos</span> and select the folder containing athlete photos named by <span class="mono">Formulario#</span> (example: <span class="mono">75.jpg</span>).</div>
+          <div><b>1) Load Data:</b> Click <span class="mono">Refresh</span> and the athlete data should load.</div>
+          <div><b>2) Load photos:</b> Photos <span class="mono">will load automatically</span> based on availability matching their Athlete <span class="mono">ID#</span>.</div>
           <div><b>3) Browse athletes:</b> Use the left list to filter and select a player.</div>
           <div><b>4) Modes:</b>
             <ul style="margin:6px 0 0 18px">
               <li><b>Normal:</b> Full dashboard view + position suggestion controls.</li>
               <li><b>Scout Mode:</b> Scout Profile layout (contact-first).</li>
-              <li><b>Coach Mode:</b> Scout Profile layout + keeps performance charts/sections below.</li>
+              <li><b>Coach Mode:</b> Scout Profile layout & performance charts/sections below.</li>
             </ul>
           </div>
         </div>
