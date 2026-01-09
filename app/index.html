@@ -971,17 +971,23 @@ async function loadDefaultCsv(){
     const text = await res.text();
     parseCsvText(text, "results.csv");
   }catch(e){
-    // Prevent false-negative alerts if data is already present (e.g., double-click or a previous successful load)
-    try{
-      if (Array.isArray(rows) && rows.length > 0){
-        setStatus("Ready");
-        return;
-      }
-    }catch(_){}
-
     console.warn(e);
-    setStatus("No results.csv");
-    alert("Couldn't load results.csv. Put it next to this HTML file, or use the Load CSV button.");
+
+    // Avoid false-negative alerts: parsing/loading can still complete asynchronously,
+    // or data may already be present from a previous successful load.
+    setStatus("Loading…");
+
+    // Give the app a moment to populate rows; only alert if it's still empty.
+    setTimeout(() => {
+      try{
+        if (Array.isArray(rows) && rows.length > 0){
+          setStatus("Ready");
+          return;
+        }
+      }catch(_){}
+      setStatus("No results.csv");
+      alert("Couldn't load results.csv. Put it next to this HTML file, or use the Load CSV button.");
+    }, 800);
   }
 }
 
