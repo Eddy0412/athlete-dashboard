@@ -58,6 +58,19 @@
       padding:6px 10px;border-radius:999px;
       white-space:nowrap;
     }
+    /* Public view indicator (subtle, small) */
+    .pillPublic{
+      font-size:10px;
+      padding:0px 6px;
+      letter-spacing:0.3px;
+      border:1px solid rgba(255,209,102,.35);
+      background: rgba(255,209,102,.12);
+      color:#fff1c2;
+      line-height:18px;
+      height:18px;
+      display:inline-flex;
+      align-items:center;
+    }
 
     .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex-wrap:nowrap;align-items:center;margin-top:10px;}
 
@@ -399,7 +412,7 @@ body.scrollLocked{overscroll-behavior: none;}
 <header>
   <div class="wrap title">
     <div>
-      <h1>Athlete Combine Dashboard (Local) <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.112</span></h1>
+      <h1>Athlete Combine Dashboard (Local) <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.112</span><span id="publicPill" class="pill pillPublic" style="display:none;margin-left:8px">Public</span></h1>
       <div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
     </div>
 
@@ -675,7 +688,11 @@ const IS_DEMO = false;
 // View modes: default FULL, optional public view via ?view=public
 const VIEW_MODE = (new URLSearchParams(window.location.search).get('view') || '').toLowerCase();
 const IS_PUBLIC_VIEW = VIEW_MODE === 'public';
-if (IS_PUBLIC_VIEW) document.documentElement.classList.add('publicView');
+if (IS_PUBLIC_VIEW) {
+  document.documentElement.classList.add('publicView');
+  const pp = document.getElementById('publicPill');
+  if (pp) pp.style.display = 'inline-flex';
+}
 /** ---------- Config: map your CSV columns here ---------- **/
 const COL = {
   id: "Formulario#",
@@ -1352,7 +1369,7 @@ if (coachBtn){
   });
 }
 if (!IS_PUBLIC_VIEW) {
-  try{ setCoachMode(sessionStorage.getItem(\"coachModeOn\")===\"1\"); }catch(e){}
+  try{ setCoachMode(sessionStorage.getItem("coachModeOn")==="1"); }catch(e){}
 }
 
 // Scout mode toggle (layout-only)
@@ -1373,7 +1390,7 @@ if (toggleBtn){
 }
 // restore mode
 if (!IS_PUBLIC_VIEW) {
-  try{ setScoutMode(sessionStorage.getItem(\"scoutModeOn\")===\"1\"); }catch(e){}
+  try{ setScoutMode(sessionStorage.getItem("scoutModeOn")==="1"); }catch(e){}
 }
 
 
