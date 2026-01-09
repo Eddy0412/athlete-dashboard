@@ -1200,6 +1200,9 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
   // Charts
   renderRadar(r);
   renderBars(r);
+
+  // Sync selection to presenter window (if open)
+  _sendToPresenter({ type: "ac_athlete_update", athlete: r });
 }
 
 function renderRadar(r){
@@ -1349,8 +1352,40 @@ $("file").addEventListener("change", (e) => {
 
 $("search").addEventListener("input", applyFilter);
 $("loadDefault").addEventListener("click", loadDefaultCsv);
+// Presentation window sync (index controls, external fullscreen presenter)
+let _presentWin = null;
+let _presentReady = false;
+
+function _sendToPresenter(payload){
+  try{
+    if(_presentWin && !_presentWin.closed){
+      _presentWin.postMessage(payload, "*");
+    }
+  }catch(e){}
+}
+
+function _sendCurrentToPresenter(){
+  try{
+    if(typeof activeIndex !== "number" || activeIndex < 0) return;
+    const r = currentRows?.[activeIndex];
+    if(!r) return;
+    _sendToPresenter({ type: "ac_athlete_update", athlete: r });
+  }catch(e){}
+}
+
+window.addEventListener("message", (e) => {
+  if(e?.data?.type === "ac_presentation_ready"){
+    _presentReady = true;
+    _sendCurrentToPresenter();
+  }
+});
+
 $("presentBtn")?.addEventListener("click", () => {
-  window.open("presentation.html", "_blank", "noopener");
+  _presentReady = false;
+  // Keep opener available (no noopener) so presenter can handshake back
+  _presentWin = window.open("presentation.html", "ac_presenter", "popup=1");
+  // Best-effort initial send (presenter will also request via ready handshake)
+  setTimeout(_sendCurrentToPresenter, 250);
 });
 
 // Drag & drop
