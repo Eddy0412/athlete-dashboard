@@ -957,29 +957,28 @@ function parseCsvText(csvText, label){
 }
 
 async function loadDefaultCsv(){
+  // Keep behavior aligned with v1.0.116 (simple fetch + parse),
+  // but make the URL GitHub Pages-safe when the page is opened with a trailing "?" or other querystrings.
   try{
     setStatus("Loading…");
 
-    // IMPORTANT: On GitHub Pages, trailing querystrings like "?" can make window.location.href
-    // resolve "results.csv" incorrectly (e.g. "/app/?results.csv"). Always base off pathname.
     const baseHref = window.location.origin + window.location.pathname;
-    const resultsUrl = new URL("results.csv", baseHref).toString();
+    const resultsUrl = new URL("./results.csv", baseHref).toString();
 
-    let res = await fetch(resultsUrl, { cache: "no-store" });
+    const res = await fetch(resultsUrl, { cache: "no-store" });
     if(!res.ok) throw new Error("results.csv not found");
 
-    let text = await res.text();
-
-    // If a mis-resolved URL returned the HTML app shell with 200 OK, retry once.
-    const head = text.slice(0, 250).toLowerCase();
-    if(head.includes("<!doctype") || head.includes("<html") || head.includes("<head")){
-      res = await fetch(resultsUrl, { cache: "no-store" });
-      if(!res.ok) throw new Error("results.csv not found");
-      text = await res.text();
-    }
-
+    const text = await res.text();
     parseCsvText(text, "results.csv");
   }catch(e){
+    // Prevent false-negative alerts if data is already present (e.g., double-click or a previous successful load)
+    try{
+      if (Array.isArray(rows) && rows.length > 0){
+        setStatus("Ready");
+        return;
+      }
+    }catch(_){}
+
     console.warn(e);
     setStatus("No results.csv");
     alert("Couldn't load results.csv. Put it next to this HTML file, or use the Load CSV button.");
