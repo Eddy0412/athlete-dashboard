@@ -271,11 +271,9 @@
   }
 
   function trySetPhoto(r){
-    // Prefer the exact URL computed in index.html
     const direct = r && (r._photoUrl || r.photoUrl || r.PhotoUrl);
     if(direct){ setPhotoFromUrl(direct); return; }
 
-    // Fallback: /photos/{Formulario#}.jpg|png|webp
     const id = pick(r, ["Formulario#", "Formulario", "ID", "Id", "id"]);
     const candidates = [
       `photos/${id}.jpg`,
@@ -332,15 +330,39 @@
     if(e.key === "f" || e.key === "F") toggleFullscreen();
   });
 
-  // Handshake + request current athlete from opener
+  // --- Connection to dashboard (index.html) ---
+  // Primary: window.opener postMessage
+  // Fallback: BroadcastChannel
+  let ch = null;
   try{
-    if(window.opener){
-      window.opener.postMessage({ type: "ac_presentation_ready" }, "*");
-      window.opener.postMessage({ type: "ac_request_current_athlete" }, "*");
+    if ("BroadcastChannel" in window){
+      ch = new BroadcastChannel("ac_presenter_channel");
+      ch.addEventListener("message", (ev) => {
+        if(ev?.data?.type === "ac_athlete_update"){
+          renderAthlete(ev.data.athlete);
+        }
+      });
     }
   }catch(e){}
 
-  // Listen for updates from index
+  function requestCurrent(){
+    try{
+      if(window.opener){
+        window.opener.postMessage({ type: "ac_request_current_athlete" }, "*");
+      }
+    }catch(e){}
+    try{ ch?.postMessage({ type: "ac_request_current_athlete" }); }catch(e){}
+  }
+
+  // Handshake + request current athlete
+  try{
+    if(window.opener){
+      window.opener.postMessage({ type: "ac_presentation_ready" }, "*");
+    }
+  }catch(e){}
+  requestCurrent();
+
+  // Listen for updates from opener too
   window.addEventListener("message", (e) => {
     if(e?.data?.type === "ac_athlete_update"){
       renderAthlete(e.data.athlete);
@@ -354,6 +376,7 @@
   }
 })();
 </script>
+
 
 </body>
 </html>

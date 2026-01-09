@@ -1412,12 +1412,25 @@ $("file").addEventListener("change", (e) => {
 $("search").addEventListener("input", applyFilter);
 $("loadDefault").addEventListener("click", loadDefaultCsv);
 // // Presentation window sync (index controls, external fullscreen presenter)
+// Primary: postMessage to the presenter window
+// Fallback: BroadcastChannel (works even if window.opener is unavailable)
 let _presentWin = null;
-let _presentReady = false;
 let _presentLastPayload = null;
+let _presentCh = null;
+
+try{
+  if ("BroadcastChannel" in window){
+    _presentCh = new BroadcastChannel("ac_presenter_channel");
+    _presentCh.addEventListener("message", (ev) => {
+      const t = ev?.data?.type;
+      if(t === "ac_request_current_athlete"){
+        _sendCurrentToPresenter();
+      }
+    });
+  }
+}catch(e){}
 
 function rowToPresenter(r){
-  // Provide presenter-friendly payload while preserving existing row object keys
   try{
     return Object.assign({}, r, { _photoUrl: (typeof photoUrlForRow === "function" ? photoUrlForRow(r) : "") });
   }catch(e){
@@ -1425,19 +1438,28 @@ function rowToPresenter(r){
   }
 }
 
+function _broadcastToPresenter(payload){
+  try{ _presentCh?.postMessage(payload); }catch(e){}
+}
+
 function _sendToPresenter(payload){
+  _presentLastPayload = payload;
+  // Try the popup/tab first
   try{
-    _presentLastPayload = payload;
     if(_presentWin && !_presentWin.closed){
       _presentWin.postMessage(payload, "*");
     }
   }catch(e){}
+  // Always also broadcast as a reliable fallback
+  _broadcastToPresenter(payload);
 }
 
 function _sendCurrentToPresenter(){
   try{
-    if(typeof activeIndex !== "number" || activeIndex < 0) return;
-    const r = rows?.[activeIndex];
+    // activeIndex can vary; prefer the currently selected row if available
+    let r = null;
+    if(typeof activeIndex === "number" && activeIndex >= 0) r = rows?.[activeIndex];
+    if(!r && typeof selectedIndex === "number" && selectedIndex >= 0) r = rows?.[selectedIndex];
     if(!r) return;
     _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
   }catch(e){}
@@ -1446,7 +1468,6 @@ function _sendCurrentToPresenter(){
 window.addEventListener("message", (e) => {
   const t = e?.data?.type;
   if(t === "ac_presentation_ready"){
-    _presentReady = true;
     // If we already have a payload, send it immediately
     if(_presentLastPayload) _sendToPresenter(_presentLastPayload);
     else _sendCurrentToPresenter();
@@ -1457,9 +1478,7 @@ window.addEventListener("message", (e) => {
 });
 
 $("presentBtn")?.addEventListener("click", () => {
-  _presentReady = false;
   _presentWin = window.open("presentation.html", "ac_presenter");
-  // Best-effort send (presenter will handshake too)
   setTimeout(_sendCurrentToPresenter, 250);
 });
 
