@@ -957,37 +957,16 @@ function parseCsvText(csvText, label){
 }
 
 async function loadDefaultCsv(){
-  // Keep behavior aligned with v1.0.116 (simple fetch + parse),
-  // but make the URL GitHub Pages-safe when the page is opened with a trailing "?" or other querystrings.
   try{
     setStatus("Loading…");
-
-    const baseHref = window.location.origin + window.location.pathname;
-    const resultsUrl = new URL("./results.csv", baseHref).toString();
-
-    const res = await fetch(resultsUrl, { cache: "no-store" });
+    const res = await fetch("./results.csv", { cache: "no-store" });
     if(!res.ok) throw new Error("results.csv not found");
-
     const text = await res.text();
     parseCsvText(text, "results.csv");
   }catch(e){
     console.warn(e);
-
-    // Avoid false-negative alerts: parsing/loading can still complete asynchronously,
-    // or data may already be present from a previous successful load.
-    setStatus("Loading…");
-
-    // Give the app a moment to populate rows; only alert if it's still empty.
-    setTimeout(() => {
-      try{
-        if (Array.isArray(rows) && rows.length > 0){
-          setStatus("Ready");
-          return;
-        }
-      }catch(_){}
-      setStatus("No results.csv");
-      alert("Couldn't load results.csv. Put it next to this HTML file, or use the Load CSV button.");
-    }, 800);
+    setStatus("No results.csv");
+    alert("Couldn't load results.csv. Put it next to this HTML file, or use the Load CSV button.");
   }
 }
 
