@@ -1411,24 +1411,12 @@ $("file").addEventListener("change", (e) => {
 
 $("search").addEventListener("input", applyFilter);
 $("loadDefault").addEventListener("click", loadDefaultCsv);
-// // Presentation window sync (index controls, external fullscreen presenter)
-// Primary: postMessage to the presenter window
-// Fallback: BroadcastChannel (works even if window.opener is unavailable)
+// Presentation window sync (index controls, external fullscreen presenter)
+// Transport layers: postMessage (popup/tab) + BroadcastChannel + localStorage (most reliable)
 let _presentWin = null;
-let _presentLastPayload = null;
 let _presentCh = null;
 
-try{
-  if ("BroadcastChannel" in window){
-    _presentCh = new BroadcastChannel("ac_presenter_channel");
-    _presentCh.addEventListener("message", (ev) => {
-      const t = ev?.data?.type;
-      if(t === "ac_request_current_athlete"){
-        _sendCurrentToPresenter();
-      }
-    });
-  }
-}catch(e){}
+const PRES_KEY = "ac_presenter_current_athlete";
 
 function rowToPresenter(r){
   try{
@@ -1438,41 +1426,58 @@ function rowToPresenter(r){
   }
 }
 
+function _persistToStorage(payload){
+  try{
+    if(payload?.type === "ac_athlete_update"){
+      localStorage.setItem(PRES_KEY, JSON.stringify(payload));
+    }
+  }catch(e){}
+}
+
 function _broadcastToPresenter(payload){
   try{ _presentCh?.postMessage(payload); }catch(e){}
 }
 
-function _sendToPresenter(payload){
-  _presentLastPayload = payload;
-  // Try the popup/tab first
+function _postToPresenter(payload){
   try{
     if(_presentWin && !_presentWin.closed){
       _presentWin.postMessage(payload, "*");
     }
   }catch(e){}
-  // Always also broadcast as a reliable fallback
+}
+
+function _sendToPresenter(payload){
+  _persistToStorage(payload);
+  _postToPresenter(payload);
   _broadcastToPresenter(payload);
 }
 
-function _sendCurrentToPresenter(){
+function _getSelectedRow(){
   try{
-    // activeIndex can vary; prefer the currently selected row if available
-    let r = null;
-    if(typeof activeIndex === "number" && activeIndex >= 0) r = rows?.[activeIndex];
-    if(!r && typeof selectedIndex === "number" && selectedIndex >= 0) r = rows?.[selectedIndex];
-    if(!r) return;
-    _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
+    if(typeof activeIndex === "number" && activeIndex >= 0) return rows?.[activeIndex] || null;
+    if(typeof selectedIndex === "number" && selectedIndex >= 0) return rows?.[selectedIndex] || null;
   }catch(e){}
+  return null;
 }
 
-window.addEventListener("message", (e) => {
-  const t = e?.data?.type;
-  if(t === "ac_presentation_ready"){
-    // If we already have a payload, send it immediately
-    if(_presentLastPayload) _sendToPresenter(_presentLastPayload);
-    else _sendCurrentToPresenter();
+function _sendCurrentToPresenter(){
+  const r = _getSelectedRow();
+  if(!r) return;
+  _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
+}
+
+try{
+  if ("BroadcastChannel" in window){
+    _presentCh = new BroadcastChannel("ac_presenter_channel");
+    _presentCh.addEventListener("message", (ev) => {
+      if(ev?.data?.type === "ac_request_current_athlete") _sendCurrentToPresenter();
+    });
   }
-  if(t === "ac_request_current_athlete"){
+}catch(e){}
+
+window.addEventListener("message", (e) => {
+  const typ = e?.data?.type;
+  if(typ === "ac_request_current_athlete" || typ === "ac_presentation_ready"){
     _sendCurrentToPresenter();
   }
 });
@@ -1481,6 +1486,7 @@ $("presentBtn")?.addEventListener("click", () => {
   _presentWin = window.open("presentation.html", "ac_presenter");
   setTimeout(_sendCurrentToPresenter, 250);
 });
+
 
 // Drag & drop
 const dz = $("dropZone");

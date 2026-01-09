@@ -232,6 +232,7 @@
 <script>
 (function(){
   const $ = (id)=>document.getElementById(id);
+  const PRES_KEY = "ac_presenter_current_athlete";
 
   const el = {
     name: $("pName"),
@@ -315,6 +316,19 @@
     trySetPhoto(r);
   }
 
+  function tryLoadFromStorage(){
+    try{
+      const raw = localStorage.getItem(PRES_KEY);
+      if(!raw) return false;
+      const payload = JSON.parse(raw);
+      if(payload?.type === "ac_athlete_update" && payload?.athlete){
+        renderAthlete(payload.athlete);
+        return true;
+      }
+    }catch(e){}
+    return false;
+  }
+
   async function toggleFullscreen(){
     try{
       if(!document.fullscreenElement){
@@ -330,53 +344,50 @@
     if(e.key === "f" || e.key === "F") toggleFullscreen();
   });
 
-  // --- Connection to dashboard (index.html) ---
-  // Primary: window.opener postMessage
-  // Fallback: BroadcastChannel
+  // postMessage updates
+  window.addEventListener("message", (e) => {
+    if(e?.data?.type === "ac_athlete_update" && e?.data?.athlete){
+      renderAthlete(e.data.athlete);
+    }
+  });
+
+  // BroadcastChannel updates
   let ch = null;
   try{
     if ("BroadcastChannel" in window){
       ch = new BroadcastChannel("ac_presenter_channel");
       ch.addEventListener("message", (ev) => {
-        if(ev?.data?.type === "ac_athlete_update"){
+        if(ev?.data?.type === "ac_athlete_update" && ev?.data?.athlete){
           renderAthlete(ev.data.athlete);
         }
       });
     }
   }catch(e){}
 
-  function requestCurrent(){
-    try{
-      if(window.opener){
-        window.opener.postMessage({ type: "ac_request_current_athlete" }, "*");
-      }
-    }catch(e){}
-    try{ ch?.postMessage({ type: "ac_request_current_athlete" }); }catch(e){}
-  }
+  // localStorage updates across tabs
+  window.addEventListener("storage", (ev) => {
+    if(ev.key === PRES_KEY){
+      tryLoadFromStorage();
+    }
+  });
 
   // Handshake + request current athlete
   try{
     if(window.opener){
       window.opener.postMessage({ type: "ac_presentation_ready" }, "*");
+      window.opener.postMessage({ type: "ac_request_current_athlete" }, "*");
     }
   }catch(e){}
-  requestCurrent();
+  try{ ch?.postMessage({ type: "ac_request_current_athlete" }); }catch(e){}
 
-  // Listen for updates from opener too
-  window.addEventListener("message", (e) => {
-    if(e?.data?.type === "ac_athlete_update"){
-      renderAthlete(e.data.athlete);
-    }
-  });
+  const had = tryLoadFromStorage();
 
-  // If no data arrives, keep hint visible
   if(el.hint){
-    el.hint.style.display = "block";
+    el.hint.style.display = had ? "none" : "block";
     el.hint.textContent = "Waiting for selection… (Pick an athlete in the dashboard)";
   }
 })();
 </script>
-
 
 </body>
 </html>
