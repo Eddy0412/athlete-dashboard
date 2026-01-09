@@ -233,18 +233,144 @@
 (function(){
   const $ = (id)=>document.getElementById(id);
 
-  const el = {
-    name: $("pName"),
-    meta: $("pMeta"),
-    stats: $("pStats"),
-    notes: $("pNotes"),
-    photo: $("pPhoto"),
-    hint: $("pHint"),
-    btnFullscreen: $("btnFullscreen"),
+  const COLS = {
+    form: "Formulario#",
+    name: "Nombre",
+    age: "Edad",
+    weight: "Peso",
+    height: "Estatura",
+    phone: "Celular",
+    address: "Direccion",
+    school: "Lugar de Estudios",
+    dash1: "40 YDS DASH (SEGUNDOS)",
+    dash2: "40 YDS DASH (SEGUNDOS) 2da Vuelta",
+    broad1: "BROAD JUMP (PULGADAS)",
+    broad2: "BROAD JUMP (PULGADAS) 2da Vuelta",
+    shuttle1: "5-10-5 (SHUTTLE) RUN",
+    cone1: "3- CONE DRILL",
+    bench: "BENCHPRESS"
   };
 
-  function esc(s){
-    return String(s ?? "—")
+  let rows = [];
+  let idx = 0;
+
+  function parseCSV(text){
+    // minimal CSV parser (handles quoted commas)
+    const lines = text.split(/\r?\n/).filter(Boolean);
+    if(!lines.length) return [];
+    const header = splitCSVLine(lines[0]);
+    const out = [];
+    for(let i=1;i<lines.length;i++){
+      const cells = splitCSVLine(lines[i]);
+      const obj = {};
+      header.forEach((h, j)=> obj[h] = (cells[j] ?? "").trim());
+      out.push(obj);
+    }
+    return out;
+  }
+
+  function splitCSVLine(line){
+    const res = [];
+    let cur = "";
+    let inQ = false;
+    for(let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(ch === '"'){
+        if(inQ && line[i+1] === '"'){ cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if(ch === "," && !inQ){
+        res.push(cur);
+        cur = "";
+      } else {
+        cur += ch;
+      }
+    }
+    res.push(cur);
+    return res;
+  }
+
+  function val(r, key){ return (r && r[key] != null) ? String(r[key]).trim() : ""; }
+  function nice(v){ return v && v !== "0" ? v : "—"; }
+
+  function setPhoto(r){
+    const img = $("photoImg");
+    const fb = $("photoFallback");
+    const form = val(r, COLS.form);
+    const candidates = [
+      `photos/${form}.jpg`,
+      `photos/${form}.jpeg`,
+      `photos/${form}.png`,
+      `photos/${form}.webp`,
+    ];
+    let tried = 0;
+    img.onerror = () => {
+      tried++;
+      if(tried < candidates.length){
+        img.src = candidates[tried];
+      } else {
+        img.style.display = "none";
+        fb.style.display = "block";
+      }
+    };
+    img.onload = () => {
+      fb.style.display = "none";
+      img.style.display = "block";
+    };
+    tried = 0;
+    img.src = candidates[0];
+  }
+
+  function render(){
+    if(!rows.length) return;
+    const r = rows[idx];
+
+    $("counterPill").textContent = `${idx+1} / ${rows.length}`;
+
+    $("name").textContent = nice(val(r, COLS.name));
+
+    const meta = [];
+    meta.push(pill(`Age: ${nice(val(r, COLS.age))}`));
+    meta.push(pill(`Height: ${nice(val(r, COLS.height))}`));
+    meta.push(pill(`Weight: ${nice(val(r, COLS.weight))}`));
+    $("metaRow").innerHTML = meta.join("");
+
+    const stats = [
+      stat("40 yd (best)", bestOf(val(r, COLS.dash1), val(r, COLS.dash2), "lower")),
+      stat("Broad Jump (best)", bestOf(val(r, COLS.broad1), val(r, COLS.broad2), "higher")),
+      stat("5-10-5", nice(val(r, COLS.shuttle1))),
+      stat("3-Cone", nice(val(r, COLS.cone1))),
+      stat("Bench", nice(val(r, COLS.bench))),
+      stat("Form #", nice(val(r, COLS.form))),
+    ];
+    $("stats").innerHTML = stats.join("");
+
+    $("school").textContent = `School: ${nice(val(r, COLS.school))}`;
+    $("location").textContent = `Address: ${nice(val(r, COLS.address))}`;
+
+    setPhoto(r);
+  }
+
+  function pill(text){
+    return `<span class="pill">${escapeHtml(text)}</span>`;
+  }
+  function stat(k,v){
+    return `<div class="stat"><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v || "—")}</div></div>`;
+  }
+
+  function bestOf(a1, a2, better){
+    const n1 = parseFloat((a1||"").replace(",", "."));
+    const n2 = parseFloat((a2||"").replace(",", "."));
+    const v1 = Number.isFinite(n1) ? n1 : null;
+    const v2 = Number.isFinite(n2) ? n2 : null;
+    if(v1 == null && v2 == null) return "—";
+    if(v1 != null && v2 == null) return String(v1);
+    if(v2 != null && v1 == null) return String(v2);
+    if(better === "lower") return String(Math.min(v1, v2));
+    return String(Math.max(v1, v2));
+  }
+
+  function escapeHtml(s){
+    return String(s)
       .replaceAll("&","&amp;")
       .replaceAll("<","&lt;")
       .replaceAll(">","&gt;")
@@ -252,104 +378,44 @@
       .replaceAll("'","&#39;");
   }
 
-  function pick(obj, keys){
-    for(const k of keys){
-      if(obj && obj[k] !== undefined && obj[k] !== "") return obj[k];
-    }
-    return "";
-  }
+  function prev(){ idx = (idx - 1 + rows.length) % rows.length; render(); }
+  function next(){ idx = (idx + 1) % rows.length; render(); }
 
-  function trySetPhoto(r){
-    if(!el.photo) return;
-    const direct = r && (r._photoUrl || r.photoUrl || r.PhotoUrl);
-    if(direct){
-      el.photo.style.backgroundImage = `url('${direct}')`;
-      el.photo.removeAttribute("data-empty");
-      return;
-    }
-    const id = pick(r, ["Formulario#", "Formulario", "ID", "Id", "id"]);
-    // Your existing convention: /photos/{Formulario#}.jpg|png|webp
-    const candidates = [
-      `photos/${id}.jpg`,
-      `photos/${id}.jpeg`,
-      `photos/${id}.png`,
-      `photos/${id}.webp`,
-    ].filter(x => id);
-    if(!candidates.length){
-      el.photo.style.backgroundImage = "";
-      el.photo.setAttribute("data-empty","1");
-      return;
-    }
+  $("prevBtn").addEventListener("click", prev);
+  $("nextBtn").addEventListener("click", next);
 
-    let i = 0;
-    const img = new Image();
-    const loadNext = () => {
-      if(i >= candidates.length){
-        el.photo.style.backgroundImage = "";
-        el.photo.setAttribute("data-empty","1");
-        return;
-      }
-      img.onload = () => {
-        el.photo.style.backgroundImage = `url('${candidates[i]}')`;
-        el.photo.removeAttribute("data-empty");
-      };
-      img.onerror = () => { i++; loadNext(); };
-      img.src = candidates[i];
-    };
-    loadNext();
-  }
+  $("exitBtn").addEventListener("click", () => {
+    window.close();
+    // If the browser blocks close (not opened by script), fall back:
+    setTimeout(()=>{ window.location.href = "index.html"; }, 150);
+  });
 
-  function renderAthlete(r){
-    if(!r) return;
-
-    if(el.hint) el.hint.style.display = "none";
-
-    const name = pick(r, ["Nombre", "Name", "Athlete", "athlete", "Player", "player"]) || "—";
-    const pos  = pick(r, ["Pos", "Position", "Posición", "position"]) || "—";
-    const sport = pick(r, ["Sport", "Deporte", "sport"]) || "—";
-    const age = pick(r, ["Age", "Edad", "age"]) || "—";
-    const team = pick(r, ["Team", "Equipo", "team"]) || "—";
-
-    if(el.name) el.name.innerHTML = esc(name);
-    if(el.meta) el.meta.innerHTML = `${esc(sport)} • ${esc(pos)} • ${esc(team)}`;
-    if(el.stats) el.stats.innerHTML = `<span class="stat"><span class="k">Age</span><span class="v">${esc(age)}</span></span>`;
-
-    const notes = pick(r, ["Notas", "Notes", "notes"]) || "";
-    if(el.notes) el.notes.innerHTML = notes ? esc(notes) : "—";
-
-    trySetPhoto(r);
-  }
-
-  // Fullscreen helpers
-  async function toggleFullscreen(){
+  $("fsBtn").addEventListener("click", async () => {
     try{
       if(!document.fullscreenElement){
         await document.documentElement.requestFullscreen();
-      }else{
+      } else {
         await document.exitFullscreen();
       }
     }catch(e){}
-  }
+  });
 
-  el.btnFullscreen?.addEventListener("click", toggleFullscreen);
   window.addEventListener("keydown", (e) => {
-    if(e.key === "f" || e.key === "F") toggleFullscreen();
-  });
-
-  // Handshake with opener (index window)
-  try{
-    if(window.opener){
-      window.opener.postMessage({ type: "ac_presentation_ready" }, "*");
-    }
-  }catch(e){}
-
-  // Listen for updates from index
-  window.addEventListener("message", (e) => {
-    if(e?.data?.type === "ac_athlete_update"){
-      renderAthlete(e.data.athlete);
+    if(e.key === "ArrowLeft") prev();
+    if(e.key === "ArrowRight") next();
+    if(e.key.toLowerCase() === "f"){
+      $("fsBtn").click();
     }
   });
 
+  async function init(){
+    const res = await fetch("results.csv", { cache: "no-store" });
+    const text = await res.text();
+    rows = parseCSV(text);
+    idx = 0;
+    render();
+  }
+  init();
 })();
 </script>
 </body>

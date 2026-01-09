@@ -1200,9 +1200,6 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
   // Charts
   renderRadar(r);
   renderBars(r);
-
-  // Sync selection to presenter window (if open)
-  _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
 }
 
 function renderRadar(r){
@@ -1352,50 +1349,8 @@ $("file").addEventListener("change", (e) => {
 
 $("search").addEventListener("input", applyFilter);
 $("loadDefault").addEventListener("click", loadDefaultCsv);
-// Presentation window sync (index controls, external fullscreen presenter)
-let _presentWin = null;
-let _presentReady = false;
-
-function _sendToPresenter(payload){
-  try{
-    if(_presentWin && !_presentWin.closed){
-      _presentWin.postMessage(payload, "*");
-    }
-  }catch(e){}
-
-function rowToPresenter(r){
-  // Provide presenter-friendly payload while preserving existing row object keys
-  try{
-    return Object.assign({}, r, { _photoUrl: (typeof photoUrlForRow === "function" ? photoUrlForRow(r) : "") });
-  }catch(e){
-    return Object.assign({}, r);
-  }
-}
-
-}
-
-function _sendCurrentToPresenter(){
-  try{
-    if(typeof activeIndex !== "number" || activeIndex < 0) return;
-    const r = rows?.[activeIndex];
-    if(!r) return;
-    _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
-  }catch(e){}
-}
-
-window.addEventListener("message", (e) => {
-  if(e?.data?.type === "ac_presentation_ready"){
-    _presentReady = true;
-    _sendCurrentToPresenter();
-  }
-});
-
 $("presentBtn")?.addEventListener("click", () => {
-  _presentReady = false;
-  // Keep opener available (no noopener) so presenter can handshake back
-  _presentWin = window.open("presentation.html", "ac_presenter", "popup=1");
-  // Best-effort initial send (presenter will also request via ready handshake)
-  setTimeout(_sendCurrentToPresenter, 250);
+  window.open("presentation.html", "_blank", "noopener");
 });
 
 // Drag & drop
