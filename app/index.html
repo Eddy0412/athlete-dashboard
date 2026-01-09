@@ -1,15 +1,14 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Athlete Combine Dashboard (Local)</title>
-
-  <!-- Libraries (CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Athlete Combine Dashboard (Local)</title>
+<!-- Libraries (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
     :root{
       --bg:#0b0f17;
       --card:#121a27;
@@ -36,9 +35,18 @@
       border-bottom:1px solid var(--line);
     }
     .wrap{max-width:1200px;margin:0 auto;padding:18px 16px;}
-    .title{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    /* Keep header controls below the title (stable + no "pushed up" toolbar) */
+    .title{display:flex;flex-direction:column;gap:12px;align-items:flex-start;justify-content:flex-start}
     h1{margin:0;font-size:18px;letter-spacing:.2px}
     .sub{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+    .titleBar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;width:100%;}
+    .topRightControls{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
+    /* In Media View, only show Media toggle (hide other mode/load controls) */
+    html.mediaView #toggleScout,
+    html.mediaView #toggleCoach,
+    html.mediaView #photosLabel,
+    html.mediaView #csvLabel{display:none !important;}
     .row{display:grid;grid-template-columns: 420px 1fr;gap:14px;align-items:start}
     @media (max-width: 980px){ .row{grid-template-columns:1fr} }
 
@@ -71,8 +79,20 @@
       display:inline-flex;
       align-items:center;
     }
+.pillMedia{
+      font-size:10px;
+      padding:0px 6px;
+      letter-spacing:0.3px;
+      border:1px solid rgba(81,202,245,.22);
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      height:16px;
+      background: rgba(81,202,245,.12);
+      color:#d7f6ff;
+    }
 
-    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex-wrap:nowrap;align-items:center;margin-top:10px;}
+    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;}
 
     .btn{
       appearance:none;border:1px solid rgba(9,167,212,.35);
@@ -149,6 +169,22 @@ canvas{width:100% !important; height:320px !important}
     body.scoutMode #attemptsWrap{display:none !important;}
     body.scoutMode #barsWrap{display:none !important;}
 
+    /* --- Media Mode: Scout-like layout, but separate from Scout Mode toggle --- */
+    body.mediaMode #dashPhotoBlock{display:none !important;}
+    body.mediaMode #scoutPhotoBlock{display:block !important;}
+    body.mediaMode #posTooltip{display:none !important;}
+    body.mediaMode #posInfoBtn{display:none !important;}
+    body.mediaMode #posSelect{display:none !important;}
+    body.mediaMode #twoColWrap{display:none !important;}
+    body.mediaMode #attemptsWrap{display:none !important;}
+    body.mediaMode #barsWrap{display:none !important;}
+
+    /* Media profile tweaks: hide phone/email, show Age */
+    #scoutAgeItem{display:none;}
+    body.mediaMode #scoutAgeItem{display:block;}
+    body.mediaMode #scoutPhoneItem{display:none !important;}
+    body.mediaMode #scoutEmailItem{display:none !important;}
+
 
     /* --- Coach Mode: hide only Athlete Profile row, keep graphs --- */
     body.coachMode #dashPhotoBlock{display:none !important;}
@@ -215,12 +251,11 @@ canvas{width:100% !important; height:320px !important}
 .kv .k, .contactLabel{font-weight:800;}
 
 .controlsRight{display:flex;gap:10px;align-items:center;}
+  .controlsRight #menuBtn{margin-right:auto;}
 
 
-/* Header height lock */
-header{height:128px;min-height:128px;padding-bottom:10px;}
-header .wrap.title{height:128px;align-items:flex-start;padding-top:18px;}
-header .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:760px;}
+
+/* Header height lock removed in v1.0.116 (prevents small-screen misalignment) */
 
 /* --- Responsive Drawer Nav + Mobile Modal Upgrades (v1.0.110 FULL) --- */
 html, body{overflow-x:hidden;}
@@ -308,7 +343,8 @@ body.scrollLocked{overscroll-behavior: none;}
   header{height:auto;min-height:auto;}
   header .wrap.title{height:auto;padding-top:14px;}
   .controls{width:100%;}
-  .controlsRight{gap:12px; width:100%; justify-content:space-between;}
+  /* Keep Refresh/About grouped; search stays outside drawer */
+  .controlsRight{gap:12px; width:100%; justify-content:flex-end;}
   .controlsRight #searchWrap{flex:1 1 auto; min-width:0;}
   .controlsRight #search{width:100%;}
   /* slightly tighter header spacing on mobile */
@@ -330,6 +366,10 @@ body.scrollLocked{overscroll-behavior: none;}
   -webkit-overflow-scrolling: touch !important;
 }
 @media (max-width: 520px){
+
+  /* Must-confirm: in Media View (?view=media) on smartphone widths, hide GitHub + Changelog */
+  html.mediaView #githubBtn,
+  html.mediaView #versionBtn{display:none !important;}
   #modalOverlay{padding:12px !important;}
   #modalBox{width:96vw !important; max-height: 90vh !important; border-radius:16px !important;}
   #modalBox > div:first-child{flex-direction:column !important; align-items:stretch !important;}
@@ -401,129 +441,116 @@ body.scrollLocked{overscroll-behavior: none;}
 .publicView #photosLabel,
 .publicView #csvLabel,
 .publicView #githubBtn,
-.publicView #versionBtn,
-.publicView #toggleScout,
-.publicView #toggleCoach{display:none !important;}
+.publicView #versionBtn{display:none !important;}
+
+  /* Media view: lock Media Mode button without changing visual style */
+  #toggleMedia:disabled{opacity:1; cursor:default;}
 </style>
-
-
 </head>
 <body>
 <header>
-  <div class="wrap title">
-    <div>
-      <h1>Athlete Combine Dashboard (Local) <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.112</span><span id="publicPill" class="pill pillPublic" style="display:none;margin-left:8px">Public</span></h1>
-      <div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
-    </div>
+<div class="wrap title"><div class="titleBar"><div>
+<h1>Athlete Combine Dashboard (Local) <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.116</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span></h1>
+<div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
+</div><div class="topRightControls"><button class="linkBtn btnIcon" id="loadDefault" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-14.9-2M4 16a8 8 0 0014.9 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg><span>Refresh</span></button><button class="linkBtn btnIcon" id="presentBtn" type="button" title="Open Presentation Mode">
+<svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17.5h4.5M12 17.5V20M4 4h16v11H4V4z"></path>
+</svg><span>Present</span></button><button class="btn linkBtn btnIcon" id="githubBtn" onclick="window.open('https://github.com/Eddy0412/athlete-dashboard','_blank')" title="Open project" type="button">
+<svg aria-hidden="true" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 .5C5.73.5.75 5.6.75 12.1c0 5.2 3.44 9.62 8.2 11.18.6.12.82-.27.82-.58v-2.1c-3.34.75-4.04-1.67-4.04-1.67-.55-1.45-1.34-1.84-1.34-1.84-1.1-.78.08-.76.08-.76 1.22.09 1.86 1.3 1.86 1.3 1.08 1.91 2.84 1.36 3.53 1.04.11-.81.42-1.36.76-1.67-2.66-.31-5.46-1.37-5.46-6.1 0-1.35.46-2.45 1.22-3.31-.12-.31-.53-1.57.12-3.27 0 0 1.01-.33 3.3 1.26.96-.27 1.98-.4 3-.4 1.02 0 2.05.14 3 .4 2.28-1.59 3.29-1.26 3.29-1.26.65 1.7.24 2.96.12 3.27.76.86 1.22 1.96 1.22 3.31 0 4.75-2.81 5.78-5.48 6.09.43.39.81 1.1.81 2.22v3.29c0 .32.22.7.83.58 4.76-1.56 8.19-5.98 8.19-11.18C23.25 5.6 18.27.5 12 .5z"></path>
+</svg>
+<span>GitHub</span>
+</button><button class="btn linkBtn btnIcon" id="aboutBtn" style="padding:9px 10px;border-radius:999px" title="About" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg><span>About</span></button><button class="btn linkBtn btnIcon" id="versionBtn" style="padding:9px 10px;border-radius:999px" title="Version &amp; Changelog" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M9 12h6M9 16h6M14 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V8l-5-6z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg><span>Changelog</span></button></div></div>
 
-    <div class="controls">
-      <div class="searchWrap" id="searchWrap" style="position:relative">
-      <input class="input" id="search" placeholder="Search athlete name…" />
-      <button type="button" class="linkBtn btnIcon" id="clearSearch" aria-label="Clear search" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--muted);font-size:14px;font-weight:400;cursor:pointer;padding:0;line-height:1">x</button>
-    </div>
-      <button class="btn drawerPrimary" id="toggleScout">Scout Mode: Off</button>
-      <button class="btn drawerPrimary" id="toggleCoach">Coach Mode: Off</button>
-      <label class="btn drawerPrimary" id="photosLabel" for="photos">Load Photos</label>
-      <input id="photos" type="file" accept="image/*" multiple webkitdirectory style="display:none" />
-      <label class="btn drawerPrimary" id="csvLabel" for="file">Load CSV</label>
-      <input id="file" type="file" accept=".csv,text/csv" style="display:none" />
-      
-
-      <div class="controlsSpacer"></div>
-      <div class="controlsRight">
-        <button type="button" class="linkBtn btnIcon" id="menuBtn" title="Menu" aria-label="Open menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg><span>Menu</span></button>
-        <button type="button" class="linkBtn btnIcon" id="loadDefault"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-    d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-14.9-2M4 16a8 8 0 0014.9 2"></path>
-</svg><span>Refresh</span></button>
-        <button id="githubBtn" type="button" class="btn linkBtn btnIcon" title="Open project"
-  onclick="window.open('https://github.com/Eddy0412/athlete-dashboard','_blank')">
-  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M12 .5C5.73.5.75 5.6.75 12.1c0 5.2 3.44 9.62 8.2 11.18.6.12.82-.27.82-.58v-2.1c-3.34.75-4.04-1.67-4.04-1.67-.55-1.45-1.34-1.84-1.34-1.84-1.1-.78.08-.76.08-.76 1.22.09 1.86 1.3 1.86 1.3 1.08 1.91 2.84 1.36 3.53 1.04.11-.81.42-1.36.76-1.67-2.66-.31-5.46-1.37-5.46-6.1 0-1.35.46-2.45 1.22-3.31-.12-.31-.53-1.57.12-3.27 0 0 1.01-.33 3.3 1.26.96-.27 1.98-.4 3-.4 1.02 0 2.05.14 3 .4 2.28-1.59 3.29-1.26 3.29-1.26.65 1.7.24 2.96.12 3.27.76.86 1.22 1.96 1.22 3.31 0 4.75-2.81 5.78-5.48 6.09.43.39.81 1.1.81 2.22v3.29c0 .32.22.7.83.58 4.76-1.56 8.19-5.98 8.19-11.18C23.25 5.6 18.27.5 12 .5z"/>
-  </svg>
-  <span>GitHub</span>
-</button>
-        <button class="btn linkBtn btnIcon" id="aboutBtn" title="About" style="padding:9px 10px;border-radius:999px" type="button"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-</svg><span>About</span></button>
-        <button class="btn linkBtn btnIcon" id="versionBtn" title="Version & Changelog" style="padding:9px 10px;border-radius:999px" type="button"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-    d="M9 12h6M9 16h6M14 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V8l-5-6z"></path>
-</svg><span>Changelog</span></button>
-      
-      </div>
+<div class="controls">
+<div class="searchWrap" id="searchWrap" style="position:relative">
+<input class="input" id="search" placeholder="Search athlete name…"/>
+<button aria-label="Clear search" class="linkBtn btnIcon" id="clearSearch" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--muted);font-size:14px;font-weight:400;cursor:pointer;padding:0;line-height:1" type="button">x</button>
 </div>
-  </div>
+<button class="btn drawerPrimary" id="toggleScout">Scout Mode: Off</button>
+<button class="btn drawerPrimary" id="toggleCoach">Coach Mode: Off</button><button class="btn drawerPrimary" id="toggleMedia">Media Mode: Off</button>
+<label class="btn drawerPrimary" for="photos" id="photosLabel">Load Photos</label>
+<input accept="image/*" id="photos" multiple="" style="display:none" type="file" webkitdirectory=""/>
+<label class="btn drawerPrimary" for="file" id="csvLabel">Load CSV</label>
+<input accept=".csv,text/csv" id="file" style="display:none" type="file"/>
+<div class="controlsSpacer"></div>
+<div class="controlsRight">
+<button aria-label="Open menu" class="linkBtn btnIcon" id="menuBtn" title="Menu" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span>Menu</span></button>
+
+
+
+
+</div>
+</div>
+</div>
 </header>
-
 <!-- Mobile Drawer (responsive navbar) -->
-<div id="drawerOverlay" aria-hidden="true"></div>
-<aside id="navDrawer" aria-label="Menu drawer">
-  <div class="drawerHd">
-    <div class="drawerTitle">Menu</div>
-    <button type="button" class="btn" id="drawerCloseBtn" style="padding:8px 10px;border-radius:12px">Close</button>
-  </div>
-  <div id="drawerBody" class="drawerBody"></div>
+<div aria-hidden="true" id="drawerOverlay"></div>
+<aside aria-label="Menu drawer" id="navDrawer">
+<div class="drawerHd">
+<div class="drawerTitle">Menu</div>
+<button class="btn" id="drawerCloseBtn" style="padding:8px 10px;border-radius:12px" type="button">Close</button>
+</div>
+<div class="drawerBody" id="drawerBody"></div>
 </aside>
-
 <div class="wrap">
-  <div class="row">
-    <!-- LEFT: Athlete list -->
-    <div class="card">
-      <div class="hd">
-        <div>
-          <div style="font-weight:800">Athletes</div>
-          <div class="small" id="athleteCount">0 loaded</div>
-        </div>
-        <span class="pill" id="statusPill">No data</span>
-      </div>
-      <div class="bd">
-        <div class="drop" id="dropZone">
-          <div class="hint">
-            <strong>Tip:</strong> Load your <span class="mono">results.csv</span> (or any CSV) and optionally load an <strong>images folder</strong> named by <span class="mono">Formulario#</span> (e.g., <span class="mono">5.jpg</span>, <span class="mono">19.png</span>).
+<div class="row">
+<!-- LEFT: Athlete list -->
+<div class="card">
+<div class="hd">
+<div>
+<div style="font-weight:800">Athletes</div>
+<div class="small" id="athleteCount">0 loaded</div>
+</div>
+<span class="pill" id="statusPill">No data</span>
+</div>
+<div class="bd">
+<div class="drop" id="dropZone">
+<div class="hint">
+<strong>Tip:</strong> Load your <span class="mono">results.csv</span> (or any CSV) and optionally load an <strong>images folder</strong> named by <span class="mono">Formulario#</span> (e.g., <span class="mono">5.jpg</span>, <span class="mono">19.png</span>).
           </div>
-        </div>
-        <div style="height:12px"></div>
-        <div style="max-height:560px;overflow:auto;border:1px solid rgba(30,42,60,.9);border-radius:14px">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:54%">Name</th>
-                <th style="width:10%">Age</th>
-                <th style="width:18%">Weight</th>
-                <th style="width:18%">School</th>
-              </tr>
-            </thead>
-            <tbody id="athleteTable"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT: Athlete details -->
-    <div class="card" id="detailCard">
-      <div class="hd">
-        <div>
-          <div style="font-weight:800" id="athleteName">Select an athlete</div>
-          <div class="small" id="athleteMeta">—</div>
-        </div>
-        <span class="pill" id="dataSourcePill">—</span>
-      </div>
-
-      <div class="bd">
-        
-        
-        <div class="card" id="dashPhotoBlock" style="box-shadow:none;margin-bottom:12px">
-          <div class="hd" style="background:rgba(255,255,255,.02);display:flex;justify-content:space-between;align-items:center;gap:10px">
-            <div style="font-weight:800">Athlete Profile</div>
-            <div class="small muted">ID + position tag (auto-suggested)</div>
-          </div>
-          <div class="bd" style="display:grid;gap:10px;justify-items:center">
-            <div style="width:320px;max-width:100%;position:relative">
-              <!-- overlays -->
-              <div id="athleteIdBadge"
-                   style="position:absolute;top:10px;left:10px;z-index:2;
+</div>
+<div style="height:12px"></div>
+<div style="max-height:560px;overflow:auto;border:1px solid rgba(30,42,60,.9);border-radius:14px">
+<table>
+<thead>
+<tr>
+<th style="width:54%">Name</th>
+<th style="width:10%">Age</th>
+<th style="width:18%">Weight</th>
+<th style="width:18%">School</th>
+</tr>
+</thead>
+<tbody id="athleteTable"></tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- RIGHT: Athlete details -->
+<div class="card" id="detailCard">
+<div class="hd">
+<div>
+<div id="athleteName" style="font-weight:800">Select an athlete</div>
+<div class="small" id="athleteMeta">—</div>
+</div>
+<span class="pill" id="dataSourcePill">—</span>
+</div>
+<div class="bd">
+<div class="card" id="dashPhotoBlock" style="box-shadow:none;margin-bottom:12px">
+<div class="hd" style="background:rgba(255,255,255,.02);display:flex;justify-content:space-between;align-items:center;gap:10px">
+<div style="font-weight:800">Athlete Profile</div>
+<div class="small muted">ID + position tag (auto-suggested)</div>
+</div>
+<div class="bd" style="display:grid;gap:10px;justify-items:center">
+<div style="width:320px;max-width:100%;position:relative">
+<!-- overlays -->
+<div id="athleteIdBadge" style="position:absolute;top:10px;left:10px;z-index:2;
                           padding:8px 12px;border-radius:14px;
                           font-size:18px;font-weight:900;letter-spacing:.3px;
                           border:1px solid rgba(255,255,255,.18);
@@ -531,9 +558,7 @@ body.scrollLocked{overscroll-behavior: none;}
                           backdrop-filter: blur(8px);">
                 #—
               </div>
-
-              <div id="athletePosBadge"
-                   style="position:absolute;top:10px;right:10px;z-index:2;
+<div id="athletePosBadge" style="position:absolute;top:10px;right:10px;z-index:2;
                           padding:8px 12px;border-radius:999px;
                           font-size:14px;font-weight:900;letter-spacing:.4px;
                           border:1px solid rgba(9,167,212,.35);
@@ -541,52 +566,44 @@ body.scrollLocked{overscroll-behavior: none;}
                           backdrop-filter: blur(8px);">
                 —
               </div>
-
-              <!-- photo -->
-              <div id="athletePhotoLarge"
-                   style="width:320px;height:320px;border-radius:24px;
+<!-- photo -->
+<div id="athletePhotoLarge" style="width:320px;height:320px;border-radius:24px;
                           overflow:hidden;border:1px solid rgba(255,255,255,.15);
                           background:rgba(255,255,255,.04)">
-                <div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">No photo</div>
-              </div>
-            </div>
-
-            <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center">
-              <span class="small muted">Position:</span>
-              <select id="posSelect" class="input" style="width:220px">
-                <option value="">Auto</option>
-                <option>QB</option><option>RB</option><option>WR</option><option>TE</option>
-                <option>OL</option><option>DL</option><option>LB</option><option>DB</option>
-                <option>K/P</option>
-              </select>
-              <button id="posInfoBtn" class="btn" style="padding:7px 10px;border-radius:999px">?</button>
-              <div id="posTooltip" style="display:none;max-width:520px;text-align:left;
+<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">No photo</div>
+</div>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center">
+<span class="small muted">Position:</span>
+<select class="input" id="posSelect" style="width:220px">
+<option value="">Auto</option>
+<option>QB</option><option>RB</option><option>WR</option><option>TE</option>
+<option>OL</option><option>DL</option><option>LB</option><option>DB</option>
+<option>K/P</option>
+</select>
+<button class="btn" id="posInfoBtn" style="padding:7px 10px;border-radius:999px">?</button>
+<div id="posTooltip" style="display:none;max-width:520px;text-align:left;
                    padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);
                    background:rgba(11,15,23,.75);backdrop-filter: blur(10px)">
-                <div class="small muted" id="posExplain">—</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-        
-        <div class="card" id="scoutPhotoBlock" style="box-shadow:none;margin-bottom:12px">
-          <div class="hd" style="background:rgba(255,255,255,.02)">
-            <div style="font-weight:800">Scout Profile</div>
-            <div class="small muted">Contact-ready info</div>
-          </div>
-          <div class="bd">
-            <div class="twoCol" style="grid-template-columns: 1fr 1fr">
-              <div style="position:relative;display:flex;justify-content:center">
-                <div id="athletePhotoScout"
-                     style="width:340px;height:340px;border-radius:24px;
+<div class="small muted" id="posExplain">—</div>
+</div>
+</div>
+</div>
+</div>
+<div class="card" id="scoutPhotoBlock" style="box-shadow:none;margin-bottom:12px">
+<div class="hd" style="background:rgba(255,255,255,.02)">
+<div id="scoutProfileTitle" style="font-weight:800">Scout Profile</div>
+<div class="small muted">Contact-ready info</div>
+</div>
+<div class="bd">
+<div class="twoCol" style="grid-template-columns: 1fr 1fr">
+<div style="position:relative;display:flex;justify-content:center">
+<div id="athletePhotoScout" style="width:340px;height:340px;border-radius:24px;
                             overflow:hidden;border:1px solid rgba(255,255,255,.15);
                             background:rgba(255,255,255,.04)">
-                  <div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">No photo</div>
-                </div>
-                <div id="athleteIdBadgeScout"
-                     style="position:absolute;top:12px;left:12px;z-index:2;
+<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--muted)">No photo</div>
+</div>
+<div id="athleteIdBadgeScout" style="position:absolute;top:12px;left:12px;z-index:2;
                             padding:8px 12px;border-radius:14px;
                             font-size:18px;font-weight:900;letter-spacing:.3px;
                             border:1px solid rgba(255,255,255,.18);
@@ -594,8 +611,7 @@ body.scrollLocked{overscroll-behavior: none;}
                             backdrop-filter: blur(8px);">
                   #—
                 </div>
-                <div id="athletePosBadgeScout"
-                     style="position:absolute;top:12px;right:12px;z-index:2;
+<div id="athletePosBadgeScout" style="position:absolute;top:12px;right:12px;z-index:2;
                             padding:8px 12px;border-radius:999px;
                             font-size:14px;font-weight:900;letter-spacing:.4px;
                             border:1px solid rgba(9,167,212,.35);
@@ -603,82 +619,77 @@ body.scrollLocked{overscroll-behavior: none;}
                             backdrop-filter: blur(8px);">
                   —
                 </div>
-              </div>
-
-              <div class="contactCard">
-                <div style="font-weight:800;margin-bottom:10px">Contact details</div>
-                <div class="contactGrid">
-                  <div class="contactItem">
-                    <div class="label">DOB</div>
-                    <div class="value" id="scoutDob">—</div>
-                  </div>
-                  <div class="contactItem">
-                    <div class="label">Height</div>
-                    <div class="value" id="scoutHeight">—</div>
-                  </div>
-                  <div class="contactItem">
-                    <div class="label">Weight</div>
-                    <div class="value" id="scoutWeight">—</div>
-                  </div>
-                  <div class="contactItem">
-                    <div class="label">Phone</div>
-                    <div class="value" id="scoutPhone">—</div>
-                  </div>
-                  <div class="contactItem" style="grid-column:1/-1">
-                    <div class="label">Email</div>
-                    <div class="value" id="scoutEmail">—</div>
-                  </div>
-                </div>
-                <div class="small muted" style="margin-top:10px">
+</div>
+<div class="contactCard">
+<div style="font-weight:800;margin-bottom:10px">Contact details</div>
+<div class="contactGrid">
+<div class="contactItem">
+<div class="label">DOB</div>
+<div class="value" id="scoutDob">—</div>
+</div>
+<div class="contactItem" id="scoutAgeItem">
+<div class="label">Age</div>
+<div class="value" id="scoutAge">—</div>
+</div>
+<div class="contactItem">
+<div class="label">Height</div>
+<div class="value" id="scoutHeight">—</div>
+</div>
+<div class="contactItem">
+<div class="label">Weight</div>
+<div class="value" id="scoutWeight">—</div>
+</div>
+<div class="contactItem" id="scoutPhoneItem">
+<div class="label">Phone</div>
+<div class="value" id="scoutPhone">—</div>
+</div>
+<div class="contactItem" id="scoutEmailItem" style="grid-column:1/-1">
+<div class="label">Email</div>
+<div class="value" id="scoutEmail">—</div>
+</div>
+</div>
+<div class="small muted" style="margin-top:10px">
                   Tip: take note of your preferred athlete to contact them on draft day.
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="kpis" id="kpis"></div>
-
-        <div style="height:12px"></div>
-
-        <div class="twoCol" id="twoColWrap">
-          <div class="card" style="box-shadow:none">
-            <div class="hd" style="background:rgba(255,255,255,.02)">
-              <div style="font-weight:800">Performance Radar (percentiles)</div>
-              <div class="small muted">Times: lower is better • Dist/Reps: higher is better</div>
-            </div>
-            <div class="bd"><canvas id="radar"></canvas></div>
-          </div>
-
-          <div class="card" id="attemptsWrap" style="box-shadow:none">
-            <div class="hd" style="background:rgba(255,255,255,.02)">
-              <div style="font-weight:800">Attempts</div>
-              <div class="small muted">Best attempt used for ranking</div>
-            </div>
-            <div class="bd">
-              <div id="attempts"></div>
-            </div>
-          </div>
-        </div>
-
-        <div style="height:12px"></div>
-
-        <div class="card" id="barsWrap" style="box-shadow:none">
-          <div class="hd" style="background:rgba(255,255,255,.02)">
-            <div style="font-weight:800">Raw Metrics (best attempt)</div>
-            <div class="small muted">Quick visual of the athlete’s best values</div>
-          </div>
-          <div class="bd"><canvas id="bars"></canvas></div>
-        </div>
-
-        <div style="height:8px"></div>
-        <div class="hint">
-          <strong>Next step:</strong> After reviewing the data, shortlist your top athletes, compare them against your position benchmarks, write down follow‑up questions, and mark who you want to contact before draft day.</div>
-      </div>
-    </div>
-  </div>
 </div>
-
+</div>
+</div>
+</div>
+<div class="kpis" id="kpis"></div>
+<div style="height:12px"></div>
+<div class="twoCol" id="twoColWrap">
+<div class="card" style="box-shadow:none">
+<div class="hd" style="background:rgba(255,255,255,.02)">
+<div style="font-weight:800">Performance Radar (percentiles)</div>
+<div class="small muted">Times: lower is better • Dist/Reps: higher is better</div>
+</div>
+<div class="bd"><canvas id="radar"></canvas></div>
+</div>
+<div class="card" id="attemptsWrap" style="box-shadow:none">
+<div class="hd" style="background:rgba(255,255,255,.02)">
+<div style="font-weight:800">Attempts</div>
+<div class="small muted">Best attempt used for ranking</div>
+</div>
+<div class="bd">
+<div id="attempts"></div>
+</div>
+</div>
+</div>
+<div style="height:12px"></div>
+<div class="card" id="barsWrap" style="box-shadow:none">
+<div class="hd" style="background:rgba(255,255,255,.02)">
+<div style="font-weight:800">Raw Metrics (best attempt)</div>
+<div class="small muted">Quick visual of the athlete’s best values</div>
+</div>
+<div class="bd"><canvas id="bars"></canvas></div>
+</div>
+<div style="height:8px"></div>
+<div class="hint">
+<strong>Next step:</strong> After reviewing the data, shortlist your top athletes, compare them against your position benchmarks, write down follow‑up questions, and mark who you want to contact before draft day.</div>
+</div>
+</div>
+</div>
+</div>
 <script>
 
 // FULL production build (v1.0.110 baseline)
@@ -688,6 +699,8 @@ const IS_DEMO = false;
 // View modes: default FULL, optional public view via ?view=public
 const VIEW_MODE = (new URLSearchParams(window.location.search).get('view') || '').toLowerCase();
 const IS_PUBLIC_VIEW = VIEW_MODE === 'public';
+const IS_MEDIA_VIEW = VIEW_MODE === 'media';
+if (IS_MEDIA_VIEW) { document.documentElement.classList.add('mediaView'); }
 if (IS_PUBLIC_VIEW) {
   document.documentElement.classList.add('publicView');
   const pp = document.getElementById('publicPill');
@@ -1117,6 +1130,7 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
   };
 
   setText("scoutDob", r[COL.dob]);
+  setText("scoutAge", r[COL.age]);
   setText("scoutHeight", r[COL.height]);
   setText("scoutWeight", formatLbs(r[COL.weight]));
   setText("scoutPhone", r[COL.phone]);
@@ -1335,6 +1349,9 @@ $("file").addEventListener("change", (e) => {
 
 $("search").addEventListener("input", applyFilter);
 $("loadDefault").addEventListener("click", loadDefaultCsv);
+$("presentBtn")?.addEventListener("click", () => {
+  window.open("presentation.html", "_blank", "noopener");
+});
 
 // Drag & drop
 const dz = $("dropZone");
@@ -1356,6 +1373,7 @@ dz.addEventListener("drop", (e)=>{
 // Coach mode toggle (layout-only; mutually exclusive with Scout Mode)
 const coachBtn = document.getElementById("toggleCoach");
 function setCoachMode(on){
+  if (on) { try{ setMediaMode(false); }catch(e){} }
   document.body.classList.toggle("coachMode", !!on);
   if (coachBtn) coachBtn.textContent = `Coach Mode: ${on ? "On" : "Off"}`;
   if (on) { document.body.classList.remove("scoutMode"); if (toggleBtn) toggleBtn.textContent = "Scout Mode: Off"; }
@@ -1375,6 +1393,7 @@ if (!IS_PUBLIC_VIEW) {
 // Scout mode toggle (layout-only)
 const toggleBtn = document.getElementById("toggleScout");
 function setScoutMode(on){
+  if (on) { try{ setMediaMode(false); }catch(e){} }
   if (on) { document.body.classList.remove("coachMode"); try{ sessionStorage.setItem("coachModeOn","0"); }catch(e){} if (coachBtn) coachBtn.textContent = "Coach Mode: Off"; }
 
   document.body.classList.toggle("scoutMode", !!on);
@@ -1394,6 +1413,67 @@ if (!IS_PUBLIC_VIEW) {
 }
 
 
+
+// Media mode toggle (independent; used for shared/public-facing UI)
+const mediaBtn = document.getElementById("toggleMedia");
+let __prevScoutForMedia = null;
+let __prevCoachForMedia = null;
+function setMediaMode(on){
+  let isOn = !!on;
+  // In ?view=media, Media Mode is locked ON
+  if (IS_MEDIA_VIEW && !isOn) { isOn = true; }
+
+  // Preserve prior modes so toggling Media doesn't permanently change user state
+  if (isOn){
+    if (__prevScoutForMedia === null) __prevScoutForMedia = document.body.classList.contains("scoutMode");
+    if (__prevCoachForMedia === null) __prevCoachForMedia = document.body.classList.contains("coachMode");
+  }
+
+  // Media Mode should be mutually exclusive with Scout/Coach
+  if (isOn){
+    try{ setScoutMode(false); }catch(e){}
+    try{ setCoachMode(false); }catch(e){}
+  }
+
+  document.body.classList.toggle("mediaMode", isOn);
+  if (mediaBtn) mediaBtn.textContent = `Media Mode: ${isOn ? "On" : "Off"}`;
+
+  // Update profile title + pills
+  const spt = document.getElementById("scoutProfileTitle");
+  if (spt) spt.textContent = isOn ? "Media Profile" : "Scout Profile";
+  const mp = document.getElementById("mediaPill");
+  if (mp) mp.style.display = isOn ? "inline-flex" : "none";
+
+  // Media Mode uses a Scout-like layout via CSS (body.mediaMode) but MUST NOT toggle Scout Mode itself.
+  if (!isOn){
+    // restore prior modes if we had them
+    if (__prevScoutForMedia !== null) { try{ setScoutMode(!!__prevScoutForMedia); }catch(e){} }
+    if (__prevCoachForMedia !== null) { try{ setCoachMode(!!__prevCoachForMedia); }catch(e){} }
+    __prevScoutForMedia = null;
+    __prevCoachForMedia = null;
+  }
+
+  try{ sessionStorage.setItem("mediaModeOn", isOn ? "1" : "0"); }catch(e){}
+}
+if (mediaBtn){
+  mediaBtn.addEventListener("click", ()=>{
+    if (IS_MEDIA_VIEW) { setMediaMode(true); return; }
+    const on = !document.body.classList.contains("mediaMode");
+    setMediaMode(on);
+    if (document.body.classList.contains("drawerOpen")) closeDrawer();
+  });
+}
+// restore / initialize
+try{
+  if (IS_MEDIA_VIEW) {
+    setMediaMode(true);
+    if (mediaBtn) { mediaBtn.disabled = true; mediaBtn.classList.add('locked'); }
+  } else {
+    setMediaMode(sessionStorage.getItem("mediaModeOn")==="1");
+  }
+}catch(e){}
+
+// Media view layout is driven by Media Mode (body.mediaMode) and does not force Scout Mode.
 let __scrollLockCount = 0;
 let __scrollLockY = 0;
 function lockScroll(){
@@ -1461,11 +1541,9 @@ function initResponsiveNav(){
   const moveEls = [
     document.getElementById("toggleScout"),
     document.getElementById("toggleCoach"),
+    document.getElementById("toggleMedia"),
     document.getElementById("photosLabel"),
     document.getElementById("csvLabel"),
-    document.getElementById("githubBtn"),
-    document.getElementById("aboutBtn"),
-    document.getElementById("versionBtn"),
   ].filter(Boolean);
 
   const searchOriginalSpot = searchWrap ? { parent: searchWrap.parentNode, next: searchWrap.nextSibling } : null;
@@ -1570,9 +1648,18 @@ function initModalWiring(){
     versionBtn.addEventListener("click", ()=>{
       openModal("Version & Changelog", `<div style="display:grid;gap:10px">
   <div style="font-weight:900">What’s new</div>
-  <div><b>v1.0.112</b> — UI fixes (responsive controls, mobile table, small-phone layout, readability).</div>
+  <div><b>v1.0.116</b> — Public View + header layout polish (UI fixes only).</div>
 
   <div style="margin-top:10px;font-weight:900">Changelog</div>
+
+<div style="margin-top:6px;font-weight:900">v1.0.116</div>
+<ul style="margin:6px 0 0 18px">
+  <li>Added <span class="mono">?view=public</span> mode for sharing a simplified UI externally.</li>
+  <li>Public View hides: Load Photos, Load CSV, GitHub, and Changelog buttons.</li>
+  <li>Public View keeps <b>Scout Mode</b> and <b>Coach Mode</b> toggles available.</li>
+  <li>Header controls aligned under the title; improved spacing so Search/Refresh/About are not pushed up on mobile.</li>
+  <li>Added a subtle <b>Public</b> pill indicator when Public View is active.</li>
+</ul>
 
 <div style="margin-top:6px;font-weight:900">v1.0.112</div>
 <ul style="margin:6px 0 0 18px">
@@ -1682,7 +1769,8 @@ function applyPublicViewMode(){
   try{ setCoachMode(true); }catch(e){}
 
   // Hide controls not meant for public users
-  const hideIds = ["photosLabel","csvLabel","githubBtn","versionBtn","toggleScout","toggleCoach"];
+  // Keep mode toggles visible even in public view (requested for coaches/scouts)
+  const hideIds = ["photosLabel","csvLabel","githubBtn","versionBtn"];
   hideIds.forEach(id=>{
     const el = document.getElementById(id);
     if (el) el.style.display = "none";
@@ -1698,17 +1786,15 @@ initResponsiveNav();
 setStatus("Ready");
 
 </script>
-
 <!-- Modals -->
 <div id="modalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center;padding:18px">
-  <div id="modalBox" style="width:min(860px, 96vw);max-height:86vh;overflow:auto;background:rgba(18,26,39,.98);border:1px solid rgba(30,42,60,.9);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.5)">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 14px;border-bottom:1px solid rgba(30,42,60,.9)">
-      <div style="font-weight:900" id="modalTitle">Modal</div>
-      <button class="btn" id="modalClose" style="padding:8px 10px;border-radius:12px">Close</button>
-    </div>
-    <div style="padding:14px" id="modalContent"></div>
-  </div>
+<div id="modalBox" style="width:min(860px, 96vw);max-height:86vh;overflow:auto;background:rgba(18,26,39,.98);border:1px solid rgba(30,42,60,.9);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 14px;border-bottom:1px solid rgba(30,42,60,.9)">
+<div id="modalTitle" style="font-weight:900">Modal</div>
+<button class="btn" id="modalClose" style="padding:8px 10px;border-radius:12px">Close</button>
 </div>
-
+<div id="modalContent" style="padding:14px"></div>
+</div>
+</div>
 </body>
 </html>

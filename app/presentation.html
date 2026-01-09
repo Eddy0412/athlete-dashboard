@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Presentation Mode — Athlete Combine Dashboard</title>
+<style>
+  :root{
+    --bg:#070b16;
+    --panel: rgba(255,255,255,.06);
+    --border: rgba(255,255,255,.14);
+    --text:#eef3ff;
+    --muted:#a7b3d6;
+    --accent:#51CAF5;
+    --accent2:#5471B7;
+    --radius:18px;
+    --shadow: 0 20px 70px rgba(0,0,0,.55);
+    --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:var(--font);
+    color:var(--text);
+    background:
+      radial-gradient(1200px 600px at 20% -10%, rgba(81,202,245,.16), transparent 60%),
+      radial-gradient(900px 500px at 90% 10%, rgba(84,113,183,.18), transparent 60%),
+      var(--bg);
+    overflow:hidden;
+  }
+
+  .wrap{
+    height:100%;
+    display:grid;
+    grid-template-rows: auto 1fr;
+  }
+
+  .topbar{
+    padding: 14px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    border-bottom: 1px solid rgba(255,255,255,.10);
+    background: linear-gradient(to bottom, rgba(7,11,22,.88), rgba(7,11,22,.55));
+    backdrop-filter: blur(10px);
+  }
+  .brand{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    min-width: 220px;
+  }
+  .brand .title{
+    font-weight: 800;
+    letter-spacing: .2px;
+    font-size: 16px;
+    margin:0;
+  }
+  .brand .sub{
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .btn{
+    appearance:none;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,.06);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor:pointer;
+    font-size: 13px;
+    line-height:1;
+    user-select:none;
+  }
+  .btn:hover{ border-color: rgba(81,202,245,.35); }
+  .btn:active{ transform: translateY(1px); }
+  .btnGhost{ background: transparent; }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    border:1px solid rgba(255,255,255,.18);
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(255,255,255,.06);
+  }
+
+  .stage{
+    padding: 18px;
+    display:grid;
+    place-items:center;
+  }
+  .card{
+    width: min(1100px, 100%);
+    border: 1px solid rgba(255,255,255,.12);
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+  .cardInner{
+    padding: 22px;
+    display:grid;
+    grid-template-columns: 340px 1fr;
+    gap: 18px;
+  }
+
+  .photo{
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 16px;
+    background: rgba(0,0,0,.18);
+    overflow:hidden;
+    min-height: 360px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color: rgba(255,255,255,.45);
+    position:relative;
+  }
+  .photo img{
+    width:100%;
+    height:100%;
+    object-fit: cover;
+    display:block;
+  }
+
+  .name{
+    font-size: 40px;
+    font-weight: 900;
+    letter-spacing: .2px;
+    margin:0 0 10px 0;
+  }
+  .metaRow{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom: 14px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .stat{
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(0,0,0,.16);
+    border-radius: 14px;
+    padding: 12px;
+  }
+  .stat .k{
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .stat .v{
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: .2px;
+  }
+
+  .footerHint{
+    padding: 12px 18px;
+    border-top: 1px solid rgba(255,255,255,.10);
+    color: var(--muted);
+    font-size: 12px;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  @media (max-width: 900px){
+    .cardInner{ grid-template-columns: 1fr; }
+    .photo{ min-height: 260px; }
+    .name{ font-size: 32px; }
+    .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 520px){
+    .stage{ padding: 12px; }
+    .cardInner{ padding: 14px; }
+    .name{ font-size: 26px; }
+    .grid{ grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <h1 class="title">Presentation Mode</h1>
+        <div class="sub">Arrow keys: Prev/Next • F: Fullscreen • Esc: Exit fullscreen</div>
+      </div>
+      <div class="actions">
+        <span class="pill" id="counterPill">— / —</span>
+        <button class="btn" id="prevBtn" type="button">Prev</button>
+        <button class="btn" id="nextBtn" type="button">Next</button>
+        <button class="btn btnGhost" id="fsBtn" type="button">Fullscreen</button>
+        <button class="btn btnGhost" id="exitBtn" type="button">Exit</button>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="card" role="region" aria-label="Presentation card">
+        <div class="cardInner">
+          <div class="photo">
+            <img id="photoImg" alt="" style="display:none"/>
+            <div id="photoFallback">No photo</div>
+          </div>
+
+          <div>
+            <h2 class="name" id="name">—</h2>
+            <div class="metaRow" id="metaRow"></div>
+
+            <div class="grid" id="stats"></div>
+          </div>
+        </div>
+
+        <div class="footerHint">
+          <div id="school">—</div>
+          <div id="location">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const $ = (id)=>document.getElementById(id);
+
+  const COLS = {
+    form: "Formulario#",
+    name: "Nombre",
+    age: "Edad",
+    weight: "Peso",
+    height: "Estatura",
+    phone: "Celular",
+    address: "Direccion",
+    school: "Lugar de Estudios",
+    dash1: "40 YDS DASH (SEGUNDOS)",
+    dash2: "40 YDS DASH (SEGUNDOS) 2da Vuelta",
+    broad1: "BROAD JUMP (PULGADAS)",
+    broad2: "BROAD JUMP (PULGADAS) 2da Vuelta",
+    shuttle1: "5-10-5 (SHUTTLE) RUN",
+    cone1: "3- CONE DRILL",
+    bench: "BENCHPRESS"
+  };
+
+  let rows = [];
+  let idx = 0;
+
+  function parseCSV(text){
+    // minimal CSV parser (handles quoted commas)
+    const lines = text.split(/\r?\n/).filter(Boolean);
+    if(!lines.length) return [];
+    const header = splitCSVLine(lines[0]);
+    const out = [];
+    for(let i=1;i<lines.length;i++){
+      const cells = splitCSVLine(lines[i]);
+      const obj = {};
+      header.forEach((h, j)=> obj[h] = (cells[j] ?? "").trim());
+      out.push(obj);
+    }
+    return out;
+  }
+
+  function splitCSVLine(line){
+    const res = [];
+    let cur = "";
+    let inQ = false;
+    for(let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(ch === '"'){
+        if(inQ && line[i+1] === '"'){ cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if(ch === "," && !inQ){
+        res.push(cur);
+        cur = "";
+      } else {
+        cur += ch;
+      }
+    }
+    res.push(cur);
+    return res;
+  }
+
+  function val(r, key){ return (r && r[key] != null) ? String(r[key]).trim() : ""; }
+  function nice(v){ return v && v !== "0" ? v : "—"; }
+
+  function setPhoto(r){
+    const img = $("photoImg");
+    const fb = $("photoFallback");
+    const form = val(r, COLS.form);
+    const candidates = [
+      `photos/${form}.jpg`,
+      `photos/${form}.jpeg`,
+      `photos/${form}.png`,
+      `photos/${form}.webp`,
+    ];
+    let tried = 0;
+    img.onerror = () => {
+      tried++;
+      if(tried < candidates.length){
+        img.src = candidates[tried];
+      } else {
+        img.style.display = "none";
+        fb.style.display = "block";
+      }
+    };
+    img.onload = () => {
+      fb.style.display = "none";
+      img.style.display = "block";
+    };
+    tried = 0;
+    img.src = candidates[0];
+  }
+
+  function render(){
+    if(!rows.length) return;
+    const r = rows[idx];
+
+    $("counterPill").textContent = `${idx+1} / ${rows.length}`;
+
+    $("name").textContent = nice(val(r, COLS.name));
+
+    const meta = [];
+    meta.push(pill(`Age: ${nice(val(r, COLS.age))}`));
+    meta.push(pill(`Height: ${nice(val(r, COLS.height))}`));
+    meta.push(pill(`Weight: ${nice(val(r, COLS.weight))}`));
+    $("metaRow").innerHTML = meta.join("");
+
+    const stats = [
+      stat("40 yd (best)", bestOf(val(r, COLS.dash1), val(r, COLS.dash2), "lower")),
+      stat("Broad Jump (best)", bestOf(val(r, COLS.broad1), val(r, COLS.broad2), "higher")),
+      stat("5-10-5", nice(val(r, COLS.shuttle1))),
+      stat("3-Cone", nice(val(r, COLS.cone1))),
+      stat("Bench", nice(val(r, COLS.bench))),
+      stat("Form #", nice(val(r, COLS.form))),
+    ];
+    $("stats").innerHTML = stats.join("");
+
+    $("school").textContent = `School: ${nice(val(r, COLS.school))}`;
+    $("location").textContent = `Address: ${nice(val(r, COLS.address))}`;
+
+    setPhoto(r);
+  }
+
+  function pill(text){
+    return `<span class="pill">${escapeHtml(text)}</span>`;
+  }
+  function stat(k,v){
+    return `<div class="stat"><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v || "—")}</div></div>`;
+  }
+
+  function bestOf(a1, a2, better){
+    const n1 = parseFloat((a1||"").replace(",", "."));
+    const n2 = parseFloat((a2||"").replace(",", "."));
+    const v1 = Number.isFinite(n1) ? n1 : null;
+    const v2 = Number.isFinite(n2) ? n2 : null;
+    if(v1 == null && v2 == null) return "—";
+    if(v1 != null && v2 == null) return String(v1);
+    if(v2 != null && v1 == null) return String(v2);
+    if(better === "lower") return String(Math.min(v1, v2));
+    return String(Math.max(v1, v2));
+  }
+
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#39;");
+  }
+
+  function prev(){ idx = (idx - 1 + rows.length) % rows.length; render(); }
+  function next(){ idx = (idx + 1) % rows.length; render(); }
+
+  $("prevBtn").addEventListener("click", prev);
+  $("nextBtn").addEventListener("click", next);
+
+  $("exitBtn").addEventListener("click", () => {
+    window.close();
+    // If the browser blocks close (not opened by script), fall back:
+    setTimeout(()=>{ window.location.href = "index.html"; }, 150);
+  });
+
+  $("fsBtn").addEventListener("click", async () => {
+    try{
+      if(!document.fullscreenElement){
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    }catch(e){}
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if(e.key === "ArrowLeft") prev();
+    if(e.key === "ArrowRight") next();
+    if(e.key.toLowerCase() === "f"){
+      $("fsBtn").click();
+    }
+  });
+
+  async function init(){
+    const res = await fetch("results.csv", { cache: "no-store" });
+    const text = await res.text();
+    rows = parseCSV(text);
+    idx = 0;
+    render();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
