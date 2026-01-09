@@ -957,16 +957,37 @@ function parseCsvText(csvText, label){
 }
 
 async function loadDefaultCsv(){
+  // Keep behavior aligned with v1.0.116 (simple fetch + parse),
+  // but make the URL GitHub Pages-safe when the page is opened with a trailing "?" or other querystrings.
   try{
     setStatus("Loading…");
-    const res = await fetch("./results.csv", { cache: "no-store" });
+
+    const baseHref = window.location.origin + window.location.pathname;
+    const resultsUrl = new URL("./results.csv", baseHref).toString();
+
+    const res = await fetch(resultsUrl, { cache: "no-store" });
     if(!res.ok) throw new Error("results.csv not found");
+
     const text = await res.text();
     parseCsvText(text, "results.csv");
   }catch(e){
     console.warn(e);
-    setStatus("No results.csv");
-    alert("Couldn't load results.csv. Put it next to this HTML file, or use the Load CSV button.");
+
+    // Avoid false-negative alerts: parsing/loading can still complete asynchronously,
+    // or data may already be present from a previous successful load.
+    setStatus("Loading…");
+
+    // Give the app a moment to populate rows; only alert if it's still empty.
+    setTimeout(() => {
+      try{
+        if (Array.isArray(rows) && rows.length > 0){
+          setStatus("Ready");
+          return;
+        }
+      }catch(_){}
+      setStatus("No results.csv");
+      alert("Couldn't load results.csv. Put it next to this HTML file, or use the Load CSV button.");
+    }, 800);
   }
 }
 
@@ -1390,16 +1411,10 @@ $("file").addEventListener("change", (e) => {
 
 $("search").addEventListener("input", applyFilter);
 $("loadDefault").addEventListener("click", loadDefaultCsv);
-// Presentation window sync (index controls, external fullscreen presenter)
+// // Presentation window sync (index controls, external fullscreen presenter)
 let _presentWin = null;
 let _presentReady = false;
-
-function _sendToPresenter(payload){
-  try{
-    if(_presentWin && !_presentWin.closed){
-      _presentWin.postMessage(payload, "*");
-    }
-  }catch(e){}
+let _presentLastPayload = null;
 
 function rowToPresenter(r){
   // Provide presenter-friendly payload while preserving existing row object keys
@@ -1410,6 +1425,13 @@ function rowToPresenter(r){
   }
 }
 
+function _sendToPresenter(payload){
+  try{
+    _presentLastPayload = payload;
+    if(_presentWin && !_presentWin.closed){
+      _presentWin.postMessage(payload, "*");
+    }
+  }catch(e){}
 }
 
 function _sendCurrentToPresenter(){
@@ -1422,17 +1444,22 @@ function _sendCurrentToPresenter(){
 }
 
 window.addEventListener("message", (e) => {
-  if(e?.data?.type === "ac_presentation_ready"){
+  const t = e?.data?.type;
+  if(t === "ac_presentation_ready"){
     _presentReady = true;
+    // If we already have a payload, send it immediately
+    if(_presentLastPayload) _sendToPresenter(_presentLastPayload);
+    else _sendCurrentToPresenter();
+  }
+  if(t === "ac_request_current_athlete"){
     _sendCurrentToPresenter();
   }
 });
 
 $("presentBtn")?.addEventListener("click", () => {
   _presentReady = false;
-  // Keep opener available (no noopener) so presenter can handshake back
-  _presentWin = window.open("presentation.html", "ac_presenter", "popup=1");
-  // Best-effort initial send (presenter will also request via ready handshake)
+  _presentWin = window.open("presentation.html", "ac_presenter");
+  // Best-effort send (presenter will handshake too)
   setTimeout(_sendCurrentToPresenter, 250);
 });
 
