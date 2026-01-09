@@ -959,9 +959,22 @@ function parseCsvText(csvText, label){
 async function loadDefaultCsv(){
   try{
     setStatus("Loading…");
-    const res = await fetch("app/results.csv", { cache: "no-store" });
-    if(!res.ok) throw new Error("results.csv not found");
-    const text = await res.text();
+    const resultsUrl = new URL("results.csv", window.location.href).toString();
+    const res = await fetch(resultsUrl, { cache: "no-store" });
+    // GitHub Pages + querystrings can be finicky with relative fetch paths.
+    // If the first attempt fails, retry using the current pathname as base.
+    let res2 = null;
+    if (!res.ok) {
+      try {
+        const baseHref = window.location.origin + window.location.pathname;
+        const retryUrl = new URL("results.csv", baseHref).toString();
+        res2 = await fetch(retryUrl, { cache: "no-store" });
+      } catch(e) {}
+    }
+
+    const finalRes = (res2 && res2.ok) ? res2 : res;
+    if(!finalRes.ok) throw new Error("results.csv not found");
+    const text = await finalRes.text();
     parseCsvText(text, "results.csv");
   }catch(e){
     console.warn(e);
