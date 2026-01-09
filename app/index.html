@@ -66,6 +66,15 @@
       padding:6px 10px;border-radius:999px;
       white-space:nowrap;
     }
+    /* Admin view pill */
+    .pill.pillAdmin{
+      font-size:10px;
+      padding:3px 10px;
+      border-color: rgba(0,200,170,.55);
+      background: rgba(0,200,170,.12);
+      color:#e8fff8;
+    }
+
     /* Public view indicator (subtle, small) */
     .pillPublic{
       font-size:10px;
@@ -227,7 +236,7 @@ canvas{width:100% !important; height:320px !important}
     }
 
 
-/* Link-style controls (from v1.0.110 look) */
+/* Link-style controls (from v1.0.118 look) */
 .linkBtn{
   background:transparent !important;
   border:none !important;
@@ -255,9 +264,9 @@ canvas{width:100% !important; height:320px !important}
 
 
 
-/* Header height lock removed in v1.0.116 (prevents small-screen misalignment) */
+/* Header height lock removed in v1.0.118 (prevents small-screen misalignment) */
 
-/* --- Responsive Drawer Nav + Mobile Modal Upgrades (v1.0.110 FULL) --- */
+/* --- Responsive Drawer Nav + Mobile Modal Upgrades (v1.0.118 FULL) --- */
 html, body{overflow-x:hidden;}
 #menuBtn{display:none;} /* desktop hidden */
 
@@ -445,12 +454,19 @@ body.scrollLocked{overscroll-behavior: none;}
 
   /* Media view: lock Media Mode button without changing visual style */
   #toggleMedia:disabled{opacity:1; cursor:default;}
+
+/* Public view: hide Present button */
+html.publicView #presentBtn{display:none !important;}
+
+/* Media view: hide GitHub + Changelog buttons (all widths) */
+html.mediaView #githubBtn,
+html.mediaView #versionBtn{display:none !important;}
 </style>
 </head>
 <body>
 <header>
 <div class="wrap title"><div class="titleBar"><div>
-<h1>Athlete Combine Dashboard (Local) <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.116</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span></h1>
+<h1>Athlete Combine Dashboard (Local) <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.118</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span><span class="pill pillAdmin" id="adminPill" style="display:none;margin-left:6px">Admin</span></h1>
 <div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
 </div><div class="topRightControls"><button class="linkBtn btnIcon" id="loadDefault" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24">
 <path d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-14.9-2M4 16a8 8 0 0014.9 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
@@ -692,7 +708,7 @@ body.scrollLocked{overscroll-behavior: none;}
 </div>
 <script>
 
-// FULL production build (v1.0.110 baseline)
+// FULL production build (v1.0.118 baseline)
 const IS_DEMO = false;
 
 
@@ -700,12 +716,34 @@ const IS_DEMO = false;
 const VIEW_MODE = (new URLSearchParams(window.location.search).get('view') || '').toLowerCase();
 const IS_PUBLIC_VIEW = VIEW_MODE === 'public';
 const IS_MEDIA_VIEW = VIEW_MODE === 'media';
+
+// Guard: Media pill only for Media VIEW (?view=media), not Media Mode toggle
+try{
+  const mpGuard = document.getElementById("mediaPill");
+  if (mpGuard && !IS_MEDIA_VIEW) mpGuard.style.display = "none";
+}catch(e){}
 if (IS_MEDIA_VIEW) { document.documentElement.classList.add('mediaView'); }
+
+if (IS_MEDIA_VIEW) {
+  try{
+    const mpInit = document.getElementById("mediaPill");
+    if (mpInit) mpInit.style.display = "inline-flex";
+    const apInit = document.getElementById("adminPill");
+    if (apInit) apInit.style.display = "none";
+  }catch(e){}
+}
+
 if (IS_PUBLIC_VIEW) {
   document.documentElement.classList.add('publicView');
   const pp = document.getElementById('publicPill');
   if (pp) pp.style.display = 'inline-flex';
 }
+// Admin pill (default view)
+try{
+  const ap = document.getElementById("adminPill");
+  if (ap) ap.style.display = (!IS_PUBLIC_VIEW && !IS_MEDIA_VIEW) ? "inline-flex" : "none";
+}catch(e){}
+
 /** ---------- Config: map your CSV columns here ---------- **/
 const COL = {
   id: "Formulario#",
@@ -1200,6 +1238,9 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
   // Charts
   renderRadar(r);
   renderBars(r);
+
+  // Sync selection to presenter window (if open)
+  _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
 }
 
 function renderRadar(r){
@@ -1349,8 +1390,50 @@ $("file").addEventListener("change", (e) => {
 
 $("search").addEventListener("input", applyFilter);
 $("loadDefault").addEventListener("click", loadDefaultCsv);
+// Presentation window sync (index controls, external fullscreen presenter)
+let _presentWin = null;
+let _presentReady = false;
+
+function _sendToPresenter(payload){
+  try{
+    if(_presentWin && !_presentWin.closed){
+      _presentWin.postMessage(payload, "*");
+    }
+  }catch(e){}
+
+function rowToPresenter(r){
+  // Provide presenter-friendly payload while preserving existing row object keys
+  try{
+    return Object.assign({}, r, { _photoUrl: (typeof photoUrlForRow === "function" ? photoUrlForRow(r) : "") });
+  }catch(e){
+    return Object.assign({}, r);
+  }
+}
+
+}
+
+function _sendCurrentToPresenter(){
+  try{
+    if(typeof activeIndex !== "number" || activeIndex < 0) return;
+    const r = rows?.[activeIndex];
+    if(!r) return;
+    _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
+  }catch(e){}
+}
+
+window.addEventListener("message", (e) => {
+  if(e?.data?.type === "ac_presentation_ready"){
+    _presentReady = true;
+    _sendCurrentToPresenter();
+  }
+});
+
 $("presentBtn")?.addEventListener("click", () => {
-  window.open("presentation.html", "_blank", "noopener");
+  _presentReady = false;
+  // Keep opener available (no noopener) so presenter can handshake back
+  _presentWin = window.open("presentation.html", "ac_presenter", "popup=1");
+  // Best-effort initial send (presenter will also request via ready handshake)
+  setTimeout(_sendCurrentToPresenter, 250);
 });
 
 // Drag & drop
@@ -1441,8 +1524,7 @@ function setMediaMode(on){
   // Update profile title + pills
   const spt = document.getElementById("scoutProfileTitle");
   if (spt) spt.textContent = isOn ? "Media Profile" : "Scout Profile";
-  const mp = document.getElementById("mediaPill");
-  if (mp) mp.style.display = isOn ? "inline-flex" : "none";
+  const mp = document.getElementById("mediaPill"); if (mp && IS_MEDIA_VIEW) mp.style.display = "inline-flex";
 
   // Media Mode uses a Scout-like layout via CSS (body.mediaMode) but MUST NOT toggle Scout Mode itself.
   if (!isOn){
@@ -1648,11 +1730,11 @@ function initModalWiring(){
     versionBtn.addEventListener("click", ()=>{
       openModal("Version & Changelog", `<div style="display:grid;gap:10px">
   <div style="font-weight:900">What’s new</div>
-  <div><b>v1.0.116</b> — Public View + header layout polish (UI fixes only).</div>
+  <div><b>v1.0.118</b> — Public View + header layout polish (UI fixes only).</div>
 
   <div style="margin-top:10px;font-weight:900">Changelog</div>
 
-<div style="margin-top:6px;font-weight:900">v1.0.116</div>
+<div style="margin-top:6px;font-weight:900">v1.0.118</div>
 <ul style="margin:6px 0 0 18px">
   <li>Added <span class="mono">?view=public</span> mode for sharing a simplified UI externally.</li>
   <li>Public View hides: Load Photos, Load CSV, GitHub, and Changelog buttons.</li>
@@ -1661,7 +1743,7 @@ function initModalWiring(){
   <li>Added a subtle <b>Public</b> pill indicator when Public View is active.</li>
 </ul>
 
-<div style="margin-top:6px;font-weight:900">v1.0.112</div>
+<div style="margin-top:6px;font-weight:900">v1.0.118</div>
 <ul style="margin:6px 0 0 18px">
   <li>Added responsive hamburger drawer nav (overlay header, tap-to-close, click-safe buttons).</li>
   <li>Mobile modals improved: max-size, internal scroll, iOS-safe scrolling, background scroll lock.</li>
@@ -1673,44 +1755,44 @@ function initModalWiring(){
   <li>Updated guidance text to draft-day coaching suggestions.</li>
 </ul>
 
-  <div style="margin-top:6px;font-weight:900">v1.0.110</div>
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
   <ul style="margin:6px 0 0 18px">
-    <li>Added complete version history (v1.0.104 → v1.0.110) inside the Changelog modal.</li>
+    <li>Added complete version history (v1.0.118 → v1.0.118) inside the Changelog modal.</li>
     <li>Kept About/Changelog modal behavior identical to the stable build.</li>
   </ul>
 
-  <div style="margin-top:6px;font-weight:900">v1.0.110</div>
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
   <ul style="margin:6px 0 0 18px">
     <li>Locked header height to 128px (prevents layout jumps).</li>
     <li>Improved toolbar spacing (no overlap with content).</li>
   </ul>
 
-  <div style="margin-top:6px;font-weight:900">v1.0.108</div>
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
   <ul style="margin:6px 0 0 18px">
     <li>Refresh control switched to link-style to match About/Changelog group.</li>
-    <li>Initial header height lock introduced (later refined in v1.0.110).</li>
+    <li>Initial header height lock introduced (later refined in v1.0.118).</li>
   </ul>
 
-  <div style="margin-top:6px;font-weight:900">v1.0.107</div>
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
   <ul style="margin:6px 0 0 18px">
     <li>controlsSpacer min-width set to 0px.</li>
     <li>“Load Photos Folder” renamed to “Load Photos”.</li>
     <li>GitHub link updated to repository URL.</li>
   </ul>
 
-  <div style="margin-top:6px;font-weight:900">v1.0.106</div>
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
   <ul style="margin:6px 0 0 18px">
     <li>Header right-side control order finalized: Refresh | GitHub | About | Changelog.</li>
   </ul>
 
-  <div style="margin-top:6px;font-weight:900">v1.0.105</div>
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
   <ul style="margin:6px 0 0 18px">
     <li>Navigation layout fixes (single-row header).</li>
     <li>GitHub button added to header controls.</li>
     <li>controlsSpacer tuned for better alignment.</li>
   </ul>
 
-  <div style="margin-top:6px;font-weight:900">v1.0.104</div>
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
   <ul style="margin:6px 0 0 18px">
     <li>Merged stable modal system from v8.1j-alpha with updated header link-style controls.</li>
     <li>Standardized small SVG icon sizing for header controls.</li>
