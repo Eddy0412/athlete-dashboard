@@ -261,6 +261,12 @@
 
   function trySetPhoto(r){
     if(!el.photo) return;
+    const direct = r && (r._photoUrl || r.photoUrl || r.PhotoUrl);
+    if(direct){
+      el.photo.style.backgroundImage = `url('${direct}')`;
+      el.photo.removeAttribute("data-empty");
+      return;
+    }
     const id = pick(r, ["Formulario#", "Formulario", "ID", "Id", "id"]);
     // Your existing convention: /photos/{Formulario#}.jpg|png|webp
     const candidates = [

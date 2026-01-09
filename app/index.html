@@ -1202,7 +1202,7 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
   renderBars(r);
 
   // Sync selection to presenter window (if open)
-  _sendToPresenter({ type: "ac_athlete_update", athlete: r });
+  _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
 }
 
 function renderRadar(r){
@@ -1362,14 +1362,24 @@ function _sendToPresenter(payload){
       _presentWin.postMessage(payload, "*");
     }
   }catch(e){}
+
+function rowToPresenter(r){
+  // Provide presenter-friendly payload while preserving existing row object keys
+  try{
+    return Object.assign({}, r, { _photoUrl: (typeof photoUrlForRow === "function" ? photoUrlForRow(r) : "") });
+  }catch(e){
+    return Object.assign({}, r);
+  }
+}
+
 }
 
 function _sendCurrentToPresenter(){
   try{
     if(typeof activeIndex !== "number" || activeIndex < 0) return;
-    const r = currentRows?.[activeIndex];
+    const r = rows?.[activeIndex];
     if(!r) return;
-    _sendToPresenter({ type: "ac_athlete_update", athlete: r });
+    _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
   }catch(e){}
 }
 
