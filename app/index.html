@@ -959,7 +959,7 @@ function parseCsvText(csvText, label){
 async function loadDefaultCsv(){
   try{
     setStatus("Loading…");
-    const resultsUrl = new URL("results.csv", window.location.href).toString();
+    const resultsUrl = new URL("./results.csv", window.location.href).toString();
     const res = await fetch(resultsUrl, { cache: "no-store" });
     // GitHub Pages + querystrings can be finicky with relative fetch paths.
     // If the first attempt fails, retry using the current pathname as base.
