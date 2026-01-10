@@ -388,7 +388,7 @@
     let res = await fetch(url1, { cache: "no-store" });
     if(res.ok) return await res.text();
 
-    const url2 = new URL("results.csv", dir).toString();
+    const url2 = new URL("./results.csv", dir).toString();
     res = await fetch(url2, { cache: "no-store" });
     if(res.ok) return await res.text();
 
