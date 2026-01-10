@@ -231,17 +231,28 @@
 
 <script>
 (function(){
-  const $ = (id)=>document.getElementById(id);
   const PRES_KEY = "ac_presenter_current_athlete";
 
   const el = {
-    name: $("pName"),
-    meta: $("pMeta"),
-    stats: $("pStats"),
-    notes: $("pNotes"),
-    photo: $("pPhoto"),
-    hint: $("pHint"),
-    btnFullscreen: $("btnFullscreen"),
+    name: document.getElementById("name"),
+    metaRow: document.getElementById("metaRow"),
+    stats: document.getElementById("stats"),
+    school: document.getElementById("school"),
+    location: document.getElementById("location"),
+    photoImg: document.getElementById("photoImg"),
+    photoFallback: document.getElementById("photoFallback"),
+    counterPill: document.getElementById("counterPill"),
+    fsBtn: document.getElementById("fsBtn"),
+    exitBtn: document.getElementById("exitBtn"),
+    prevBtn: document.getElementById("prevBtn"),
+    nextBtn: document.getElementById("nextBtn"),
+  };
+
+  const pick = (obj, keys) => {
+    for(const k of keys){
+      if(obj && obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== "") return obj[k];
+    }
+    return "";
   };
 
   function esc(s){
@@ -253,27 +264,40 @@
       .replaceAll("'","&#39;");
   }
 
-  function pick(obj, keys){
-    for(const k of keys){
-      if(obj && obj[k] !== undefined && obj[k] !== "") return obj[k];
-    }
-    return "";
+  function getSelFromHash(){
+    const h = (window.location.hash || "").trim();
+    const m = h.match(/#sel=([^&]+)/i);
+    return m ? decodeURIComponent(m[1]) : "";
   }
 
-  function setPhotoFromUrl(url){
-    if(!el.photo) return;
-    if(!url){
-      el.photo.style.backgroundImage = "";
-      el.photo.setAttribute("data-empty","1");
-      return;
-    }
-    el.photo.style.backgroundImage = `url('${url}')`;
-    el.photo.removeAttribute("data-empty");
+  function normId(v){
+    const s = String(v ?? "").trim();
+    if(!s) return "";
+    return s.replace(/^0+/, "") || "0";
   }
 
-  function trySetPhoto(r){
-    const direct = r && (r._photoUrl || r.photoUrl || r.PhotoUrl);
-    if(direct){ setPhotoFromUrl(direct); return; }
+  function initials(name){
+    const parts = String(name||"").trim().split(/\s+/).filter(Boolean);
+    if(!parts.length) return "—";
+    const a = (parts[0]||"")[0]||"";
+    const b = (parts[parts.length-1]||"")[0]||"";
+    return (a+b).toUpperCase();
+  }
+
+  function setPhotoUrl(url, nameForFallback){
+    if(el.photoImg){
+      el.photoImg.src = url || "";
+      el.photoImg.style.display = url ? "block" : "none";
+    }
+    if(el.photoFallback){
+      el.photoFallback.style.display = url ? "none" : "flex";
+      el.photoFallback.textContent = initials(nameForFallback);
+    }
+  }
+
+  async function resolvePhoto(r){
+    const direct = pick(r, ["_photoUrl", "photoUrl", "PhotoUrl"]);
+    if(direct) return direct;
 
     const id = pick(r, ["Formulario#", "Formulario", "ID", "Id", "id"]);
     const candidates = [
@@ -281,39 +305,85 @@
       `photos/${id}.jpeg`,
       `photos/${id}.png`,
       `photos/${id}.webp`,
-    ].filter(x => id);
+    ].filter(() => id);
 
-    if(!candidates.length){ setPhotoFromUrl(""); return; }
-
-    let i = 0;
-    const img = new Image();
-    const loadNext = () => {
-      if(i >= candidates.length){ setPhotoFromUrl(""); return; }
-      img.onload = () => setPhotoFromUrl(candidates[i]);
-      img.onerror = () => { i++; loadNext(); };
-      img.src = candidates[i];
-    };
-    loadNext();
+    for(const url of candidates){
+      try{
+        const img = new Image();
+        await new Promise((ok, bad) => {
+          img.onload = ok;
+          img.onerror = bad;
+          img.src = url;
+        });
+        return url;
+      }catch(e){}
+    }
+    return "";
   }
 
-  function renderAthlete(r){
+  function renderStatsGrid(r){
+    if(!el.stats) return;
+
+    // Show a clean set of common fields if present, otherwise show first few numeric-ish fields.
+    const primary = [
+      ["Age", ["Age","Edad","age"]],
+      ["Height", ["Height","Altura","height"]],
+      ["Weight", ["Weight","Peso","weight"]],
+      ["Position", ["Pos","Position","Posición","position"]],
+      ["Team", ["Team","Equipo","team"]],
+      ["Sport", ["Sport","Deporte","sport"]],
+    ];
+
+    const items = [];
+    for(const [label, keys] of primary){
+      const v = pick(r, keys);
+      if(v !== "") items.push([label, v]);
+    }
+
+    // Fallback: add up to 6 additional fields that look like combine metrics
+    if(items.length < 4 && r){
+      const metricHints = ["40", "dash", "yard", "vertical", "broad", "bench", "shuttle", "cone", "agility", "sprint", "jump"];
+      for(const k of Object.keys(r)){
+        if(items.length >= 10) break;
+        const lk = k.toLowerCase();
+        if(primary.some(([_, keys]) => keys.includes(k))) continue;
+        if(metricHints.some(h => lk.includes(h)) || /\d/.test(lk)){
+          const v = String(r[k] ?? "").trim();
+          if(v) items.push([k, v]);
+        }
+      }
+    }
+
+    if(!items.length){
+      el.stats.innerHTML = '<div class="stat"><span class="k">—</span><span class="v">—</span></div>';
+      return;
+    }
+
+    el.stats.innerHTML = items.map(([k,v]) =>
+      `<div class="stat"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`
+    ).join("");
+  }
+
+  async function renderAthlete(r){
     if(!r) return;
-    if(el.hint) el.hint.style.display = "none";
 
-    const name = pick(r, ["Nombre", "Name", "Athlete", "athlete", "Player", "player"]) || "—";
-    const pos  = pick(r, ["Pos", "Position", "Posición", "position"]) || "—";
-    const sport = pick(r, ["Sport", "Deporte", "sport"]) || "—";
-    const age = pick(r, ["Age", "Edad", "age"]) || "—";
-    const team = pick(r, ["Team", "Equipo", "team"]) || "—";
+    const name = pick(r, ["Nombre","Name","Athlete","athlete","Player","player"]) || "—";
+    const pos  = pick(r, ["Pos","Position","Posición","position"]) || "";
+    const sport = pick(r, ["Sport","Deporte","sport"]) || "";
+    const team  = pick(r, ["Team","Equipo","team"]) || "";
 
-    if(el.name) el.name.innerHTML = esc(name);
-    if(el.meta) el.meta.innerHTML = `${esc(sport)} • ${esc(pos)} • ${esc(team)}`;
-    if(el.stats) el.stats.innerHTML = `<span class="stat"><span class="k">Age</span><span class="v">${esc(age)}</span></span>`;
+    const school = pick(r, ["School","Colegio","Escuela","school"]) || "";
+    const location = pick(r, ["Location","Ubicación","Ciudad","Provincia","location"]) || "";
 
-    const notes = pick(r, ["Notas", "Notes", "notes"]) || "";
-    if(el.notes) el.notes.innerHTML = notes ? esc(notes) : "—";
+    if(el.name) el.name.textContent = name;
+    if(el.metaRow) el.metaRow.textContent = [sport, pos, team].filter(Boolean).join(" • ") || "—";
+    if(el.school) el.school.textContent = school || "—";
+    if(el.location) el.location.textContent = location || "—";
 
-    trySetPhoto(r);
+    renderStatsGrid(r);
+
+    const photo = await resolvePhoto(r);
+    setPhotoUrl(photo, name);
   }
 
   function tryLoadFromStorage(){
@@ -327,19 +397,6 @@
       }
     }catch(e){}
     return false;
-  }
-
-  // --- CSV loading + #sel lookup ---
-  function getSelFromHash(){
-    const h = (window.location.hash || "").trim();
-    const m = h.match(/#sel=([^&]+)/i);
-    return m ? decodeURIComponent(m[1]) : "";
-  }
-
-  function normId(v){
-    const s = String(v ?? "").trim();
-    if(!s) return "";
-    return s.replace(/^0+/, "") || "0";
   }
 
   function parseCsvSimple(text){
@@ -382,13 +439,15 @@
   }
 
   async function fetchResultsCsvText(){
+    // Resolve from directory (ignore hash/query)
     const dir = window.location.origin + window.location.pathname.replace(/[^\/]*$/, "");
     const url1 = new URL("./results.csv", dir).toString();
 
     let res = await fetch(url1, { cache: "no-store" });
     if(res.ok) return await res.text();
 
-    const url2 = new URL("./results.csv", dir).toString();
+    // fallback: try without "./"
+    const url2 = new URL("results.csv", dir).toString();
     res = await fetch(url2, { cache: "no-store" });
     if(res.ok) return await res.text();
 
@@ -425,36 +484,36 @@
       }
 
       if(found){
-        renderAthlete(found);
+        await renderAthlete(found);
+        if(el.counterPill) el.counterPill.textContent = `#${String(selRaw).padStart(3,"0")}`;
         return true;
       }
 
-      if(el.hint){
-        el.hint.style.display = "block";
-        el.hint.textContent = `No athlete found for #sel=${selRaw} (CSV key: Formulario#)`;
-      }
+      if(el.counterPill) el.counterPill.textContent = `#${String(selRaw).padStart(3,"0")}`;
       return false;
 
     }catch(err){
       console.warn(err);
-      if(el.hint){
-        el.hint.style.display = "block";
-        el.hint.textContent = `Could not load results.csv in presenter (needed for #sel=${selRaw}). Make sure results.csv is in /app/.`;
-      }
       return false;
     }
   }
 
   async function hydrate(){
+    // Update counter pill immediately from hash
+    const sel = getSelFromHash();
+    if(el.counterPill && sel) el.counterPill.textContent = `#${String(sel).padStart(3,"0")}`;
+
+    // Storage first (fast), then hash lookup (authoritative)
     const hadStorage = tryLoadFromStorage();
     const hadSel = await loadFromCsvBySel();
 
-    if(el.hint && !hadStorage && !hadSel){
-      el.hint.style.display = "block";
-      el.hint.textContent = "Waiting for selection… (Pick an athlete in the dashboard)";
+    if(!hadStorage && !hadSel){
+      // Show a lightweight hint in the meta row if nothing loaded
+      if(el.metaRow) el.metaRow.textContent = "Waiting for selection…";
     }
   }
 
+  // Fullscreen / exit button hooks
   async function toggleFullscreen(){
     try{
       if(!document.fullscreenElement){
@@ -464,23 +523,20 @@
       }
     }catch(e){}
   }
-  el.btnFullscreen?.addEventListener("click", toggleFullscreen);
-  window.addEventListener("keydown", (e) => {
-    if(e.key === "f" || e.key === "F") toggleFullscreen();
-  });
+  el.fsBtn?.addEventListener("click", toggleFullscreen);
+  el.exitBtn?.addEventListener("click", () => { try{ window.close(); }catch(e){} });
 
+  // Live updates via storage + hash
   window.addEventListener("storage", (ev) => {
     if(ev.key === PRES_KEY){
       tryLoadFromStorage();
     }
   });
-
   window.addEventListener("hashchange", () => { hydrate(); });
 
   hydrate();
 })();
 </script>
-
 
 </body>
 </html>
