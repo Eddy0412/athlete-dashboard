@@ -358,7 +358,7 @@
     if(!key) return false;
     try{
       const baseHref = window.location.origin + window.location.pathname; // ends with presentation.html
-      const resultsUrl = new URL("results.csv", baseHref).toString();
+      const resultsUrl = new URL("./results.csv", baseHref).toString();
       const res = await fetch(resultsUrl, { cache: "no-store" });
       if(!res.ok) return false;
       const text = await res.text();
