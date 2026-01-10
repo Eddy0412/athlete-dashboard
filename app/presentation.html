@@ -235,6 +235,8 @@
 
   let _photoReq = 0;
   let _currentAthleteKey = "";
+  let _currentPhotoId = "";
+  let _currentPhotoSrc = "";
   const el = {
     name: document.getElementById("name"),
     metaRow: document.getElementById("metaRow"),
@@ -286,43 +288,57 @@
     return (a+b).toUpperCase();
   }
 
-  function setPhotoUrl(url, nameForFallback, reqKey){
-    // reqKey guards against async races (old requests overwriting new renders)
-    const myKey = reqKey || "";
+  function setPhotoUrl(url, nameForFallback, athleteIdRaw){
+    const athleteId = normId(athleteIdRaw);
     const fallbackText = initials(nameForFallback);
+
+    // If a later render can't resolve a photo, don't wipe a previously loaded photo for the same athlete.
+    if(!url && athleteId && athleteId === _currentPhotoId && _currentPhotoSrc){
+      if(el.photoFallback) el.photoFallback.style.display = "none";
+      if(el.photoImg){
+        el.photoImg.style.display = "block";
+        el.photoImg.src = _currentPhotoSrc;
+      }
+      return;
+    }
 
     if(el.photoFallback){
       el.photoFallback.textContent = fallbackText;
       el.photoFallback.style.display = "flex";
     }
-    if(el.photoImg){
-      // Hide until we confirm load; prevents flicker-to-initials after partial loads
-      el.photoImg.style.display = "none";
 
-      if(!url){
-        el.photoImg.removeAttribute("src");
-        return;
-      }
+    if(!el.photoImg) return;
 
-      const imgEl = el.photoImg;
-      const thisReq = _photoReq;
-      imgEl.onload = () => {
-        // Only apply if still the latest render
-        if(thisReq !== _photoReq) return;
-        if(el.photoFallback) el.photoFallback.style.display = "none";
-        imgEl.style.display = "block";
-      };
-      imgEl.onerror = () => {
-        if(thisReq !== _photoReq) return;
-        if(el.photoFallback){
-          el.photoFallback.textContent = fallbackText;
-          el.photoFallback.style.display = "flex";
-        }
-        imgEl.style.display = "none";
-      };
+    // Hide until we confirm load
+    el.photoImg.style.display = "none";
 
-      imgEl.src = url;
+    if(!url){
+      el.photoImg.removeAttribute("src");
+      _currentPhotoSrc = "";
+      _currentPhotoId = athleteId;
+      return;
     }
+
+    const thisReq = _photoReq;
+    el.photoImg.onload = () => {
+      if(thisReq !== _photoReq) return;
+      _currentPhotoId = athleteId;
+      _currentPhotoSrc = url;
+      if(el.photoFallback) el.photoFallback.style.display = "none";
+      el.photoImg.style.display = "block";
+    };
+    el.photoImg.onerror = () => {
+      if(thisReq !== _photoReq) return;
+      _currentPhotoId = athleteId;
+      _currentPhotoSrc = "";
+      if(el.photoFallback){
+        el.photoFallback.textContent = fallbackText;
+        el.photoFallback.style.display = "flex";
+      }
+      el.photoImg.style.display = "none";
+    };
+
+    el.photoImg.src = url;
   }
 
   async function resolvePhoto(r){
