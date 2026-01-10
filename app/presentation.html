@@ -233,6 +233,8 @@
 (function(){
   const PRES_KEY = "ac_presenter_current_athlete";
 
+  let _photoReq = 0;
+  let _currentAthleteKey = "";
   const el = {
     name: document.getElementById("name"),
     metaRow: document.getElementById("metaRow"),
@@ -284,14 +286,42 @@
     return (a+b).toUpperCase();
   }
 
-  function setPhotoUrl(url, nameForFallback){
-    if(el.photoImg){
-      el.photoImg.src = url || "";
-      el.photoImg.style.display = url ? "block" : "none";
-    }
+  function setPhotoUrl(url, nameForFallback, reqKey){
+    // reqKey guards against async races (old requests overwriting new renders)
+    const myKey = reqKey || "";
+    const fallbackText = initials(nameForFallback);
+
     if(el.photoFallback){
-      el.photoFallback.style.display = url ? "none" : "flex";
-      el.photoFallback.textContent = initials(nameForFallback);
+      el.photoFallback.textContent = fallbackText;
+      el.photoFallback.style.display = "flex";
+    }
+    if(el.photoImg){
+      // Hide until we confirm load; prevents flicker-to-initials after partial loads
+      el.photoImg.style.display = "none";
+
+      if(!url){
+        el.photoImg.removeAttribute("src");
+        return;
+      }
+
+      const imgEl = el.photoImg;
+      const thisReq = _photoReq;
+      imgEl.onload = () => {
+        // Only apply if still the latest render
+        if(thisReq !== _photoReq) return;
+        if(el.photoFallback) el.photoFallback.style.display = "none";
+        imgEl.style.display = "block";
+      };
+      imgEl.onerror = () => {
+        if(thisReq !== _photoReq) return;
+        if(el.photoFallback){
+          el.photoFallback.textContent = fallbackText;
+          el.photoFallback.style.display = "flex";
+        }
+        imgEl.style.display = "none";
+      };
+
+      imgEl.src = url;
     }
   }
 
