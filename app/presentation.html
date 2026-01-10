@@ -237,6 +237,7 @@
   let _currentAthleteKey = "";
   let _currentPhotoId = "";
   let _currentPhotoSrc = "";
+  let _renderedId = "";
   const el = {
     name: document.getElementById("name"),
     metaRow: document.getElementById("metaRow"),
@@ -438,6 +439,27 @@
       if(!raw) return false;
       const payload = JSON.parse(raw);
       if(payload?.type === "ac_athlete_update" && payload?.athlete){
+        const sel = getSelFromHash();
+        const selId = normId(sel);
+        const pid = normId(pick(payload.athlete, ["Formulario#", "Formulario", "ID", "Id", "id"]) || "");
+
+        // If presenter is being driven by #sel, ignore storage updates for other athletes
+        if(selId && pid && selId !== pid) return false;
+
+        // If this storage payload doesn't include a photo URL, don't let it wipe an already loaded photo
+        const hasPhotoUrl = !!(payload.athlete._photoUrl || payload.athlete.photoUrl || payload.athlete.PhotoUrl);
+        if(!hasPhotoUrl && pid && pid === _currentPhotoId && _currentPhotoSrc){
+          // Render text fields, but keep current photo
+          const prevSrc = _currentPhotoSrc;
+          renderAthlete(payload.athlete);
+          if(el.photoImg){
+            el.photoImg.style.display = "block";
+            el.photoImg.src = prevSrc;
+          }
+          if(el.photoFallback) el.photoFallback.style.display = "none";
+          return true;
+        }
+
         renderAthlete(payload.athlete);
         return true;
       }
