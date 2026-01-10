@@ -316,67 +316,140 @@
     trySetPhoto(r);
   }
 
-  function getSelKey(){
-    const h = (window.location.hash || "").replace(/^#/, "");
-    const m = h.match(/(?:^|&)sel=([^&]*)/);
-    return m ? decodeURIComponent(m[1]) : "";
-  }
-
-  function tryLoadFromStorage(expectedKey){
+  function tryLoadFromStorage(){
     try{
       const raw = localStorage.getItem(PRES_KEY);
       if(!raw) return false;
       const payload = JSON.parse(raw);
-      const a = payload?.athlete;
-      if(payload?.type === "ac_athlete_update" && a){
-        if(!expectedKey || String(a._presentKey||"") === String(expectedKey)){
-          renderAthlete(a);
-          return true;
-        }
-      }
-    }catch(e){}
-    return false;
-  }
-
-  function parseCsv(text){
-    const lines = text.split(/\r?\n/).filter(Boolean);
-    if(lines.length < 2) return [];
-    const header = lines[0].split(",");
-    const rows = [];
-    for(let i=1;i<lines.length;i++){
-      const cols = lines[i].split(",");
-      const obj = {};
-      for(let j=0;j<header.length;j++){
-        obj[header[j]] = cols[j] ?? "";
-      }
-      rows.push(obj);
-    }
-    return rows;
-  }
-
-  async function fetchAndRenderByKey(key){
-    if(!key) return false;
-    try{
-      const baseHref = window.location.origin + window.location.pathname; // ends with presentation.html
-      const resultsUrl = new URL("./results.csv", baseHref).toString();
-      const res = await fetch(resultsUrl, { cache: "no-store" });
-      if(!res.ok) return false;
-      const text = await res.text();
-      const rows = parseCsv(text);
-      const found = rows.find(r => String(r["Formulario#"]||r["Formulario"]||r["ID"]||r["Id"]||r["id"]||"") === String(key));
-      if(found){
-        found._presentKey = String(key);
-        renderAthlete(found);
+      if(payload?.type === "ac_athlete_update" && payload?.athlete){
+        renderAthlete(payload.athlete);
         return true;
       }
     }catch(e){}
     return false;
   }
 
+  // --- CSV loading + #sel lookup ---
+  function getSelFromHash(){
+    const h = (window.location.hash || "").trim();
+    const m = h.match(/#sel=([^&]+)/i);
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+
+  function normId(v){
+    const s = String(v ?? "").trim();
+    if(!s) return "";
+    return s.replace(/^0+/, "") || "0";
+  }
+
+  function parseCsvSimple(text){
+    const rows = [];
+    let i = 0, field = "", row = [], inQuotes = false;
+    const pushField = () => { row.push(field); field = ""; };
+    const pushRow = () => { rows.push(row); row = []; };
+
+    while(i < text.length){
+      const c = text[i];
+      if(inQuotes){
+        if(c === '"'){
+          const next = text[i+1];
+          if(next === '"'){ field += '"'; i += 2; continue; }
+          inQuotes = false; i++; continue;
+        }
+        field += c; i++; continue;
+      }else{
+        if(c === '"'){ inQuotes = true; i++; continue; }
+        if(c === ','){ pushField(); i++; continue; }
+        if(c === '\r'){ i++; continue; }
+        if(c === '\n'){ pushField(); pushRow(); i++; continue; }
+        field += c; i++; continue;
+      }
+    }
+    pushField();
+    if(row.length > 1 || (row.length === 1 && row[0] !== "")) pushRow();
+
+    if(!rows.length) return [];
+    const headers = rows[0].map(h => String(h).trim());
+    const out = [];
+    for(let r = 1; r < rows.length; r++){
+      const obj = {};
+      for(let c = 0; c < headers.length; c++){
+        obj[headers[c]] = rows[r][c] ?? "";
+      }
+      out.push(obj);
+    }
+    return out;
+  }
+
+  async function fetchResultsCsvText(){
+    const dir = window.location.origin + window.location.pathname.replace(/[^\/]*$/, "");
+    const url1 = new URL("./results.csv", dir).toString();
+
+    let res = await fetch(url1, { cache: "no-store" });
+    if(res.ok) return await res.text();
+
+    const url2 = new URL("results.csv", dir).toString();
+    res = await fetch(url2, { cache: "no-store" });
+    if(res.ok) return await res.text();
+
+    throw new Error("results.csv not reachable");
+  }
+
+  async function loadFromCsvBySel(){
+    const selRaw = getSelFromHash();
+    if(!selRaw) return false;
+
+    try{
+      const text = await fetchResultsCsvText();
+      const list = (window.Papa && window.Papa.parse)
+        ? window.Papa.parse(text, { header:true, skipEmptyLines:true }).data
+        : parseCsvSimple(text);
+
+      const selN = normId(selRaw);
+      const candidates = ["Formulario#", "Formulario", "ID", "Id", "id"];
+      let found = null;
+
+      for(const r of list){
+        for(const k of candidates){
+          if(r && Object.prototype.hasOwnProperty.call(r, k)){
+            const v = String(r[k] ?? "").trim();
+            if(!v) continue;
+            const vN = normId(v);
+            if(v === selRaw || vN === selN){
+              found = r;
+              break;
+            }
+          }
+        }
+        if(found) break;
+      }
+
+      if(found){
+        renderAthlete(found);
+        return true;
+      }
+
+      if(el.hint){
+        el.hint.style.display = "block";
+        el.hint.textContent = `No athlete found for #sel=${selRaw} (CSV key: Formulario#)`;
+      }
+      return false;
+
+    }catch(err){
+      console.warn(err);
+      if(el.hint){
+        el.hint.style.display = "block";
+        el.hint.textContent = `Could not load results.csv in presenter (needed for #sel=${selRaw}). Make sure results.csv is in /app/.`;
+      }
+      return false;
+    }
+  }
+
   async function hydrate(){
-    const key = getSelKey();
-    const ok = tryLoadFromStorage(key) || await fetchAndRenderByKey(key) || tryLoadFromStorage("");
-    if(!ok && el.hint){
+    const hadStorage = tryLoadFromStorage();
+    const hadSel = await loadFromCsvBySel();
+
+    if(el.hint && !hadStorage && !hadSel){
       el.hint.style.display = "block";
       el.hint.textContent = "Waiting for selection… (Pick an athlete in the dashboard)";
     }
@@ -391,16 +464,23 @@
       }
     }catch(e){}
   }
-
   el.btnFullscreen?.addEventListener("click", toggleFullscreen);
+  window.addEventListener("keydown", (e) => {
+    if(e.key === "f" || e.key === "F") toggleFullscreen();
+  });
 
-  window.addEventListener("hashchange", hydrate);
-  window.addEventListener("storage", (ev) => { if(ev.key === PRES_KEY) hydrate(); });
+  window.addEventListener("storage", (ev) => {
+    if(ev.key === PRES_KEY){
+      tryLoadFromStorage();
+    }
+  });
 
-  // Initial run
+  window.addEventListener("hashchange", () => { hydrate(); });
+
   hydrate();
 })();
 </script>
+
 
 </body>
 </html>
