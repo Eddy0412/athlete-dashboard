@@ -1260,6 +1260,9 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
   renderRadar(r);
   renderBars(r);
 
+  // Sync selection to Presenter
+  try{ _pushToPresenter(r); }catch(e){}
+
   // Sync selection to presenter window (if open)
   _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
 }
@@ -1412,79 +1415,65 @@ $("file").addEventListener("change", (e) => {
 $("search").addEventListener("input", applyFilter);
 $("loadDefault").addEventListener("click", loadDefaultCsv);
 // Presentation window sync (index controls, external fullscreen presenter)
-// Transport layers: postMessage (popup/tab) + BroadcastChannel + localStorage (most reliable)
+// Most reliable: parent updates presenter URL hash on selection + persists latest athlete to localStorage.
 let _presentWin = null;
-let _presentCh = null;
-
 const PRES_KEY = "ac_presenter_current_athlete";
 
-function rowToPresenter(r){
+function _presentKeyForRow(r){
   try{
-    return Object.assign({}, r, { _photoUrl: (typeof photoUrlForRow === "function" ? photoUrlForRow(r) : "") });
-  }catch(e){
-    return Object.assign({}, r);
-  }
+    const k = r?.[COL.frm] ?? r?.["Formulario#"] ?? r?.["Formulario"] ?? r?.["ID"] ?? r?.["Id"] ?? r?.["id"];
+    if(k !== undefined && k !== null && String(k).trim() !== "") return String(k);
+  }catch(e){}
+  try{
+    if(typeof activeIndex === "number") return String(activeIndex);
+  }catch(e){}
+  return "";
 }
 
-function _persistToStorage(payload){
+function rowToPresenter(r){
+  // minimize + stabilize payload for storage
+  const key = _presentKeyForRow(r);
+  const base = {};
   try{
-    if(payload?.type === "ac_athlete_update"){
-      localStorage.setItem(PRES_KEY, JSON.stringify(payload));
-    }
+    // shallow copy row values
+    for (const k in r) base[k] = r[k];
+  }catch(e){}
+  base._presentKey = key;
+  try{ base._photoUrl = (typeof photoUrlForRow === "function" ? photoUrlForRow(r) : ""); }catch(e){}
+  return base;
+}
+
+function _persistPresenter(payload){
+  try{
+    localStorage.setItem(PRES_KEY, JSON.stringify(payload));
   }catch(e){}
 }
 
-function _broadcastToPresenter(payload){
-  try{ _presentCh?.postMessage(payload); }catch(e){}
-}
-
-function _postToPresenter(payload){
+function _updatePresenterHash(key){
   try{
     if(_presentWin && !_presentWin.closed){
-      _presentWin.postMessage(payload, "*");
+      _presentWin.location.hash = "sel=" + encodeURIComponent(key || "");
     }
   }catch(e){}
 }
 
-function _sendToPresenter(payload){
-  _persistToStorage(payload);
-  _postToPresenter(payload);
-  _broadcastToPresenter(payload);
-}
-
-function _getSelectedRow(){
-  try{
-    if(typeof activeIndex === "number" && activeIndex >= 0) return rows?.[activeIndex] || null;
-    if(typeof selectedIndex === "number" && selectedIndex >= 0) return rows?.[selectedIndex] || null;
-  }catch(e){}
-  return null;
-}
-
-function _sendCurrentToPresenter(){
-  const r = _getSelectedRow();
+function _pushToPresenter(r){
   if(!r) return;
-  _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
+  const athlete = rowToPresenter(r);
+  const payload = { type: "ac_athlete_update", athlete };
+  _persistPresenter(payload);
+  _updatePresenterHash(athlete._presentKey);
 }
-
-try{
-  if ("BroadcastChannel" in window){
-    _presentCh = new BroadcastChannel("ac_presenter_channel");
-    _presentCh.addEventListener("message", (ev) => {
-      if(ev?.data?.type === "ac_request_current_athlete") _sendCurrentToPresenter();
-    });
-  }
-}catch(e){}
-
-window.addEventListener("message", (e) => {
-  const typ = e?.data?.type;
-  if(typ === "ac_request_current_athlete" || typ === "ac_presentation_ready"){
-    _sendCurrentToPresenter();
-  }
-});
 
 $("presentBtn")?.addEventListener("click", () => {
-  _presentWin = window.open("presentation.html", "ac_presenter");
-  setTimeout(_sendCurrentToPresenter, 250);
+  _presentWin = window.open("presentation.html#sel=", "ac_presenter");
+  // best-effort initial push
+  setTimeout(() => {
+    try{
+      const r = rows?.[activeIndex];
+      if(r) _pushToPresenter(r);
+    }catch(e){}
+  }, 250);
 });
 
 

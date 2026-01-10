@@ -316,17 +316,70 @@
     trySetPhoto(r);
   }
 
-  function tryLoadFromStorage(){
+  function getSelKey(){
+    const h = (window.location.hash || "").replace(/^#/, "");
+    const m = h.match(/(?:^|&)sel=([^&]*)/);
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+
+  function tryLoadFromStorage(expectedKey){
     try{
       const raw = localStorage.getItem(PRES_KEY);
       if(!raw) return false;
       const payload = JSON.parse(raw);
-      if(payload?.type === "ac_athlete_update" && payload?.athlete){
-        renderAthlete(payload.athlete);
+      const a = payload?.athlete;
+      if(payload?.type === "ac_athlete_update" && a){
+        if(!expectedKey || String(a._presentKey||"") === String(expectedKey)){
+          renderAthlete(a);
+          return true;
+        }
+      }
+    }catch(e){}
+    return false;
+  }
+
+  function parseCsv(text){
+    const lines = text.split(/\r?\n/).filter(Boolean);
+    if(lines.length < 2) return [];
+    const header = lines[0].split(",");
+    const rows = [];
+    for(let i=1;i<lines.length;i++){
+      const cols = lines[i].split(",");
+      const obj = {};
+      for(let j=0;j<header.length;j++){
+        obj[header[j]] = cols[j] ?? "";
+      }
+      rows.push(obj);
+    }
+    return rows;
+  }
+
+  async function fetchAndRenderByKey(key){
+    if(!key) return false;
+    try{
+      const baseHref = window.location.origin + window.location.pathname; // ends with presentation.html
+      const resultsUrl = new URL("results.csv", baseHref).toString();
+      const res = await fetch(resultsUrl, { cache: "no-store" });
+      if(!res.ok) return false;
+      const text = await res.text();
+      const rows = parseCsv(text);
+      const found = rows.find(r => String(r["Formulario#"]||r["Formulario"]||r["ID"]||r["Id"]||r["id"]||"") === String(key));
+      if(found){
+        found._presentKey = String(key);
+        renderAthlete(found);
         return true;
       }
     }catch(e){}
     return false;
+  }
+
+  async function hydrate(){
+    const key = getSelKey();
+    const ok = tryLoadFromStorage(key) || await fetchAndRenderByKey(key) || tryLoadFromStorage("");
+    if(!ok && el.hint){
+      el.hint.style.display = "block";
+      el.hint.textContent = "Waiting for selection… (Pick an athlete in the dashboard)";
+    }
   }
 
   async function toggleFullscreen(){
@@ -340,52 +393,12 @@
   }
 
   el.btnFullscreen?.addEventListener("click", toggleFullscreen);
-  window.addEventListener("keydown", (e) => {
-    if(e.key === "f" || e.key === "F") toggleFullscreen();
-  });
 
-  // postMessage updates
-  window.addEventListener("message", (e) => {
-    if(e?.data?.type === "ac_athlete_update" && e?.data?.athlete){
-      renderAthlete(e.data.athlete);
-    }
-  });
+  window.addEventListener("hashchange", hydrate);
+  window.addEventListener("storage", (ev) => { if(ev.key === PRES_KEY) hydrate(); });
 
-  // BroadcastChannel updates
-  let ch = null;
-  try{
-    if ("BroadcastChannel" in window){
-      ch = new BroadcastChannel("ac_presenter_channel");
-      ch.addEventListener("message", (ev) => {
-        if(ev?.data?.type === "ac_athlete_update" && ev?.data?.athlete){
-          renderAthlete(ev.data.athlete);
-        }
-      });
-    }
-  }catch(e){}
-
-  // localStorage updates across tabs
-  window.addEventListener("storage", (ev) => {
-    if(ev.key === PRES_KEY){
-      tryLoadFromStorage();
-    }
-  });
-
-  // Handshake + request current athlete
-  try{
-    if(window.opener){
-      window.opener.postMessage({ type: "ac_presentation_ready" }, "*");
-      window.opener.postMessage({ type: "ac_request_current_athlete" }, "*");
-    }
-  }catch(e){}
-  try{ ch?.postMessage({ type: "ac_request_current_athlete" }); }catch(e){}
-
-  const had = tryLoadFromStorage();
-
-  if(el.hint){
-    el.hint.style.display = had ? "none" : "block";
-    el.hint.textContent = "Waiting for selection… (Pick an athlete in the dashboard)";
-  }
+  // Initial run
+  hydrate();
 })();
 </script>
 
