@@ -324,17 +324,100 @@
     const pos  = pick(r, ["Pos","Position","Posición"]) || "";
     const sport = pick(r, ["Sport","Deporte"]) || "";
     const team = pick(r, ["Team","Equipo"]) || "";
-    const age = pick(r, ["Age","Edad"]) || "";
+
+    // Core fields
+    const age = pick(r, ["Age","Edad","age"]) || "";
+    const height = pick(r, ["Height","Altura","Ht","height"]) || "";
+    const weight = pick(r, ["Weight","Peso","Wt","weight"]) || "";
 
     if(el.name) el.name.innerHTML = esc(name);
-    if(el.meta) el.meta.innerHTML = [sport,pos,team].filter(Boolean).map(esc).join(" • ");
-    if(el.stats) el.stats.innerHTML = age ? `<span class="k">Age</span><span class="v">${esc(age)}</span>` : "";
+    if(el.meta) el.meta.innerHTML = [sport,pos,team].filter(Boolean).map(esc).join(" • ") || "&nbsp;";
     if(el.counter) el.counter.textContent = selRaw ? `#${selRaw}` : "";
 
+    // School + location
+    const school = pick(r, ["School","Escuela","Colegio","school"]) || "";
+    const location = pick(r, ["Location","Ubicación","Ubicacion","Ciudad","Provincia","location"]) || "";
+    if(el.school) el.school.innerHTML = school ? esc(school) : "—";
+    if(el.location) el.location.innerHTML = location ? esc(location) : "—";
+
+    // Stats grid (Age/Height/Weight + key results)
+    const usedKeys = new Set([
+      "Nombre","Name","Athlete","Player",
+      "Pos","Position","Posición",
+      "Sport","Deporte",
+      "Team","Equipo",
+      "Age","Edad","age",
+      "Height","Altura","Ht","height",
+      "Weight","Peso","Wt","weight",
+      "School","Escuela","Colegio","school",
+      "Location","Ubicación","Ubicacion","Ciudad","Provincia","location",
+      "Formulario#","Formulario","ID","Id","id",
+      "_photoUrl","photoUrl","PhotoUrl","PHOTO","Photo",
+      "Email","Phone","Telefono","Teléfono"
+    ]);
+
+    function statCard(k, v){
+      const vv = String(v ?? "").trim();
+      if(!vv) return "";
+      return `<div class="stat"><div class="k">${esc(k)}</div><div class="v">${esc(vv)}</div></div>`;
+    }
+
+    // Choose results fields to show
+    const preferred = [
+      "40yd","40Y","40","40 Time","40_time","Forty",
+      "Vertical","Vert","Salto Vertical",
+      "Broad Jump","Broad","Salto Largo",
+      "Shuttle","Pro Shuttle","20 Shuttle",
+      "3Cone","3 Cone","Cone",
+      "Bench","Bench Press","BP","Reps"
+    ];
+
+    const results = [];
+    // Add preferred keys if present
+    for(const k of preferred){
+      if(Object.prototype.hasOwnProperty.call(r, k) && String(r[k] ?? "").trim() !== ""){
+        results.push([k, r[k]]);
+      }
+    }
+    // Add other likely metric keys (time/jump/rep) up to limit
+    if(results.length < 6){
+      const reMetric = /(time|yd|yard|dash|40|vertical|broad|jump|shuttle|cone|bench|rep|press|agility|speed)/i;
+      for(const k of Object.keys(r)){
+        if(usedKeys.has(k)) continue;
+        if(results.some(([kk]) => kk === k)) continue;
+        const val = String(r[k] ?? "").trim();
+        if(!val) continue;
+        if(reMetric.test(k)){
+          results.push([k, r[k]]);
+          if(results.length >= 6) break;
+        }
+      }
+    }
+
+    const cards = [];
+    if(age) cards.push(statCard("Age", age));
+    if(height) cards.push(statCard("Height", height));
+    if(weight) cards.push(statCard("Weight", weight));
+
+    for(const [k,v] of results){
+      // Friendly label: trim extra spaces
+      cards.push(statCard(k, v));
+    }
+
+    if(el.stats) el.stats.innerHTML = cards.join("");
+
+    // Photo via CDN (same logic as index.html)
     const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
     if(idRaw){
       const url = PHOTO_BASE_URL + padId(idRaw) + ".jpg";
       setPhoto(url, name);
+    }else{
+      // no id: keep initials
+      if(el.photoFallback){
+        el.photoFallback.textContent = initials(name);
+        el.photoFallback.style.display = "flex";
+      }
+      if(el.photoImg) el.photoImg.style.display = "none";
     }
   }
 
