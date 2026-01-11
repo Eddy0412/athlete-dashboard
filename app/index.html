@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
-<title>Athlete Combine Dashboard (Local)</title>
+<title>Athlete Combine Dashboard (Local) v1.0.120</title>
 <!-- Libraries (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -1771,9 +1771,19 @@ function initModalWiring(){
     versionBtn.addEventListener("click", ()=>{
       openModal("Version & Changelog", `<div style="display:grid;gap:10px">
   <div style="font-weight:900">What’s new</div>
-  <div><b>v1.0.118</b> — Public View + header layout polish (UI fixes only).</div>
+  <div><b>v1.0.120</b> — Presenter Mode polish + best-results display (UI updates).</div>
 
   <div style="margin-top:10px;font-weight:900">Changelog</div>
+
+
+<div style="margin-top:6px;font-weight:900">v1.0.120</div>
+<ul style="margin:6px 0 0 18px">
+  <li>Presentation Mode improvements: synced athlete selection via <span class="mono">#sel=</span> and stable CDN photos.</li>
+  <li>Presenter shows best attempts only: 40yds, Broad Jump, 5-10-5, 3-Cone, Bench (with units and 2-decimal time formatting).</li>
+  <li>Spanish CSV field support in presenter: <span class="mono">Edad</span>, <span class="mono">Estatura</span>, <span class="mono">Peso</span>, <span class="mono">Lugar de Estudios</span>.</li>
+  <li>Presenter placeholders: missing tests still render as <span class="mono">—</span>; initials fallback enlarged for readability.</li>
+</ul>
+
 
 <div style="margin-top:6px;font-weight:900">v1.0.118</div>
 <ul style="margin:6px 0 0 18px">
