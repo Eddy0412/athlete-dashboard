@@ -334,85 +334,89 @@
     if(el.meta) el.meta.innerHTML = [sport,pos,team].filter(Boolean).map(esc).join(" • ") || "&nbsp;";
     if(el.counter) el.counter.textContent = selRaw ? `#${selRaw}` : "";
 
-    // School + location
+    // School (non-negotiable)
     const school = pick(r, ["School","Escuela","Colegio","school"]) || "";
-    const location = pick(r, ["Location","Ubicación","Ubicacion","Ciudad","Provincia","location"]) || "";
     if(el.school) el.school.innerHTML = school ? esc(school) : "—";
-    if(el.location) el.location.innerHTML = location ? esc(location) : "—";
 
-    // Stats grid (Age/Height/Weight + key results)
-    const usedKeys = new Set([
-      "Nombre","Name","Athlete","Player",
-      "Pos","Position","Posición",
-      "Sport","Deporte",
-      "Team","Equipo",
-      "Age","Edad","age",
-      "Height","Altura","Ht","height",
-      "Weight","Peso","Wt","weight",
-      "School","Escuela","Colegio","school",
-      "Location","Ubicación","Ubicacion","Ciudad","Provincia","location",
-      "Formulario#","Formulario","ID","Id","id",
-      "_photoUrl","photoUrl","PhotoUrl","PHOTO","Photo",
-      "Email","Phone","Telefono","Teléfono"
-    ]);
+    // Helpers to compute "best" from multiple columns if needed
+    function toNumber(v){
+      if(v === undefined || v === null) return null;
+      const s = String(v).replace(/,/g,".").trim();
+      const mm = s.match(/-?\d+(?:\.\d+)?/);
+      if(!mm) return null;
+      const n = parseFloat(mm[0]);
+      return Number.isFinite(n) ? n : null;
+    }
 
-    function statCard(k, v){
-      const vv = String(v ?? "").trim();
+    function statCard(label, value){
+      const vv = String(value ?? "").trim();
       if(!vv) return "";
-      return `<div class="stat"><div class="k">${esc(k)}</div><div class="v">${esc(vv)}</div></div>`;
+      return `<div class="stat"><div class="k">${esc(label)}</div><div class="v">${esc(vv)}</div></div>`;
     }
 
-    // Choose results fields to show
-    const preferred = [
-      "40yd","40Y","40","40 Time","40_time","Forty",
-      "Vertical","Vert","Salto Vertical",
-      "Broad Jump","Broad","Salto Largo",
-      "Shuttle","Pro Shuttle","20 Shuttle",
-      "3Cone","3 Cone","Cone",
-      "Bench","Bench Press","BP","Reps"
-    ];
-
-    const results = [];
-    // Add preferred keys if present
-    for(const k of preferred){
-      if(Object.prototype.hasOwnProperty.call(r, k) && String(r[k] ?? "").trim() !== ""){
-        results.push([k, r[k]]);
-      }
-    }
-    // Add other likely metric keys (time/jump/rep) up to limit
-    if(results.length < 6){
-      const reMetric = /(time|yd|yard|dash|40|vertical|broad|jump|shuttle|cone|bench|rep|press|agility|speed)/i;
+    function bestFromRow(regex, mode){
+      let bestVal = null;
+      let bestRaw = "";
       for(const k of Object.keys(r)){
-        if(usedKeys.has(k)) continue;
-        if(results.some(([kk]) => kk === k)) continue;
-        const val = String(r[k] ?? "").trim();
-        if(!val) continue;
-        if(reMetric.test(k)){
-          results.push([k, r[k]]);
-          if(results.length >= 6) break;
+        if(!regex.test(k)) continue;
+        const raw = r[k];
+        const n = toNumber(raw);
+        if(n === null) continue;
+        const rawS = String(raw ?? "").trim();
+        if(bestVal === null){
+          bestVal = n; bestRaw = rawS;
+        }else{
+          if(mode === "min" && n < bestVal){ bestVal = n; bestRaw = rawS; }
+          if(mode === "max" && n > bestVal){ bestVal = n; bestRaw = rawS; }
         }
       }
+      return bestRaw;
     }
+
+    function bestExplicit(keys){
+      for(const k of keys){
+        if(Object.prototype.hasOwnProperty.call(r, k) && String(r[k]??"").trim() !== ""){
+          return String(r[k]).trim();
+        }
+      }
+      return "";
+    }
+
+    // Best results (Coach-profile style)
+    const best40 = bestExplicit(["Best 40","Best 40yd","Best 40yd dash","Best 40yd Dash","40yd Best","Best40"]) ||
+                  bestFromRow(/(^|\b)(40\s*yd|40yd|forty|40\s*dash|40yd\s*dash)(\b|$)/i, "min");
+
+    const bestBroad = bestExplicit(["Best Broad","Best Broad Jump","Best Broad jump","Broad Jump Best","BestBroad"]) ||
+                      bestFromRow(/(^|\b)(broad\s*jump|broad)(\b|$)/i, "max");
+
+    const best5105 = bestExplicit(["Best 5-10-5","Best 5-10-5 (Pro Shuttle)","Best Pro Shuttle","Best Shuttle","5-10-5 Best","Pro Shuttle Best","Best5105"]) ||
+                     bestFromRow(/(^|\b)(5\s*-\s*10\s*-\s*5|5\s*10\s*5|5105|pro\s*shuttle|shuttle)(\b|$)/i, "min");
+
+    const best3Cone = bestExplicit(["Best 3-cone","Best 3 Cone","Best 3Cone","3-cone Best","3Cone Best","Best3Cone"]) ||
+                      bestFromRow(/(^|\b)(3\s*-?\s*cone|3cone|three\s*cone|cone)(\b|$)/i, "min");
+
+    const bestBench = bestExplicit(["Best Bench","Best Bench Press","Best BP","Bench Best","BP Best","BestBench"]) ||
+                      bestFromRow(/(^|\b)(bench|bench\s*press|bp|press\s*reps|reps)(\b|$)/i, "max");
 
     const cards = [];
     if(age) cards.push(statCard("Age", age));
     if(height) cards.push(statCard("Height", height));
     if(weight) cards.push(statCard("Weight", weight));
 
-    for(const [k,v] of results){
-      // Friendly label: trim extra spaces
-      cards.push(statCard(k, v));
-    }
+    if(best40) cards.push(statCard("Best 40yd", best40));
+    if(bestBroad) cards.push(statCard("Best Broad Jump", bestBroad));
+    if(best5105) cards.push(statCard("Best 5-10-5", best5105));
+    if(best3Cone) cards.push(statCard("Best 3-Cone", best3Cone));
+    if(bestBench) cards.push(statCard("Best Bench", bestBench));
 
-    if(el.stats) el.stats.innerHTML = cards.join("");
+    if(el.stats) el.stats.innerHTML = cards.join("") || "&nbsp;";
 
-    // Photo via CDN (same logic as index.html)
+    // Photo via CDN
     const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
     if(idRaw){
       const url = PHOTO_BASE_URL + padId(idRaw) + ".jpg";
       setPhoto(url, name);
     }else{
-      // no id: keep initials
       if(el.photoFallback){
         el.photoFallback.textContent = initials(name);
         el.photoFallback.style.display = "flex";
