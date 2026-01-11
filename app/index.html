@@ -1260,6 +1260,9 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
   renderRadar(r);
   renderBars(r);
 
+  // Sync selection to Presenter
+  try{ _pushToPresenter(r); }catch(e){}
+
   // Sync selection to presenter window (if open)
   _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
 }
@@ -1412,50 +1415,67 @@ $("file").addEventListener("change", (e) => {
 $("search").addEventListener("input", applyFilter);
 $("loadDefault").addEventListener("click", loadDefaultCsv);
 // Presentation window sync (index controls, external fullscreen presenter)
+// Most reliable: parent updates presenter URL hash on selection + persists latest athlete to localStorage.
 let _presentWin = null;
-let _presentReady = false;
+const PRES_KEY = "ac_presenter_current_athlete";
 
-function _sendToPresenter(payload){
+function _presentKeyForRow(r){
   try{
-    if(_presentWin && !_presentWin.closed){
-      _presentWin.postMessage(payload, "*");
-    }
+    const k = r?.[COL.frm] ?? r?.["Formulario#"] ?? r?.["Formulario"] ?? r?.["ID"] ?? r?.["Id"] ?? r?.["id"];
+    if(k !== undefined && k !== null && String(k).trim() !== "") return String(k);
   }catch(e){}
+  try{
+    if(typeof activeIndex === "number") return String(activeIndex);
+  }catch(e){}
+  return "";
+}
 
 function rowToPresenter(r){
-  // Provide presenter-friendly payload while preserving existing row object keys
+  // minimize + stabilize payload for storage
+  const key = _presentKeyForRow(r);
+  const base = {};
   try{
-    return Object.assign({}, r, { _photoUrl: (typeof photoUrlForRow === "function" ? photoUrlForRow(r) : "") });
-  }catch(e){
-    return Object.assign({}, r);
-  }
+    // shallow copy row values
+    for (const k in r) base[k] = r[k];
+  }catch(e){}
+  base._presentKey = key;
+  try{ base._photoUrl = (typeof photoUrlForRow === "function" ? photoUrlForRow(r) : ""); }catch(e){}
+  return base;
 }
 
-}
-
-function _sendCurrentToPresenter(){
+function _persistPresenter(payload){
   try{
-    if(typeof activeIndex !== "number" || activeIndex < 0) return;
-    const r = rows?.[activeIndex];
-    if(!r) return;
-    _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
+    localStorage.setItem(PRES_KEY, JSON.stringify(payload));
   }catch(e){}
 }
 
-window.addEventListener("message", (e) => {
-  if(e?.data?.type === "ac_presentation_ready"){
-    _presentReady = true;
-    _sendCurrentToPresenter();
-  }
-});
+function _updatePresenterHash(key){
+  try{
+    if(_presentWin && !_presentWin.closed){
+      _presentWin.location.hash = "sel=" + encodeURIComponent(key || "");
+    }
+  }catch(e){}
+}
+
+function _pushToPresenter(r){
+  if(!r) return;
+  const athlete = rowToPresenter(r);
+  const payload = { type: "ac_athlete_update", athlete };
+  _persistPresenter(payload);
+  _updatePresenterHash(athlete._presentKey);
+}
 
 $("presentBtn")?.addEventListener("click", () => {
-  _presentReady = false;
-  // Keep opener available (no noopener) so presenter can handshake back
-  _presentWin = window.open("presentation.html", "ac_presenter", "popup=1");
-  // Best-effort initial send (presenter will also request via ready handshake)
-  setTimeout(_sendCurrentToPresenter, 250);
+  _presentWin = window.open("presentation.html#sel=", "ac_presenter");
+  // best-effort initial push
+  setTimeout(() => {
+    try{
+      const r = rows?.[activeIndex];
+      if(r) _pushToPresenter(r);
+    }catch(e){}
+  }, 250);
 });
+
 
 // Drag & drop
 const dz = $("dropZone");
