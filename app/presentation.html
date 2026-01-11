@@ -231,33 +231,21 @@
 
 <script>
 (function(){
-  const PRES_KEY = "ac_presenter_current_athlete";
+  const PHOTO_BASE_URL = "https://media.kkmsports.xyz/athletes/";
 
-  let _photoReq = 0;
-  let _currentAthleteKey = "";
-  let _currentPhotoId = "";
-  let _currentPhotoSrc = "";
-  let _renderedId = "";
+  const $ = (id)=>document.getElementById(id);
+
   const el = {
-    name: document.getElementById("name"),
-    metaRow: document.getElementById("metaRow"),
-    stats: document.getElementById("stats"),
-    school: document.getElementById("school"),
-    location: document.getElementById("location"),
-    photoImg: document.getElementById("photoImg"),
-    photoFallback: document.getElementById("photoFallback"),
-    counterPill: document.getElementById("counterPill"),
-    fsBtn: document.getElementById("fsBtn"),
-    exitBtn: document.getElementById("exitBtn"),
-    prevBtn: document.getElementById("prevBtn"),
-    nextBtn: document.getElementById("nextBtn"),
-  };
-
-  const pick = (obj, keys) => {
-    for(const k of keys){
-      if(obj && obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== "") return obj[k];
-    }
-    return "";
+    name: $("name"),
+    meta: $("metaRow"),
+    stats: $("stats"),
+    school: $("school"),
+    location: $("location"),
+    photoImg: $("photoImg"),
+    photoFallback: $("photoFallback"),
+    counter: $("counterPill"),
+    fsBtn: $("fsBtn"),
+    exitBtn: $("exitBtn"),
   };
 
   function esc(s){
@@ -269,10 +257,24 @@
       .replaceAll("'","&#39;");
   }
 
-  function getSelFromHash(){
-    const h = (window.location.hash || "").trim();
-    const m = h.match(/#sel=([^&]+)/i);
-    return m ? decodeURIComponent(m[1]) : "";
+  function pick(obj, keys){
+    for(const k of keys){
+      if(obj && obj[k] !== undefined && obj[k] !== "") return obj[k];
+    }
+    return "";
+  }
+
+  function initials(name){
+    const s = String(name||"").trim();
+    if(!s) return "—";
+    const p = s.split(/\s+/);
+    return ((p[0]?.[0]||"") + (p[p.length-1]?.[0]||"")).toUpperCase();
+  }
+
+  function padId(v){
+    const s = String(v ?? "").trim();
+    if(!s) return "";
+    return s.padStart(3, "0");
   }
 
   function normId(v){
@@ -281,59 +283,34 @@
     return s.replace(/^0+/, "") || "0";
   }
 
-  function initials(name){
-    const parts = String(name||"").trim().split(/\s+/).filter(Boolean);
-    if(!parts.length) return "—";
-    const a = (parts[0]||"")[0]||"";
-    const b = (parts[parts.length-1]||"")[0]||"";
-    return (a+b).toUpperCase();
+  function getSel(){
+    const h = window.location.hash || "";
+    const m = h.match(/#sel=([^&]+)/i);
+    return m ? decodeURIComponent(m[1]) : "";
   }
 
-  function setPhotoUrl(url, nameForFallback, athleteIdRaw){
-    const athleteId = normId(athleteIdRaw);
-    const fallbackText = initials(nameForFallback);
-
-    // If a later render can't resolve a photo, don't wipe a previously loaded photo for the same athlete.
-    if(!url && athleteId && athleteId === _currentPhotoId && _currentPhotoSrc){
-      if(el.photoFallback) el.photoFallback.style.display = "none";
-      if(el.photoImg){
-        el.photoImg.style.display = "block";
-        el.photoImg.src = _currentPhotoSrc;
-      }
-      return;
-    }
-
-    if(el.photoFallback){
-      el.photoFallback.textContent = fallbackText;
-      el.photoFallback.style.display = "flex";
-    }
-
+  function setPhoto(url, name){
     if(!el.photoImg) return;
 
-    // Hide until we confirm load
+    if(el.photoFallback){
+      el.photoFallback.textContent = initials(name);
+      el.photoFallback.style.display = "flex";
+    }
     el.photoImg.style.display = "none";
 
-    if(!url){
-      el.photoImg.removeAttribute("src");
-      _currentPhotoSrc = "";
-      _currentPhotoId = athleteId;
-      return;
-    }
+    const token = Date.now() + Math.random();
+    el.photoImg.dataset.token = token;
 
-    const thisReq = _photoReq;
     el.photoImg.onload = () => {
-      if(thisReq !== _photoReq) return;
-      _currentPhotoId = athleteId;
-      _currentPhotoSrc = url;
+      if(el.photoImg.dataset.token != token) return;
       if(el.photoFallback) el.photoFallback.style.display = "none";
       el.photoImg.style.display = "block";
     };
+
     el.photoImg.onerror = () => {
-      if(thisReq !== _photoReq) return;
-      _currentPhotoId = athleteId;
-      _currentPhotoSrc = "";
+      if(el.photoImg.dataset.token != token) return;
       if(el.photoFallback){
-        el.photoFallback.textContent = fallbackText;
+        el.photoFallback.textContent = initials(name);
         el.photoFallback.style.display = "flex";
       }
       el.photoImg.style.display = "none";
@@ -342,269 +319,80 @@
     el.photoImg.src = url;
   }
 
-  async function resolvePhoto(r){
-    const direct = pick(r, ["_photoUrl", "photoUrl", "PhotoUrl"]);
-    if(direct) return direct;
+  function render(r, selRaw){
+    const name = pick(r, ["Nombre","Name","Athlete","Player"]) || "—";
+    const pos  = pick(r, ["Pos","Position","Posición"]) || "";
+    const sport = pick(r, ["Sport","Deporte"]) || "";
+    const team = pick(r, ["Team","Equipo"]) || "";
+    const age = pick(r, ["Age","Edad"]) || "";
 
-    const id = pick(r, ["Formulario#", "Formulario", "ID", "Id", "id"]);
-    const candidates = [
-      `photos/${id}.jpg`,
-      `photos/${id}.jpeg`,
-      `photos/${id}.png`,
-      `photos/${id}.webp`,
-    ].filter(() => id);
+    if(el.name) el.name.innerHTML = esc(name);
+    if(el.meta) el.meta.innerHTML = [sport,pos,team].filter(Boolean).map(esc).join(" • ");
+    if(el.stats) el.stats.innerHTML = age ? `<span class="k">Age</span><span class="v">${esc(age)}</span>` : "";
+    if(el.counter) el.counter.textContent = selRaw ? `#${selRaw}` : "";
 
-    for(const url of candidates){
-      try{
-        const img = new Image();
-        await new Promise((ok, bad) => {
-          img.onload = ok;
-          img.onerror = bad;
-          img.src = url;
-        });
-        return url;
-      }catch(e){}
+    const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
+    if(idRaw){
+      const url = PHOTO_BASE_URL + padId(idRaw) + ".jpg";
+      setPhoto(url, name);
     }
-    return "";
   }
 
-  function renderStatsGrid(r){
-    if(!el.stats) return;
-
-    // Show a clean set of common fields if present, otherwise show first few numeric-ish fields.
-    const primary = [
-      ["Age", ["Age","Edad","age"]],
-      ["Height", ["Height","Altura","height"]],
-      ["Weight", ["Weight","Peso","weight"]],
-      ["Position", ["Pos","Position","Posición","position"]],
-      ["Team", ["Team","Equipo","team"]],
-      ["Sport", ["Sport","Deporte","sport"]],
-    ];
-
-    const items = [];
-    for(const [label, keys] of primary){
-      const v = pick(r, keys);
-      if(v !== "") items.push([label, v]);
-    }
-
-    // Fallback: add up to 6 additional fields that look like combine metrics
-    if(items.length < 4 && r){
-      const metricHints = ["40", "dash", "yard", "vertical", "broad", "bench", "shuttle", "cone", "agility", "sprint", "jump"];
-      for(const k of Object.keys(r)){
-        if(items.length >= 10) break;
-        const lk = k.toLowerCase();
-        if(primary.some(([_, keys]) => keys.includes(k))) continue;
-        if(metricHints.some(h => lk.includes(h)) || /\d/.test(lk)){
-          const v = String(r[k] ?? "").trim();
-          if(v) items.push([k, v]);
-        }
-      }
-    }
-
-    if(!items.length){
-      el.stats.innerHTML = '<div class="stat"><span class="k">—</span><span class="v">—</span></div>';
-      return;
-    }
-
-    el.stats.innerHTML = items.map(([k,v]) =>
-      `<div class="stat"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`
-    ).join("");
-  }
-
-  async function renderAthlete(r){
-    if(!r) return;
-
-    const name = pick(r, ["Nombre","Name","Athlete","athlete","Player","player"]) || "—";
-    const pos  = pick(r, ["Pos","Position","Posición","position"]) || "";
-    const sport = pick(r, ["Sport","Deporte","sport"]) || "";
-    const team  = pick(r, ["Team","Equipo","team"]) || "";
-
-    const school = pick(r, ["School","Colegio","Escuela","school"]) || "";
-    const location = pick(r, ["Location","Ubicación","Ciudad","Provincia","location"]) || "";
-
-    if(el.name) el.name.textContent = name;
-    if(el.metaRow) el.metaRow.textContent = [sport, pos, team].filter(Boolean).join(" • ") || "—";
-    if(el.school) el.school.textContent = school || "—";
-    if(el.location) el.location.textContent = location || "—";
-
-    renderStatsGrid(r);
-
-    const photo = await resolvePhoto(r);
-    setPhotoUrl(photo, name);
-  }
-
-  function tryLoadFromStorage(){
-    try{
-      const raw = localStorage.getItem(PRES_KEY);
-      if(!raw) return false;
-      const payload = JSON.parse(raw);
-      if(payload?.type === "ac_athlete_update" && payload?.athlete){
-        const sel = getSelFromHash();
-        const selId = normId(sel);
-        const pid = normId(pick(payload.athlete, ["Formulario#", "Formulario", "ID", "Id", "id"]) || "");
-
-        // If presenter is being driven by #sel, ignore storage updates for other athletes
-        if(selId && pid && selId !== pid) return false;
-
-        // If this storage payload doesn't include a photo URL, don't let it wipe an already loaded photo
-        const hasPhotoUrl = !!(payload.athlete._photoUrl || payload.athlete.photoUrl || payload.athlete.PhotoUrl);
-        if(!hasPhotoUrl && pid && pid === _currentPhotoId && _currentPhotoSrc){
-          // Render text fields, but keep current photo
-          const prevSrc = _currentPhotoSrc;
-          renderAthlete(payload.athlete);
-          if(el.photoImg){
-            el.photoImg.style.display = "block";
-            el.photoImg.src = prevSrc;
-          }
-          if(el.photoFallback) el.photoFallback.style.display = "none";
-          return true;
-        }
-
-        renderAthlete(payload.athlete);
-        return true;
-      }
-    }catch(e){}
-    return false;
-  }
-
-  function parseCsvSimple(text){
+  function parseCsv(text){
     const rows = [];
-    let i = 0, field = "", row = [], inQuotes = false;
-    const pushField = () => { row.push(field); field = ""; };
-    const pushRow = () => { rows.push(row); row = []; };
-
-    while(i < text.length){
-      const c = text[i];
-      if(inQuotes){
-        if(c === '"'){
-          const next = text[i+1];
-          if(next === '"'){ field += '"'; i += 2; continue; }
-          inQuotes = false; i++; continue;
-        }
-        field += c; i++; continue;
-      }else{
-        if(c === '"'){ inQuotes = true; i++; continue; }
-        if(c === ','){ pushField(); i++; continue; }
-        if(c === '\r'){ i++; continue; }
-        if(c === '\n'){ pushField(); pushRow(); i++; continue; }
-        field += c; i++; continue;
+    let i=0,f="",row=[],q=false;
+    const pf=()=>{row.push(f);f="";};
+    const pr=()=>{rows.push(row);row=[];};
+    while(i<text.length){
+      const c=text[i];
+      if(q){
+        if(c=='"' && text[i+1]=='"'){f+='"';i+=2;continue;}
+        if(c=='"'){q=false;i++;continue;}
+        f+=c;i++;continue;
       }
+      if(c=='"'){q=true;i++;continue;}
+      if(c==','){pf();i++;continue;}
+      if(c=='\n'){pf();pr();i++;continue;}
+      if(c=='\r'){i++;continue;}
+      f+=c;i++;
     }
-    pushField();
-    if(row.length > 1 || (row.length === 1 && row[0] !== "")) pushRow();
-
-    if(!rows.length) return [];
-    const headers = rows[0].map(h => String(h).trim());
-    const out = [];
-    for(let r = 1; r < rows.length; r++){
-      const obj = {};
-      for(let c = 0; c < headers.length; c++){
-        obj[headers[c]] = rows[r][c] ?? "";
-      }
-      out.push(obj);
-    }
-    return out;
+    pf(); if(row.length) pr();
+    const h=rows.shift();
+    return rows.map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]||""])));
   }
 
-  async function fetchResultsCsvText(){
-    // Resolve from directory (ignore hash/query)
+  async function loadCsv(){
     const dir = window.location.origin + window.location.pathname.replace(/[^\/]*$/, "");
-    const url1 = new URL("./results.csv", dir).toString();
-
-    let res = await fetch(url1, { cache: "no-store" });
-    if(res.ok) return await res.text();
-
-    // fallback: try without "./"
-    const url2 = new URL("results.csv", dir).toString();
-    res = await fetch(url2, { cache: "no-store" });
-    if(res.ok) return await res.text();
-
-    throw new Error("results.csv not reachable");
+    const res = await fetch(new URL("./results.csv", dir), { cache:"no-store" });
+    if(!res.ok) throw new Error("results.csv not found");
+    return parseCsv(await res.text());
   }
 
-  async function loadFromCsvBySel(){
-    const selRaw = getSelFromHash();
-    if(!selRaw) return false;
-
-    try{
-      const text = await fetchResultsCsvText();
-      const list = (window.Papa && window.Papa.parse)
-        ? window.Papa.parse(text, { header:true, skipEmptyLines:true }).data
-        : parseCsvSimple(text);
-
-      const selN = normId(selRaw);
-      const candidates = ["Formulario#", "Formulario", "ID", "Id", "id"];
-      let found = null;
-
-      for(const r of list){
-        for(const k of candidates){
-          if(r && Object.prototype.hasOwnProperty.call(r, k)){
-            const v = String(r[k] ?? "").trim();
-            if(!v) continue;
-            const vN = normId(v);
-            if(v === selRaw || vN === selN){
-              found = r;
-              break;
-            }
-          }
-        }
-        if(found) break;
-      }
-
-      if(found){
-        await renderAthlete(found);
-        if(el.counterPill) el.counterPill.textContent = `#${String(selRaw).padStart(3,"0")}`;
-        return true;
-      }
-
-      if(el.counterPill) el.counterPill.textContent = `#${String(selRaw).padStart(3,"0")}`;
-      return false;
-
-    }catch(err){
-      console.warn(err);
-      return false;
-    }
-  }
-
+  let csv=null, lastSel="";
   async function hydrate(){
-    // Update counter pill immediately from hash
-    const sel = getSelFromHash();
-    if(el.counterPill && sel) el.counterPill.textContent = `#${String(sel).padStart(3,"0")}`;
-
-    // Storage first (fast), then hash lookup (authoritative)
-    const hadStorage = tryLoadFromStorage();
-    const hadSel = await loadFromCsvBySel();
-
-    if(!hadStorage && !hadSel){
-      // Show a lightweight hint in the meta row if nothing loaded
-      if(el.metaRow) el.metaRow.textContent = "Waiting for selection…";
-    }
+    const sel = getSel();
+    if(!sel || sel===lastSel) return;
+    lastSel=sel;
+    if(!csv) csv = await loadCsv();
+    const selN = normId(sel);
+    const row = csv.find(r => normId(pick(r,["Formulario#","Formulario","ID","Id","id"])) === selN);
+    if(row) render(row, sel);
   }
 
-  // Fullscreen / exit button hooks
-  async function toggleFullscreen(){
+  el.fsBtn?.addEventListener("click", async()=>{
     try{
-      if(!document.fullscreenElement){
-        await document.documentElement.requestFullscreen();
-      }else{
-        await document.exitFullscreen();
-      }
+      if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
     }catch(e){}
-  }
-  el.fsBtn?.addEventListener("click", toggleFullscreen);
-  el.exitBtn?.addEventListener("click", () => { try{ window.close(); }catch(e){} });
-
-  // Live updates via storage + hash
-  window.addEventListener("storage", (ev) => {
-    if(ev.key === PRES_KEY){
-      tryLoadFromStorage();
-    }
   });
-  window.addEventListener("hashchange", () => { hydrate(); });
 
+  el.exitBtn?.addEventListener("click", ()=>{ try{ window.close(); }catch(e){} });
+
+  window.addEventListener("hashchange", hydrate);
   hydrate();
 })();
 </script>
+
 
 </body>
 </html>
