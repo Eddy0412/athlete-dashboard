@@ -348,6 +348,24 @@
       return Number.isFinite(n) ? n : null;
     }
 
+    function formatTime(raw){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      if(/[a-zA-Z]/.test(s)) return s;
+      const n = toNumber(s);
+      if(n === null) return s;
+      return n.toFixed(2);
+    }
+
+    function formatNumber(raw, decimals){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      if(/[a-zA-Z]/.test(s)) return s;
+      const n = toNumber(s);
+      if(n === null) return s;
+      return (decimals === 0) ? String(Math.round(n)) : n.toFixed(decimals);
+    }
+
     function addUnit(raw, unit){
       const s = String(raw ?? "").trim();
       if(!s) return "";
@@ -361,8 +379,8 @@
 
     function statCard(label, value){
       const vv = String(value ?? "").trim();
-      if(!vv) return "";
-      return `<div class="stat"><div class="k">${esc(label)}</div><div class="v">${esc(vv)}</div></div>`;
+      const show = vv ? vv : "—";
+      return `<div class="stat"><div class="k">${esc(label)}</div><div class="v">${esc(show)}</div></div>`;
     }
 
     function bestFromRow(regex, mode){
@@ -410,17 +428,17 @@
                       bestFromRow(/(^|\b)(bench|bench\s*press|bp|press\s*reps|reps)(\b|$)/i, "max");
 
     const cards = [];
-    if(age) cards.push(statCard("Age", age));
-    if(height) cards.push(statCard("Height", height));
-    if(weight) cards.push(statCard("Weight", String(weight).trim() ? (String(weight).trim() + " lbs") : ""));
+    cards.push(statCard("Age", age));
+    cards.push(statCard("Height", height));
+    cards.push(statCard("Weight", String(weight).trim() ? (String(weight).trim() + " lbs") : ""));
 
-    if(best40) cards.push(statCard("40yds", addUnit(best40, "s")));
-    if(bestBroad) cards.push(statCard("Broad Jump", addUnit(bestBroad, "in")));
-    if(best5105) cards.push(statCard("5-10-5", addUnit(best5105, "s")));
-    if(best3Cone) cards.push(statCard("3-Cone", addUnit(best3Cone, "s")));
-    if(bestBench) cards.push(statCard("Bench", addUnit(bestBench, "reps")));
+    if(best40) cards.push(statCard("40yds", addUnit(formatTime(best40), "s")));
+    if(bestBroad) cards.push(statCard("Broad Jump", addUnit(formatNumber(bestBroad, 0), "in")));
+    if(best5105) cards.push(statCard("5-10-5", addUnit(formatTime(best5105), "s")));
+    if(best3Cone) cards.push(statCard("3-Cone", addUnit(formatTime(best3Cone), "s")));
+    if(bestBench) cards.push(statCard("Bench", addUnit(formatNumber(bestBench, 0), "reps")));
 
-    if(el.stats) el.stats.innerHTML = cards.join("") || "&nbsp;";
+    if(el.stats) el.stats.innerHTML = cards.join("");
 
     // Photo via CDN
     const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
