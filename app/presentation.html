@@ -348,6 +348,17 @@
       return Number.isFinite(n) ? n : null;
     }
 
+    function addUnit(raw, unit){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      const lower = s.toLowerCase();
+      // If already contains unit or non-numeric suffix, don't append
+      if(lower.includes(unit.toLowerCase())) return s;
+      // If it contains any letters (like 'sec', 'in', 'reps') assume unit present
+      if(/[a-zA-Z]/.test(s)) return s;
+      return s + " " + unit;
+    }
+
     function statCard(label, value){
       const vv = String(value ?? "").trim();
       if(!vv) return "";
@@ -383,19 +394,19 @@
     }
 
     // Best results (Coach-profile style)
-    const best40 = bestExplicit(["Best 40","Best 40yd","Best 40yd dash","Best 40yd Dash","40yd Best","Best40"]) ||
+    const best40 = bestExplicit(["40yds","40 yds","40yd","40 yd","40","40 Time","Tiempo 40","Best 40","Best 40yd","Best 40yd dash","Best 40yd Dash","40yd Best","Best40"]) ||
                   bestFromRow(/(^|\b)(40\s*yd|40yd|forty|40\s*dash|40yd\s*dash)(\b|$)/i, "min");
 
-    const bestBroad = bestExplicit(["Best Broad","Best Broad Jump","Best Broad jump","Broad Jump Best","BestBroad"]) ||
+    const bestBroad = bestExplicit(["Broad Jump","Salto Largo","Salto","Best Broad","Best Broad Jump","Best Broad jump","Broad Jump Best","BestBroad"]) ||
                       bestFromRow(/(^|\b)(broad\s*jump|broad)(\b|$)/i, "max");
 
-    const best5105 = bestExplicit(["Best 5-10-5","Best 5-10-5 (Pro Shuttle)","Best Pro Shuttle","Best Shuttle","5-10-5 Best","Pro Shuttle Best","Best5105"]) ||
+    const best5105 = bestExplicit(["5-10-5","5 10 5","Pro Shuttle","Shuttle","Tiempo 5-10-5","Best 5-10-5","Best 5-10-5 (Pro Shuttle)","Best Pro Shuttle","Best Shuttle","5-10-5 Best","Pro Shuttle Best","Best5105"]) ||
                      bestFromRow(/(^|\b)(5\s*-\s*10\s*-\s*5|5\s*10\s*5|5105|pro\s*shuttle|shuttle)(\b|$)/i, "min");
 
-    const best3Cone = bestExplicit(["Best 3-cone","Best 3 Cone","Best 3Cone","3-cone Best","3Cone Best","Best3Cone"]) ||
+    const best3Cone = bestExplicit(["3-Cone","3 Cone","3Cone","Cone","Tiempo 3-Cone","Best 3-cone","Best 3 Cone","Best 3Cone","3-cone Best","3Cone Best","Best3Cone"]) ||
                       bestFromRow(/(^|\b)(3\s*-?\s*cone|3cone|three\s*cone|cone)(\b|$)/i, "min");
 
-    const bestBench = bestExplicit(["Best Bench","Best Bench Press","Best BP","Bench Best","BP Best","BestBench"]) ||
+    const bestBench = bestExplicit(["Bench","Bench Press","Press Banca","Banca","BP","Reps Bench","Best Bench","Best Bench Press","Best BP","Bench Best","BP Best","BestBench"]) ||
                       bestFromRow(/(^|\b)(bench|bench\s*press|bp|press\s*reps|reps)(\b|$)/i, "max");
 
     const cards = [];
@@ -403,11 +414,11 @@
     if(height) cards.push(statCard("Height", height));
     if(weight) cards.push(statCard("Weight", String(weight).trim() ? (String(weight).trim() + " lbs") : ""));
 
-    if(best40) cards.push(statCard("40yd Dash", best40));
-    if(bestBroad) cards.push(statCard("Broad Jump", bestBroad));
-    if(best5105) cards.push(statCard("5-10-5", best5105));
-    if(best3Cone) cards.push(statCard("3-Cone", best3Cone));
-    if(bestBench) cards.push(statCard("Bench Press", bestBench));
+    if(best40) cards.push(statCard("40yds", addUnit(best40, "s")));
+    if(bestBroad) cards.push(statCard("Broad Jump", addUnit(bestBroad, "in")));
+    if(best5105) cards.push(statCard("5-10-5", addUnit(best5105, "s")));
+    if(best3Cone) cards.push(statCard("3-Cone", addUnit(best3Cone, "s")));
+    if(bestBench) cards.push(statCard("Bench", addUnit(bestBench, "reps")));
 
     if(el.stats) el.stats.innerHTML = cards.join("") || "&nbsp;";
 
