@@ -326,16 +326,16 @@
     const team = pick(r, ["Team","Equipo"]) || "";
 
     // Core fields
-    const age = pick(r, ["Age","Edad","age"]) || "";
-    const height = pick(r, ["Height","Altura","Ht","height"]) || "";
-    const weight = pick(r, ["Weight","Peso","Wt","weight"]) || "";
+    const age = pick(r, ["Edad","Age","age"]) || "";
+    const height = pick(r, ["Estatura","Altura","Height","Ht","height"]) || "";
+    const weight = pick(r, ["Peso","Weight","Wt","weight"]) || "";
 
     if(el.name) el.name.innerHTML = esc(name);
     if(el.meta) el.meta.innerHTML = [sport,pos,team].filter(Boolean).map(esc).join(" • ") || "&nbsp;";
     if(el.counter) el.counter.textContent = selRaw ? `#${selRaw}` : "";
 
     // School (non-negotiable)
-    const school = pick(r, ["School","Escuela","Colegio","school"]) || "";
+    const school = pick(r, ["Lugar de Estudios","Lugar de estudios","Lugar_de_Estudios","School","Escuela","Colegio","school"]) || "";
     if(el.school) el.school.innerHTML = school ? esc(school) : "—";
 
     // Helpers to compute "best" from multiple columns if needed
@@ -401,13 +401,13 @@
     const cards = [];
     if(age) cards.push(statCard("Age", age));
     if(height) cards.push(statCard("Height", height));
-    if(weight) cards.push(statCard("Weight", weight));
+    if(weight) cards.push(statCard("Weight", String(weight).trim() ? (String(weight).trim() + " lbs") : ""));
 
-    if(best40) cards.push(statCard("Best 40yd", best40));
-    if(bestBroad) cards.push(statCard("Best Broad Jump", bestBroad));
-    if(best5105) cards.push(statCard("Best 5-10-5", best5105));
-    if(best3Cone) cards.push(statCard("Best 3-Cone", best3Cone));
-    if(bestBench) cards.push(statCard("Best Bench", bestBench));
+    if(best40) cards.push(statCard("40yd Dash", best40));
+    if(bestBroad) cards.push(statCard("Broad Jump", bestBroad));
+    if(best5105) cards.push(statCard("5-10-5", best5105));
+    if(best3Cone) cards.push(statCard("3-Cone", best3Cone));
+    if(bestBench) cards.push(statCard("Bench Press", bestBench));
 
     if(el.stats) el.stats.innerHTML = cards.join("") || "&nbsp;";
 
