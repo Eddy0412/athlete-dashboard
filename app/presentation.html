@@ -187,6 +187,8 @@
     .name{ font-size: 26px; }
     .grid{ grid-template-columns: 1fr; }
   }
+
+#photoFallback{ font-size:64px; letter-spacing:1px; }
 </style>
 </head>
 <body>
@@ -426,8 +428,13 @@
     const best5105 = bestExplicit(["5-10-5","5 10 5","Pro Shuttle","Shuttle","Tiempo 5-10-5","Best 5-10-5","Best 5-10-5 (Pro Shuttle)","Best Pro Shuttle","Best Shuttle","5-10-5 Best","Pro Shuttle Best","Best5105"]) ||
                      bestFromRow(/(^|\b)(5\s*-\s*10\s*-\s*5|5\s*10\s*5|5105|pro\s*shuttle|shuttle)(\b|$)/i, "min");
 
-    const best3Cone = bestExplicit(["3-Cone","3 Cone","3Cone","Cone","Tiempo 3-Cone","Best 3-cone","Best 3 Cone","Best 3Cone","3-cone Best","3Cone Best","Best3Cone"]) ||
-                      bestFromRow(/(^|\b)(3\s*-?\s*cone|3cone|three\s*cone|cone)(\b|$)/i, "min");
+    // 3- CONE DRILL — best of attempts (includes "2da Vuelta")
+    const best3Cone = bestExplicit([
+      "3- CONE DRILL",
+      "3- CONE DRILL 2da Vuelta",
+      "3-Cone","3 Cone","3Cone","Cone","Tiempo 3-Cone","Tiempo_3_Cone",
+      "Best 3-cone","Best 3 Cone","Best 3Cone","3-cone Best","3Cone Best","Best3Cone"
+    ]) || bestFromRow(/3\s*-\s*CONE\s*DRILL|3\s*-?\s*cone|3cone|three\s*cone|cone/i, "min");
 
     const bestBench = bestExplicit(["Bench","Bench Press","Press Banca","Banca","BP","Reps Bench","Best Bench","Best Bench Press","Best BP","Bench Best","BP Best","BestBench"]) ||
                       bestFromRow(/(^|\b)(bench|bench\s*press|bp|press\s*reps|reps)(\b|$)/i, "max");
