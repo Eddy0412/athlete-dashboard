@@ -412,8 +412,13 @@
     }
 
     // Best results (Coach-profile style)
-    const best40 = bestExplicit(["40yds","40 yds","40yd","40 yd","40","40 Time","Tiempo 40","Best 40","Best 40yd","Best 40yd dash","Best 40yd Dash","40yd Best","Best40"]) ||
-                  bestFromRow(/(^|\b)(40\s*yd|40yd|forty|40\s*dash|40yd\s*dash)(\b|$)/i, "min");
+    // 40 YDS DASH (SEGUNDOS) — best of attempts (includes "2da Vuelta")
+    const best40 = bestExplicit([
+      "40 YDS DASH (SEGUNDOS)",
+      "40 YDS DASH (SEGUNDOS) 2da Vuelta",
+      "40yds","40 yds","40yd","40 yd","40","40 Time","Tiempo 40","Tiempo_40",
+      "40yds (s)","40yd (s)","Tiempo 40yd","Tiempo 40 yds"
+    ]) || bestFromRow(/40\s*YDS\s*DASH\s*\(SEGUNDOS\)|40\s*yds?\s*dash|40\s*yds?|forty|tiempo\s*40/i, "min");
 
     const bestBroad = bestExplicit(["Broad Jump","Salto Largo","Salto","Best Broad","Best Broad Jump","Best Broad jump","Broad Jump Best","BestBroad"]) ||
                       bestFromRow(/(^|\b)(broad\s*jump|broad)(\b|$)/i, "max");
