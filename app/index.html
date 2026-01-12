@@ -74,6 +74,22 @@
       background: rgba(0,200,170,.12);
       color:#e8fff8;
     }
+    .pillPro{
+      font-size:10px;
+      padding:3px 10px;
+      border-radius:999px;
+      border:1px solid rgba(81,202,245,.28);
+      background: rgba(0,180,120,.14);
+      color:#eafff6;
+    }
+
+
+/* Intelligence tiers (v1.0.121) */
+.tierPill{ font-size:10px; padding:0px 6px; border-radius:999px; border:1px solid rgba(255,255,255,.14); letter-spacing:.3px; }
+.tier-elite{ background:rgba(102,217,239,.14); border-color:rgba(102,217,239,.35); }
+.tier-good{ background:rgba(81,202,245,.12); border-color:rgba(81,202,245,.32); }
+.tier-avg{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.14); }
+.tier-low{ background:rgba(255,107,107,.10); border-color:rgba(255,107,107,.30); }
 
     /* Public view indicator (subtle, small) */
     .pillPublic{
@@ -171,7 +187,7 @@ canvas{width:100% !important; height:320px !important}
     /* Hide position controls/tooltip in Scout Mode */
     body.scoutMode #posTooltip{display:none !important;}
     body.scoutMode #posInfoBtn{display:none !important;}
-    body.scoutMode #posSelect{display:none !important;}
+    body.scoutMode #posSelect{ color:#fff !important; }
 
     /* Save real estate in scout mode */
     body.scoutMode #twoColWrap{display:none !important;}
@@ -446,6 +462,29 @@ body.scrollLocked{overscroll-behavior: none;}
 #posSelect, #posSelect option { color: #111 !important; }
 #posSelect option { background: #fff; }
 
+
+/* Intelligence visibility (v1.0.121) */
+html.publicView #scorePill,
+html.publicView #intelCard,
+html.publicView .tierPill,
+html.publicView .sortWrap{ display:none !important; }
+
+html.mediaView #scorePill,
+html.mediaView #intelCard,
+html.mediaView .tierPill,
+html.mediaView .sortWrap{ display:none !important; }
+
+/* Pro View: like Public, but with intelligence enabled */
+html.proView #csvLabel,
+html.proView #photosLabel,
+html.proView #file,
+html.proView #photos,
+html.proView #toggleScout,
+html.proView #toggleCoach,
+html.proView #toggleMedia{ display:none !important; }
+
+html.proView #presentBtn{ display:none !important; }
+html.proView #versionBtn{ display:none !important; }
 /* Public View: hide advanced controls */
 .publicView #photosLabel,
 .publicView #csvLabel,
@@ -462,12 +501,30 @@ html.publicView #presentBtn{display:none !important;}
 /* Media view: hide GitHub + Changelog buttons (all widths) */
 html.mediaView #githubBtn,
 html.mediaView #versionBtn{display:none !important;}
+
+/* Strengths & Flags icons */
+.sfIcon{ display:inline-block; width:18px; margin-right:6px; transform: translateY(1px); }
+.sfGood{ color: rgba(180,255,220,.95); }
+.sfWarn{ color: rgba(255,210,140,.95); }
+
+/* Sort dropdown readability */
+#sortSelect{ color:#fff !important; }
+#sortSelect option{ color:#111; }
+
+/* Position dropdown readability */
+#posSelect{ color:#fff; }
+#posSelect option{ color:#111; }
+
+/* Position dropdown color fix (safe override) */
+select#posSelect{ color:#fff !important; }
+select#posSelect option{ color:#111 !important; }
+
 </style>
 </head>
 <body>
 <header>
 <div class="wrap title"><div class="titleBar"><div>
-<h1>Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.120</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span><span class="pill pillAdmin" id="adminPill" style="display:none;margin-left:6px">Admin</span></h1>
+<h1>Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.121</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillPro" id="proPill" style="display:none;margin-left:6px">Pro</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span><span class="pill pillAdmin" id="adminPill" style="display:none;margin-left:6px">Admin</span></h1>
 <div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
 </div><div class="topRightControls"><button class="linkBtn btnIcon" id="loadDefault" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24">
 <path d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-14.9-2M4 16a8 8 0 0014.9 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
@@ -490,6 +547,19 @@ html.mediaView #versionBtn{display:none !important;}
 <input class="input" id="search" placeholder="Search athlete name…"/>
 <button aria-label="Clear search" class="linkBtn btnIcon" id="clearSearch" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--muted);font-size:14px;font-weight:400;cursor:pointer;padding:0;line-height:1" type="button">x</button>
 </div>
+<div class="sortWrap" style="display:flex;align-items:center;gap:8px;margin-left:auto">
+  <span class="small muted">Sort</span>
+  <select class="input" id="sortSelect" style="width:210px">
+    <option value="name">Name (A→Z)</option>
+    <option value="score">Athletic Score (High→Low)</option>
+    <option value="dash40">40yd (Fast→Slow)</option>
+    <option value="broad">Broad Jump (High→Low)</option>
+    <option value="shuttle">5-10-5 (Fast→Slow)</option>
+    <option value="cone">3-Cone (Fast→Slow)</option>
+    <option value="bench">Bench (High→Low)</option>
+  </select>
+</div>
+
 <button class="btn drawerPrimary" id="toggleScout">Scout Mode: Off</button>
 <button class="btn drawerPrimary" id="toggleCoach">Coach Mode: Off</button><button class="btn drawerPrimary" id="toggleMedia">Media Mode: Off</button>
 <label class="btn drawerPrimary" for="photos" id="photosLabel">Load Photos</label>
@@ -525,7 +595,7 @@ html.mediaView #versionBtn{display:none !important;}
 <div style="font-weight:800">Athletes</div>
 <div class="small" id="athleteCount">0 loaded</div>
 </div>
-<span class="pill" id="statusPill">No data</span>
+<span class="pill" id="dataSourcePill" style="margin-right:6px">—</span><span class="pill" id="statusPill">No data</span>
 </div>
 <div class="bd">
 <div class="drop" id="dropZone">
@@ -556,7 +626,7 @@ html.mediaView #versionBtn{display:none !important;}
 <div id="athleteName" style="font-weight:800">Select an athlete</div>
 <div class="small" id="athleteMeta">—</div>
 </div>
-<span class="pill" id="dataSourcePill">—</span>
+<span class="pill" id="scorePill" style="display:none;margin-left:6px">Score —</span>
 </div>
 <div class="bd">
 <div class="card" id="dashPhotoBlock" style="box-shadow:none;margin-bottom:12px">
@@ -682,6 +752,25 @@ html.mediaView #versionBtn{display:none !important;}
 </div>
 <div class="bd"><canvas id="radar"></canvas></div>
 </div>
+
+<div class="card" id="intelCard" style="box-shadow:none;margin-bottom:12px">
+  <div class="hd" style="background:rgba(255,255,255,.02)">
+    <div style="font-weight:800">Strengths & Flags</div>
+    <div class="small muted">Auto-generated from percentiles</div>
+  </div>
+  <div class="bd">
+    <div id="intelSummary" class="small" style="display:grid;grid-template-rows:auto auto;gap:12px">
+      <div>
+        <div style="font-weight:800;margin-bottom:6px">Strengths</div>
+        <ul id="intelStrengths" style="margin:0 0 0 18px;padding:0"></ul>
+      </div>
+      <div>
+        <div style="font-weight:800;margin-bottom:6px">Flags</div>
+        <ul id="intelFlags" style="margin:0 0 0 18px;padding:0"></ul>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="card" id="attemptsWrap" style="box-shadow:none">
 <div class="hd" style="background:rgba(255,255,255,.02)">
 <div style="font-weight:800">Attempts</div>
@@ -717,6 +806,7 @@ const IS_DEMO = false;
 const VIEW_MODE = (new URLSearchParams(window.location.search).get('view') || '').toLowerCase();
 const IS_PUBLIC_VIEW = VIEW_MODE === 'public';
 const IS_MEDIA_VIEW = VIEW_MODE === 'media';
+const IS_PRO_VIEW = VIEW_MODE === 'pro';
 
 // Guard: Media pill only for Media VIEW (?view=media), not Media Mode toggle
 try{
@@ -739,10 +829,16 @@ if (IS_PUBLIC_VIEW) {
   const pp = document.getElementById('publicPill');
   if (pp) pp.style.display = 'inline-flex';
 }
+
+if (IS_PRO_VIEW) {
+  document.documentElement.classList.add('proView');
+  const pr = document.getElementById('proPill');
+  if (pr) pr.style.display = 'inline-flex';
+}
 // Admin pill (default view)
 try{
   const ap = document.getElementById("adminPill");
-  if (ap) ap.style.display = (!IS_PUBLIC_VIEW && !IS_MEDIA_VIEW) ? "inline-flex" : "none";
+  if (ap) ap.style.display = (!IS_PUBLIC_VIEW && !IS_MEDIA_VIEW && !IS_PRO_VIEW) ? "inline-flex" : "none";
 }catch(e){}
 
 /** ---------- Config: map your CSV columns here ---------- **/
@@ -804,7 +900,109 @@ let sourceLabel = "—";
 let radarChart = null;
 let barChart = null;
 
-const posOverrides = new Map(); // athleteId -> manual position
+const posOverrides = new Map();
+
+/** ---------- Intelligence (v1.0.121) ---------- **/
+let SORT_KEY = "name";
+let POP_CACHE = {};      // metricKey -> array of best values across population
+let INTEL_CACHE = [];    // per row index: {best,pct,tier,score,strengths,flags}
+
+const SCORE_WEIGHTS = { dash40:30, broad:20, shuttle:20, cone:15, bench:15 };
+
+function tierFromPercentile(p){
+  if (p === null || p === undefined) return { label:"—", cls:"tier-avg" };
+  if (p >= 85) return { label:"Elite", cls:"tier-elite" };
+  if (p >= 70) return { label:"Above Avg", cls:"tier-good" };
+  if (p >= 40) return { label:"Average", cls:"tier-avg" };
+  return { label:"Needs Work", cls:"tier-low" };
+}
+
+function athleticScore(pcts){
+  let wSum = 0, sSum = 0;
+  METRICS.forEach(m=>{
+    const p = pcts[m.key];
+    if (p === null || p === undefined) return;
+    const w = SCORE_WEIGHTS[m.key] || 0;
+    if (!w) return;
+    wSum += w;
+    sSum += p * w;
+  });
+  if (!wSum) return null;
+  return Math.round(sSum / wSum);
+}
+
+function recomputeIntelligence(){
+  // Build population arrays once per metric
+  POP_CACHE = {};
+  METRICS.forEach(m => {
+    POP_CACHE[m.key] = computePopulationBest(m); // uses bestAttemptValue over rows
+  });
+
+  INTEL_CACHE = rows.map((r, idx) => {
+    const best = {};
+    const pct = {};
+    const tier = {};
+    METRICS.forEach(m=>{
+      const b = bestAttemptValue(r, m);
+      best[m.key] = b;
+      const pop = POP_CACHE[m.key] || [];
+      const p = percentileRank(pop, b, m.better);
+      pct[m.key] = (p === null ? null : Math.max(0, Math.min(100, p)));
+      tier[m.key] = tierFromPercentile(pct[m.key]);
+    });
+
+    const score = athleticScore(pct);
+
+    // Strengths & Flags
+    const strengths = [];
+    const flags = [];
+    METRICS.forEach(m=>{
+      const p = pct[m.key];
+      if (p === null){
+        flags.push(`Missing ${m.label}`);
+        return;
+      }
+      if (p >= 70) strengths.push(`${m.label}: Top ${Math.max(1, Math.round(100 - p))}%`);
+      if (p <= 35) flags.push(`${m.label}: Bottom ${Math.max(1, Math.round(p))}%`);
+    });
+
+    return {
+      best, pct, tier,
+      score,
+      strengths: strengths.slice(0,3),
+      flags: flags.slice(0,3),
+    };
+  });
+}
+
+function sortComparator(a, b){
+  // a/b are {r, idx}
+  if (SORT_KEY === "name"){
+    return normalizeStr(a.r[COL.name]).localeCompare(normalizeStr(b.r[COL.name]));
+  }
+  const ai = INTEL_CACHE[a.idx] || {};
+  const bi = INTEL_CACHE[b.idx] || {};
+
+  if (SORT_KEY === "score"){
+    const av = ai.score, bv = bi.score;
+    if (av === null && bv === null) return 0;
+    if (av === null) return 1;
+    if (bv === null) return -1;
+    return bv - av; // high first
+  }
+
+  // metric sort
+  const m = METRICS.find(x => x.key === SORT_KEY);
+  if (!m) return 0;
+  const av = ai.best ? ai.best[SORT_KEY] : null;
+  const bv = bi.best ? bi.best[SORT_KEY] : null;
+  if (av === null && bv === null) return 0;
+  if (av === null) return 1;
+  if (bv === null) return -1;
+  return (m.better === "lower") ? (av - bv) : (bv - av);
+}
+
+ // athleteId -> manual position
 
 /** ---------- Photos (local folder) ---------- **/
 let photoMap = new Map(); // key (Formulario#) -> objectURL
@@ -945,6 +1143,7 @@ function parseCsvText(csvText, label){
       });
       setSource(label);
       setStatus("Loaded");
+      recomputeIntelligence();
       render();
       // Auto-select first athlete
       if (rows.length) selectAthlete(0);
@@ -1003,7 +1202,7 @@ function applyFilter(){
   filtered = rows
     .map((r, idx) => ({ r, idx }))
     .filter(x => normalizeStr(x.r[COL.name]).includes(q))
-    .sort((a,b)=> normalizeStr(a.r[COL.name]).localeCompare(normalizeStr(b.r[COL.name])));
+    .sort(sortComparator);
   renderTable();
 }
 
@@ -1149,10 +1348,20 @@ function selectAthlete(originalIdx){
   renderTable();
 
   const r = rows[originalIdx];
+  const intel = INTEL_CACHE[originalIdx] || null;
+
   const photoUrl = photoUrlForRow(r);
   $("athleteName").textContent = safe(r[COL.name]);
 $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height])} • ${safe(r[COL.weight])} lb • ${safe(r[COL.school])}`;
   updateLargePhoto(r);
+  // Athletic Score pill (v1.0.121)
+  const scorePill = document.getElementById("scorePill");
+  if (scorePill){
+    const s = intel && intel.score !== null && intel.score !== undefined ? String(intel.score) : "—";
+    scorePill.textContent = `Score ${s}`;
+    scorePill.style.display = (s === "—") ? "none" : "inline-flex";
+  }
+
 
   // ID badge
   const idBadge = document.getElementById("athleteIdBadge");
@@ -1246,7 +1455,11 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
     box.innerHTML = `
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
         <div style="font-weight:800">${m.label}</div>
-        <div class="small muted">${used ? "Best = " + used : ""}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="tierPill ${(intel && intel.tier && intel.tier[m.key]) ? intel.tier[m.key].cls : 'tier-avg'}">${(intel && intel.tier && intel.tier[m.key]) ? intel.tier[m.key].label : '—'}</span>
+          <span class="small muted">${(intel && intel.pct && intel.pct[m.key] !== null && intel.pct[m.key] !== undefined) ? (Math.round(intel.pct[m.key]) + '%') : '—'}</span>
+          <span class="small muted">${used ? "Best = " + used : ""}</span>
+        </div>
       </div>
       <div class="small" style="margin-top:6px">
         <div>Attempt 1: <span class="mono">${a1}</span></div>
@@ -1257,7 +1470,45 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
     attempts.appendChild(box);
   });
 
-  // Charts
+
+  // Strengths & Flags (v1.0.121)
+  const ulS = document.getElementById("intelStrengths");
+  const ulF = document.getElementById("intelFlags");
+  if (ulS) ulS.innerHTML = "";
+  if (ulF) ulF.innerHTML = "";
+  const strengths = (intel && intel.strengths) ? intel.strengths : [];
+  const flags = (intel && intel.flags) ? intel.flags : [];
+
+  const makeLi = (icon, text, toneCls) => {
+    const li = document.createElement("li");
+    if (toneCls) li.className = toneCls;
+    const ic = document.createElement("span");
+    ic.className = "sfIcon";
+    ic.setAttribute("aria-hidden","true");
+    ic.textContent = icon;
+    const tx = document.createElement("span");
+    tx.textContent = text;
+    li.appendChild(ic);
+    li.appendChild(tx);
+    return li;
+  };
+
+  if (ulS){
+    if (!strengths.length){
+      ulS.innerHTML = "<li class=\"muted\">—</li>";
+    } else {
+      strengths.forEach(t => { ulS.appendChild(makeLi("✅", t, "sfGood")); });
+    }
+  }
+  if (ulF){
+    if (!flags.length){
+      ulF.innerHTML = "<li class=\"muted\">—</li>";
+    } else {
+      flags.forEach(t => { ulF.appendChild(makeLi("⚠️", t, "sfWarn")); });
+    }
+  }
+
+// Charts
   renderRadar(r);
   renderBars(r);
 
@@ -1502,7 +1753,17 @@ function setCoachMode(on){
   document.body.classList.toggle("coachMode", !!on);
   if (coachBtn) coachBtn.textContent = `Coach Mode: ${on ? "On" : "Off"}`;
   if (on) { document.body.classList.remove("scoutMode"); if (toggleBtn) toggleBtn.textContent = "Scout Mode: Off"; }
-  try{ sessionStorage.setItem("coachModeOn", on ? "1" : "0"); }catch(e){}
+  
+  // Profile title (Coach Mode uses Athlete Profile)
+  const spt = document.getElementById("scoutProfileTitle");
+  if (spt){
+    if (!!on) spt.textContent = "Athlete Profile";
+    else if (document.body.classList.contains("scoutMode")) spt.textContent = "Scout Profile";
+    else if (document.body.classList.contains("mediaMode")) spt.textContent = "Media Profile";
+    else spt.textContent = "Scout Profile";
+  }
+
+try{ sessionStorage.setItem("coachModeOn", on ? "1" : "0"); }catch(e){}
 }
 if (coachBtn){
   coachBtn.addEventListener("click", ()=>{
@@ -1519,7 +1780,17 @@ if (!IS_PUBLIC_VIEW) {
 const toggleBtn = document.getElementById("toggleScout");
 function setScoutMode(on){
   if (on) { try{ setMediaMode(false); }catch(e){} }
-  if (on) { document.body.classList.remove("coachMode"); try{ sessionStorage.setItem("coachModeOn","0"); }catch(e){} if (coachBtn) coachBtn.textContent = "Coach Mode: Off"; }
+  if (on) { document.body.classList.remove("coachMode"); 
+  // Profile title (Scout Mode label)
+  const spt = document.getElementById("scoutProfileTitle");
+  if (spt){
+    if (!!on) spt.textContent = "Scout Profile";
+    else if (document.body.classList.contains("coachMode")) spt.textContent = "Athlete Profile";
+    else if (document.body.classList.contains("mediaMode")) spt.textContent = "Media Profile";
+    else spt.textContent = "Scout Profile";
+  }
+
+try{ sessionStorage.setItem("coachModeOn","0"); }catch(e){} if (coachBtn) coachBtn.textContent = "Coach Mode: Off"; }
 
   document.body.classList.toggle("scoutMode", !!on);
   if (toggleBtn) toggleBtn.textContent = `Scout Mode: ${on ? "On" : "Off"}`;
@@ -1539,6 +1810,13 @@ if (!IS_PUBLIC_VIEW) {
 
 
 
+
+// Pro view: default to Coach layout + intelligence UI (locked; no toggles)
+if (IS_PRO_VIEW){
+  try{ setMediaMode(false); }catch(e){}
+  try{ setScoutMode(false); }catch(e){}
+  try{ setCoachMode(true); }catch(e){}
+}
 // Media mode toggle (independent; used for shared/public-facing UI)
 const mediaBtn = document.getElementById("toggleMedia");
 let __prevScoutForMedia = null;
@@ -1777,6 +2055,16 @@ function initModalWiring(){
   <div style="margin-top:10px;font-weight:900">Changelog</div>
 
 
+
+<div style="margin-top:6px;font-weight:900">v1.0.121</div>
+<ul style="margin:6px 0 0 18px">
+  <li>Added Intelligence UI (Admin + Pro only): percentiles, tiers, Athletic Score, sorting, Strengths &amp; Flags.</li>
+  <li>New <span class="mono">?view=pro</span>: Coach-style view with intelligence enabled and Pro pill.</li>
+  <li>Strengths &amp; Flags now display in two rows, with icons for quick scanning.</li>
+  <li>Coach Mode header label switches to <span class="mono">Athlete Profile</span> (Scout Mode restores <span class="mono">Scout Profile</span>).</li>
+  <li>Improved Sort dropdown readability (selected item stays white; list options are dark).</li>
+</ul>
+
 <div style="margin-top:6px;font-weight:900">v1.0.120</div>
 <ul style="margin:6px 0 0 18px">
   <li>Presentation Mode improvements: synced athlete selection via <span class="mono">#sel=</span> and stable CDN photos.</li>
@@ -1882,6 +2170,16 @@ if (clearBtn && searchEl){
     searchEl.dispatchEvent(new Event("input", { bubbles:true }));
     searchEl.focus();
   });
+
+// Sort dropdown (v1.0.121)
+const sortEl = document.getElementById("sortSelect");
+if (sortEl){
+  sortEl.value = SORT_KEY;
+  sortEl.addEventListener("change", ()=>{
+    SORT_KEY = String(sortEl.value || "name");
+    applyFilter();
+  });
+}
 }
 
 
