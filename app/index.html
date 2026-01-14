@@ -84,7 +84,7 @@
     }
 
 
-/* Intelligence tiers (v1.0.121) */
+/* Intelligence tiers (v1.0.122) */
 .tierPill{ font-size:10px; padding:0px 6px; border-radius:999px; border:1px solid rgba(255,255,255,.14); letter-spacing:.3px; }
 .tier-elite{ background:rgba(102,217,239,.14); border-color:rgba(102,217,239,.35); }
 .tier-good{ background:rgba(81,202,245,.12); border-color:rgba(81,202,245,.32); }
@@ -519,12 +519,39 @@ html.mediaView #versionBtn{display:none !important;}
 select#posSelect{ color:#fff !important; }
 select#posSelect option{ color:#111 !important; }
 
+
+/* Watchlist UI (v1.0.122) */
+#watchBtn{ padding:6px 10px; font-weight:800; }
+#watchBtn.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
+#notesBox{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); color:#fff; }
+
+/* Hide in Public/Media views */
+html.publicView #watchBtn,
+html.publicView #notesBox,
+html.publicView #notesSaved,
+html.publicView #watchOnly{ display:none !important; }
+html.mediaView #watchBtn,
+html.mediaView #notesBox,
+html.mediaView #notesSaved,
+html.mediaView #watchOnly{ display:none !important; }
+
+/* Watchlist UI extras (v1.0.122) */
+#watchFilterBtn{ padding:6px 10px; font-weight:800; }
+#watchFilterBtn.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
+#watchCountPill{ border-color:rgba(255,215,0,.25); background:rgba(255,215,0,.08); }
+html.publicView #watchFilterBtn,
+html.publicView #watchCountPill{ display:none !important; }
+html.mediaView #watchFilterBtn,
+html.mediaView #watchCountPill{ display:none !important; }
+
+#watchCountPill.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
 </style>
 </head>
 <body>
 <header>
-<div class="wrap title"><div class="titleBar"><div>
-<h1>Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.121</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillPro" id="proPill" style="display:none;margin-left:6px">Pro</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span><span class="pill pillAdmin" id="adminPill" style="display:none;margin-left:6px">Admin</span></h1>
+<div class="wrap title"><div class="titleBar">
+<div>
+<h1>Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.122</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillPro" id="proPill" style="display:none;margin-left:6px">Pro</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span><span class="pill pillAdmin" id="adminPill" style="display:none;margin-left:6px">Admin</span></h1>
 <div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
 </div><div class="topRightControls"><button class="linkBtn btnIcon" id="loadDefault" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24">
 <path d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-14.9-2M4 16a8 8 0 0014.9 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
@@ -595,7 +622,8 @@ select#posSelect option{ color:#111 !important; }
 <div style="font-weight:800">Athletes</div>
 <div class="small" id="athleteCount">0 loaded</div>
 </div>
-<span class="pill" id="dataSourcePill" style="margin-right:6px">—</span><span class="pill" id="statusPill">No data</span>
+<button class="pill" id="watchCountPill" type="button" style="margin-right:6px;cursor:pointer;border:1px solid rgba(255,215,0,.25);background:rgba(255,215,0,.08);">☆ Watchlist: 0</button>
+      <span class="pill" id="dataSourcePill" style="margin-right:6px">—</span><span class="pill" id="statusPill">No data</span>
 </div>
 <div class="bd">
 <div class="drop" id="dropZone">
@@ -680,6 +708,7 @@ select#posSelect option{ color:#111 !important; }
 <div class="card" id="scoutPhotoBlock" style="box-shadow:none;margin-bottom:12px">
 <div class="hd" style="background:rgba(255,255,255,.02)">
 <div id="scoutProfileTitle" style="font-weight:800">Scout Profile</div>
+            <button class="btn" id="watchBtn" style="margin-left:10px">☆ Watch</button>
 <div class="small muted">Contact-ready info</div>
 </div>
 <div class="bd">
@@ -769,6 +798,12 @@ select#posSelect option{ color:#111 !important; }
         <ul id="intelFlags" style="margin:0 0 0 18px;padding:0"></ul>
       </div>
     </div>
+    <div style="margin-top:14px">
+      <div style="font-weight:800;margin-bottom:6px">Notes</div>
+      <textarea id="notesBox" class="input" rows="3" placeholder="Add notes for this athlete..." style="width:100%;resize:vertical"></textarea>
+      <div class="small muted" id="notesSaved" style="margin-top:6px;display:none">Saved</div>
+    </div>
+
   </div>
 </div>
 <div class="card" id="attemptsWrap" style="box-shadow:none">
@@ -905,7 +940,84 @@ const posOverrides = new Map();
 /** ---------- Intelligence (v1.0.121) ---------- **/
 let SORT_KEY = "name";
 let POP_CACHE = {};      // metricKey -> array of best values across population
-let INTEL_CACHE = [];    // per row index: {best,pct,tier,score,strengths,flags}
+let INTEL_CACHE = [];
+
+/** ---------- Watchlist + Notes (v1.0.122) ---------- **/
+const WATCH_STORE_KEY = "acd_watchlist_v1";
+let WATCH = {}; // id -> { starred:bool, notes:string }
+let WATCH_ONLY = false;
+
+function loadWatch(){
+  try{
+    const raw = localStorage.getItem(WATCH_STORE_KEY);
+    WATCH = raw ? JSON.parse(raw) : {};
+  } catch(e){ WATCH = {}; }
+}
+function saveWatch(){
+  try{ localStorage.setItem(WATCH_STORE_KEY, JSON.stringify(WATCH)); } catch(e){}
+}
+function wlIdFromRow(r){
+  const idRaw = r && r[COL.id] ? String(r[COL.id]).trim() : "";
+  return padId(idRaw || "");
+}
+function wlIsStarred(id){ return !!(WATCH && WATCH[id] && WATCH[id].starred); }
+function wlSetStar(id, on){
+  if (!id) return;
+  if (!WATCH[id]) WATCH[id] = { starred:false, notes:"" };
+  WATCH[id].starred = !!on;
+  saveWatch();
+}
+function wlSetNotes(id, notes){
+  if (!id) return;
+  if (!WATCH[id]) WATCH[id] = { starred:false, notes:"" };
+  WATCH[id].notes = String(notes || "");
+  saveWatch();
+}
+function updateWatchCountPill(){
+  const pill = document.getElementById("watchCountPill");
+  if (!pill) return;
+  const cnt = Object.keys(WATCH||{}).filter(k => WATCH[k] && WATCH[k].starred).length;
+  pill.textContent = `${WATCH_ONLY ? "★" : "☆"} Watchlist: ${cnt}`;
+  pill.style.display = "inline-flex";
+  pill.style.opacity = cnt ? "1" : ".8";
+  pill.classList.toggle("watchOn", WATCH_ONLY);
+}
+
+
+function initWatchlistPillBtn(){
+  const pill = document.getElementById("watchCountPill");
+  if (pill && !pill._bound){
+    pill._bound = true;
+    pill.addEventListener("click", ()=>{
+      WATCH_ONLY = !WATCH_ONLY;
+      pill.classList.toggle("watchOn", WATCH_ONLY);
+      updateWatchCountPill();
+  initWatchlistPillBtn();
+      applyFilter();
+    });
+  }
+}
+
+
+
+function initWatchlistUI(){
+  const wfb = document.getElementById("watchFilterBtn");
+  if (wfb && !wfb._bound){
+    wfb._bound = true;
+    wfb.addEventListener("click", ()=>{
+      WATCH_ONLY = !WATCH_ONLY;
+      wfb.classList.toggle("watchOn", WATCH_ONLY);
+      wfb.textContent = WATCH_ONLY ? "★ Watchlist" : "☆ Watchlist";
+      applyFilter();
+    });
+  }
+}
+
+function wlGetNotes(id){
+  return (WATCH && WATCH[id] && typeof WATCH[id].notes === "string") ? WATCH[id].notes : "";
+}
+
+    // per row index: {best,pct,tier,score,strengths,flags}
 
 const SCORE_WEIGHTS = { dash40:30, broad:20, shuttle:20, cone:15, bench:15 };
 
@@ -1202,9 +1314,12 @@ function applyFilter(){
   filtered = rows
     .map((r, idx) => ({ r, idx }))
     .filter(x => normalizeStr(x.r[COL.name]).includes(q))
+    .filter(x => !WATCH_ONLY || wlIsStarred(wlIdFromRow(x.r)))
     .sort(sortComparator);
   renderTable();
 }
+
+
 
 
 function initialsForRow(r){
@@ -1241,8 +1356,9 @@ function renderTable(){
     tr.addEventListener("click", () => selectAthlete(x.idx));
     tb.appendChild(tr);
   });
-  applyAvatarFallback();
+  applyAvatarFallback();  initWatchlistPillBtn();
 }
+
 
 function bestAttemptValue(r, m){
   const v1 = r[m.a1];
@@ -1349,6 +1465,43 @@ function selectAthlete(originalIdx){
 
   const r = rows[originalIdx];
   const intel = INTEL_CACHE[originalIdx] || null;
+
+  // Watchlist + Notes (v1.0.122)
+  const wlId = wlIdFromRow(r);
+  const watchBtn = document.getElementById("watchBtn");
+  const notesBox = document.getElementById("notesBox");
+  const notesSaved = document.getElementById("notesSaved");
+
+  if (watchBtn){
+    const on = wlIsStarred(wlId);
+    watchBtn.textContent = on ? "★ Watching" : "☆ Watch";
+    watchBtn.classList.toggle("watchOn", on);
+    watchBtn.onclick = () => {
+      const now = !wlIsStarred(wlId);
+      wlSetStar(wlId, now);
+      updateWatchCountPill();
+  initWatchlistUI();
+      watchBtn.textContent = now ? "★ Watching" : "☆ Watch";
+      watchBtn.classList.toggle("watchOn", now);
+      applyFilter();
+    };
+  }
+
+  if (notesBox){
+    notesBox.value = wlGetNotes(wlId);
+    let tmr = null;
+    notesBox.oninput = () => {
+      if (tmr) clearTimeout(tmr);
+      if (notesSaved) notesSaved.style.display = "none";
+      tmr = setTimeout(() => {
+        wlSetNotes(wlId, notesBox.value);
+        if (notesSaved){
+          notesSaved.style.display = "block";
+          setTimeout(()=>{ notesSaved.style.display = "none"; }, 900);
+        }
+      }, 300);
+    };
+  }
 
   const photoUrl = photoUrlForRow(r);
   $("athleteName").textContent = safe(r[COL.name]);
@@ -2041,8 +2194,24 @@ function initModalWiring(){
               <li><b>Coach Mode:</b> Scout Profile layout + keeps performance charts/sections below.</li>
             </ul>
           </div>
-        </div>
+        
+          <hr style="border:0;border-top:1px solid rgba(255,255,255,.12);margin:8px 0">
+          <div style="font-weight:900;font-size:15px;margin-bottom:6px">What's in Pro Mode</div>
+          <ul style="margin:0 0 8px 18px;line-height:1.55">
+            <li><b>Percentiles + tier labels</b> for each combine metric.</li>
+            <li><b>Athletic Score</b> + advanced sorting.</li>
+            <li><b>Strengths & Flags</b> summaries.</li>
+            <li><b>Watchlist + Notes</b> (save locally per athlete).</li>
+            <li><b>Pro view</b> (Coach-style + Intelligence UI).</li>
+          </ul>
+          <button class="btn" id="upgradeProBtn" style="width:100%;font-weight:900">Upgrade to Pro</button>
+</div>
       `);
+      // Upgrade CTA (placeholder link)
+      setTimeout(()=>{
+        const b = document.getElementById("upgradeProBtn");
+        if (b) b.onclick = ()=> window.open("?view=pro", "_blank");
+      }, 0);
     });
   }
 
@@ -2055,6 +2224,13 @@ function initModalWiring(){
   <div style="margin-top:10px;font-weight:900">Changelog</div>
 
 
+
+
+<div style="margin-top:6px;font-weight:900">v1.0.122</div>
+<ul style="margin:6px 0 0 18px">
+  <li>Added Watchlist (★) and Notes (saved locally per athlete) for Admin + Pro workflows.</li>
+  <li>Watchlist-only filter and star indicator in athlete list.</li>
+</ul>
 
 <div style="margin-top:6px;font-weight:900">v1.0.121</div>
 <ul style="margin:6px 0 0 18px">
