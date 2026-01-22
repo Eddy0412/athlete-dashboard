@@ -189,9 +189,15 @@
   }
 
 #photoFallback{ font-size:64px; letter-spacing:1px; }
+
+/* Template: KFL (minimal variant) */
+body.tplKfl{ background: radial-gradient(1200px 600px at 20% 20%, rgba(0,180,160,.18), rgba(0,0,0,0)) , radial-gradient(900px 500px at 80% 10%, rgba(84,113,183,.22), rgba(0,0,0,0)), #070b10; }
+body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 </style>
 </head>
 <body>
+<div id="tplTag" style="position:fixed;top:18px;left:18px;z-index:50;display:none;padding:6px 10px;border-radius:999px;font-weight:900;letter-spacing:.4px;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.35);backdrop-filter:blur(6px)">KFL</div>
+
   <div class="wrap">
     <div class="topbar">
       <div class="brand">
@@ -232,6 +238,14 @@
   </div>
 
 <script>
+function getHashParam(name){
+  try{
+    const h = (location.hash || "").replace(/^#/, "");
+    const p = new URLSearchParams(h);
+    return p.get(name) || "";
+  }catch(e){ return ""; }
+}
+
 (function(){
   const PHOTO_BASE_URL = "https://media.kkmsports.xyz/athletes/";
 

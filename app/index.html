@@ -195,6 +195,11 @@ canvas{width:100% !important; height:320px !important}
     body.scoutMode #barsWrap{display:none !important;}
 
     /* --- Media Mode: Scout-like layout, but separate from Scout Mode toggle --- */
+#mediaTemplateSelect{display:none;}
+html.mediaView #mediaTemplateSelect, body.mediaMode #mediaTemplateSelect{display:inline-block;}
+#mediaTemplateSelect{background:#0f1720;color:#fff;border:1px solid rgba(138,160,182,.45);border-radius:12px;}
+#mediaTemplateSelect option{color:#111;background:#fff;}
+
     body.mediaMode #dashPhotoBlock{display:none !important;}
     body.mediaMode #scoutPhotoBlock{display:block !important;}
     body.mediaMode #posTooltip{display:none !important;}
@@ -588,7 +593,13 @@ html.mediaView #watchCountPill{ display:none !important; }
 </div>
 
 <button class="btn drawerPrimary" id="toggleScout">Scout Mode: Off</button>
-<button class="btn drawerPrimary" id="toggleCoach">Coach Mode: Off</button><button class="btn drawerPrimary" id="toggleMedia">Media Mode: Off</button>
+<button class="btn drawerPrimary" id="toggleCoach">Coach Mode: Off</button><span style="display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <button class="btn drawerPrimary" id="toggleMedia">Media Mode: Off</button>
+  <select id="mediaTemplateSelect" class="input" style="min-width:140px;padding:8px 10px">
+    <option value="default">Default</option>
+    <option value="kfl">KFL</option>
+  </select>
+</span>
 <label class="btn drawerPrimary" for="photos" id="photosLabel">Load Photos</label>
 <input accept="image/*" id="photos" multiple="" style="display:none" type="file" webkitdirectory=""/>
 <label class="btn drawerPrimary" for="file" id="csvLabel">Load CSV</label>
@@ -1822,6 +1833,13 @@ $("loadDefault").addEventListener("click", loadDefaultCsv);
 // Presentation window sync (index controls, external fullscreen presenter)
 // Most reliable: parent updates presenter URL hash on selection + persists latest athlete to localStorage.
 let _presentWin = null;
+function getPresenterTpl(){
+  try{
+    const v = sessionStorage.getItem("presentTpl") || "default";
+    return (v === "kfl") ? "kfl" : "default";
+  }catch(e){ return "default"; }
+}
+
 const PRES_KEY = "ac_presenter_current_athlete";
 
 function _presentKeyForRow(r){
@@ -1857,8 +1875,7 @@ function _persistPresenter(payload){
 function _updatePresenterHash(key){
   try{
     if(_presentWin && !_presentWin.closed){
-      _presentWin.location.hash = "sel=" + encodeURIComponent(key || "");
-    }
+      _presentWin.location.hash = "sel=" + encodeURIComponent(key || "" || "") + "&tpl=" + encodeURIComponent(getPresenterTpl());}
   }catch(e){}
 }
 
@@ -1871,7 +1888,7 @@ function _pushToPresenter(r){
 }
 
 $("presentBtn")?.addEventListener("click", () => {
-  _presentWin = window.open("presentation.html#sel=", "ac_presenter");
+  _presentWin = window.open("presentation.html#sel=&tpl=" + encodeURIComponent(getPresenterTpl()), "ac_presenter");
   // best-effort initial push
   setTimeout(() => {
     try{
@@ -1972,6 +1989,22 @@ if (IS_PRO_VIEW){
 }
 // Media mode toggle (independent; used for shared/public-facing UI)
 const mediaBtn = document.getElementById("toggleMedia");
+
+const tplSel = document.getElementById("mediaTemplateSelect");
+if (tplSel){
+  // restore last selection
+  try{ tplSel.value = getPresenterTpl(); }catch(e){}
+  tplSel.addEventListener("change", ()=>{
+    try{
+      sessionStorage.setItem("presentTpl", tplSel.value || "default");
+      // keep presenter URL in sync if it's open
+      const r = rows?.[activeIndex];
+      if (r) _updatePresenterHash(r._presentKey || r[COL.id] || "");
+    }catch(e){}
+  });
+  // Hide in public view
+  if (document.documentElement.classList.contains("publicView")) tplSel.style.display = "none";
+}
 let __prevScoutForMedia = null;
 let __prevCoachForMedia = null;
 function setMediaMode(on){
