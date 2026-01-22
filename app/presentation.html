@@ -194,154 +194,113 @@
 body.tplKfl{ background: radial-gradient(1200px 600px at 20% 20%, rgba(0,180,160,.18), rgba(0,0,0,0)) , radial-gradient(900px 500px at 80% 10%, rgba(84,113,183,.22), rgba(0,0,0,0)), #070b10; }
 body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 
-/* --- KFL Template --- */
-.tplDefault{ display:grid; grid-template-columns: 320px 1fr; gap:18px; align-items:stretch; }
-.tplKflWrap{ display:none; }
-
-body.tplKfl .topbar{ display:none; }
-body.tplKfl .stage{ padding:0; }
-body.tplKfl .card{ border:none; border-radius:0; box-shadow:none; background:#0a5ea8; }
-body.tplKfl .cardInner{ padding:0; }
-body.tplKfl .footerHint{ display:none; }
-body.tplKfl .tplDefault{ display:none; }
-body.tplKfl .tplKflWrap{ display:grid; grid-template-columns: 46% 54%; height:100%; }
-
-.tplKflWrap{ position:relative; }
-.kflLeft{ position:relative; padding:42px 34px 24px 48px; display:flex; flex-direction:column; justify-content:flex-start; }
-.kflRight{ position:relative; padding:42px 48px 28px 28px; display:flex; flex-direction:column; align-items:center; }
-
-.kflPhotoBox{
-  width:min(420px, 92%);
-  aspect-ratio: 1 / 1;
-  border:10px solid rgba(255,255,255,.18);
-  border-radius:10px;
-  background: rgba(0,0,0,.20);
-  position:relative;
-  overflow:hidden;
-  box-shadow: 0 22px 70px rgba(0,0,0,.35);
-}
-.kflPhotoPattern{
-  position:absolute; inset:0;
+/* --- KFL TEMPLATE --- */
+#kflRoot{ position:fixed; inset:0; display:none; overflow:hidden; font-family:var(--font); }
+#kflRoot .kflStage{ position:absolute; inset:0; background:#0b63a4; }
+#kflRoot .kflStage:before{
+  content:""; position:absolute; inset:0;
   background:
-    linear-gradient(0deg, rgba(0,0,0,.12), rgba(0,0,0,.12)),
-    repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 2px, transparent 2px 22px),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 2px, transparent 2px 26px);
-  opacity:.55;
+    radial-gradient(1200px 700px at 70% 10%, rgba(255,255,255,.08), transparent 60%),
+    linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,0) 35%);
+  pointer-events:none;
 }
-#kflPhotoImg{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-#kflPhotoFallback{
-  position:absolute; inset:0;
+#kflRoot .kflInner{ position:absolute; inset:32px; display:grid; grid-template-columns: 44% 56%; gap:28px; }
+#kflRoot .left{
+  position:relative; border-radius:16px; overflow:hidden;
+  background:
+    linear-gradient(0deg, rgba(0,0,0,.35), rgba(0,0,0,0)),
+    repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 10px, rgba(255,255,255,0) 10px 22px),
+    rgba(0,0,0,.18);
+  box-shadow: 0 26px 80px rgba(0,0,0,.45);
+}
+#kflRoot .left .photoBox{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+#kflRoot .left img{ width:100%; height:100%; object-fit:cover; display:block; }
+#kflRoot .left .photoFallback{
+  width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+  font-weight:1000; font-size:72px; letter-spacing:2px; color:rgba(255,255,255,.9);
+  background:rgba(0,0,0,.12);
+}
+#kflRoot .nameBar{
+  position:absolute; left:0; right:0; bottom:0;
+  background:rgba(255,255,255,.92); color:#0b1b2b;
+  padding:18px 22px; font-weight:1000; font-size:44px; line-height:1;
+  text-transform:none;
+}
+#kflRoot .right{ position:relative; padding:6px 8px; color:#fff; }
+#kflRoot .draft{
+  position:absolute; top:0; right:0;
+  background:#e13b3b; color:#fff; font-weight:1000;
+  padding:16px 22px; font-size:56px; letter-spacing:1px;
+  border-radius:0;
+}
+#kflRoot .kflLogo{
+  margin-top:130px; display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+#kflRoot .kflLogo .badge{
+  width:150px; height:150px; border-radius:22px;
   display:flex; align-items:center; justify-content:center;
-  font-size:88px; font-weight:900; letter-spacing:2px;
-  color: rgba(255,255,255,.92);
-  background: rgba(0,0,0,.18);
-  text-transform:uppercase;
+  border:3px solid rgba(255,255,255,.35);
+  background:rgba(0,0,0,.10);
+  font-weight:1000; font-size:56px;
 }
-
-.kflNamePlate{
+#kflRoot .kflLogo .sub{
+  font-weight:900; font-size:20px; opacity:.9; letter-spacing:.6px;
+}
+#kflRoot .info{
+  margin-top:18px; text-align:center; font-weight:900;
+}
+#kflRoot .info .line{ font-size:22px; margin:8px 0; letter-spacing:.4px; }
+#kflRoot .info .small{ font-size:18px; opacity:.95; }
+#kflRoot .sectionTitle{
+  margin-top:44px; text-align:center; font-weight:1000;
+  font-size:34px; letter-spacing:1px;
+}
+#kflRoot .perf{
   margin-top:18px;
-  width:min(420px, 92%);
-  background:#f4f6fb;
-  color:#0b0e12;
-  font-weight:900;
-  font-size:38px;
-  padding:14px 18px;
-  border-radius:6px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.28);
+  display:grid; grid-template-columns: repeat(5, 1fr);
+  gap:18px;
+  align-items:stretch;
 }
-
-.kflDeveloped{ margin-top:auto; width:min(420px, 92%); text-align:center; color:rgba(255,255,255,.88); }
-.kflDevLabel{ font-size:12px; opacity:.9; margin-bottom:6px; }
-.kflDevBrand{ font-weight:900; letter-spacing:.6px; }
-
-.kflDraft{
-  align-self:flex-end;
-  background:#e64646;
-  color:#fff;
-  font-weight:900;
-  font-size:64px;
-  letter-spacing:1px;
-  padding:18px 28px;
-  border-radius:6px;
-  margin-bottom:20px;
-  transform: translateX(6px);
+#kflRoot .perf .cell{
+  border-left:1px solid rgba(255,255,255,.35);
+  padding-left:16px;
 }
-
-.kflLogo{ margin: 8px 0 18px; }
-.kflShield{
-  width: 180px; height: 180px;
-  border-radius: 18px;
-  border: 4px solid rgba(255,255,255,.25);
-  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.12), rgba(0,0,0,0) 55%),
-              rgba(0,0,0,.18);
-  display:flex; align-items:center; justify-content:center;
+#kflRoot .perf .cell:first-child{ border-left:none; padding-left:0; }
+#kflRoot .perf .label{
+  font-weight:900; font-size:16px; opacity:.95; letter-spacing:.4px;
+  text-transform:uppercase; line-height:1.2;
 }
-.kflShieldInner{ text-align:center; }
-.kflShieldTop{ font-weight:1000; font-size:58px; letter-spacing:1px; }
-.kflShieldSub{ font-size:12px; font-weight:800; opacity:.95; margin-top:2px; }
-.kflShieldSub2{ font-size:14px; font-weight:900; letter-spacing:.8px; margin-top:6px; text-transform:uppercase; }
-
-.kflBio{ text-align:center; margin-top:6px; }
-.kflBioRow{ font-size:20px; font-weight:900; margin:6px 0; letter-spacing:.4px; }
-.kflBioKey{ opacity:.95; }
-#kflSchool, #kflHeight, #kflWeight{ color:#fff; }
-
-.kflCombineTitle{
-  margin-top:26px;
-  font-weight:1000;
-  font-size:44px;
-  letter-spacing:1px;
-  text-align:center;
-  text-transform:uppercase;
+#kflRoot .perf .value{
+  margin-top:14px;
+  font-weight:1000; font-size:54px; color:#e13b3b;
+  letter-spacing:.5px;
 }
-
-.kflMetrics{
-  margin-top:18px;
-  width:100%;
-  display:grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap:0;
-  border-top:1px solid rgba(255,255,255,.18);
-  border-bottom:1px solid rgba(255,255,255,.18);
-}
-.kflMetric{
-  padding:16px 10px 18px;
-  text-align:center;
-  border-right:1px solid rgba(255,255,255,.18);
-}
-.kflMetric:last-child{ border-right:none; }
-.kflMetricLabel{ font-weight:900; font-size:14px; opacity:.95; letter-spacing:.8px; }
-.kflMetricValue{ margin-top:16px; font-weight:1000; font-size:56px; color:#ff4d4d; letter-spacing:1px; }
-
-.kflUrl{
-  margin-top:18px;
-  font-weight:1000;
+#kflRoot .footerSite{
+  position:absolute; left:0; right:0; bottom:24px;
+  text-align:center; font-weight:1000; letter-spacing:1px;
   font-size:22px;
-  letter-spacing:1px;
 }
-
-.kflAccents:before, .kflAccents:after{
-  content:"";
-  position:absolute;
-  width:190px; height:190px;
-  background: linear-gradient(135deg, rgba(255,66,66,.95) 0 40%, transparent 40% 100%);
-  opacity:.9;
+#kflRoot .accentSlash{
+  position:absolute; width:130px; height:260px;
+  background:#e13b3b;
+  transform:skewX(-20deg);
+  opacity:1;
 }
-.kflAccents:before{ top:-6px; left:-6px; transform: rotate(0deg); }
-.kflAccents:after{ bottom:-6px; right:-6px; transform: rotate(180deg); }
-
-@media (max-width: 1100px){
-  body.tplKfl .tplKflWrap{ grid-template-columns: 1fr; }
-  .kflDraft{ font-size:48px; }
-  .kflCombineTitle{ font-size:36px; }
-  .kflMetricValue{ font-size:44px; }
+#kflRoot .accentSlash.s1{ left:22px; top:54px; }
+#kflRoot .accentSlash.s2{ left:22px; bottom:40px; }
+#kflRoot .accentSlash.s3{ right:22px; bottom:64px; }
+@media (max-width: 1024px){
+  #kflRoot .kflInner{ inset:18px; grid-template-columns: 1fr; }
+  #kflRoot .draft{ font-size:44px; }
+  #kflRoot .nameBar{ font-size:36px; }
+  #kflRoot .perf{ grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
 <body>
 <div id="tplTag" style="position:fixed;top:18px;left:18px;z-index:50;display:none;padding:6px 10px;border-radius:999px;font-weight:900;letter-spacing:.4px;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.35);backdrop-filter:blur(6px)">KFL</div>
 
-  <div class="wrap">
+  <div id="defaultRoot"><div class="wrap">
     <div class="topbar">
       <div class="brand">
         <h1 class="title">Presentation Mode</h1>
@@ -359,82 +318,16 @@ body.tplKfl .tplKflWrap{ display:grid; grid-template-columns: 46% 54%; height:10
     <div class="stage">
       <div class="card" role="region" aria-label="Presentation card">
         <div class="cardInner">
-          <!-- Default template -->
-          <div class="tplDefault">
-            <div class="photo">
-              <img id="photoImg" alt="" style="display:none"/>
-              <div id="photoFallback">No photo</div>
-            </div>
-
-            <div>
-              <h2 class="name" id="name">—</h2>
-              <div class="metaRow" id="metaRow"></div>
-
-              <div class="grid" id="stats"></div>
-            </div>
+          <div class="photo">
+            <img id="photoImg" alt="" style="display:none"/>
+            <div id="photoFallback">No photo</div>
           </div>
 
-          <!-- KFL template -->
-          <div class="tplKflWrap" aria-hidden="true">
-            <div class="kflLeft">
-              <div class="kflPhotoBox">
-                <div class="kflPhotoPattern"></div>
-                <img id="kflPhotoImg" alt="" style="display:none"/>
-                <div id="kflPhotoFallback">—</div>
-              </div>
+          <div>
+            <h2 class="name" id="name">—</h2>
+            <div class="metaRow" id="metaRow"></div>
 
-              <div class="kflNamePlate" id="kflName">—</div>
-
-              <div class="kflDeveloped">
-                <div class="kflDevLabel">Developed by:</div>
-                <div class="kflDevBrand">Kreative Kingdom Media</div>
-              </div>
-            </div>
-
-            <div class="kflRight">
-              <div class="kflDraft">DRAFT 2025</div>
-
-              <div class="kflLogo">
-                <div class="kflShield" aria-label="KFL">
-                  <div class="kflShieldInner">
-                    <div class="kflShieldTop">KFL</div>
-                    <div class="kflShieldSub">Kiwanis Football League</div>
-                    <div class="kflShieldSub2">Panama</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="kflBio">
-                <div class="kflBioRow"><span class="kflBioKey">COLEGIO:</span> <span id="kflSchool">—</span></div>
-                <div class="kflBioRow"><span class="kflBioKey">ESTATURA:</span> <span id="kflHeight">—</span></div>
-                <div class="kflBioRow"><span class="kflBioKey">PESO:</span> <span id="kflWeight">—</span></div>
-              </div>
-
-              <div class="kflCombineTitle">COMBINE PERFORMANCE</div>
-
-              <div class="kflMetrics">
-                <div class="kflMetric">
-                  <div class="kflMetricLabel">40 YARDS<br>DASH</div>
-                  <div class="kflMetricValue" id="kfl40">—</div>
-                </div>
-                <div class="kflMetric">
-                  <div class="kflMetricLabel">5-10-5<br>SHUTTLE</div>
-                  <div class="kflMetricValue" id="kfl5105">—</div>
-                </div>
-                <div class="kflMetric">
-                  <div class="kflMetricLabel">LONG<br>JUMP</div>
-                  <div class="kflMetricValue" id="kflLong">—</div>
-                </div>
-                <div class="kflMetric">
-                  <div class="kflMetricLabel">BENCH<br>PRESS</div>
-                  <div class="kflMetricValue" id="kflBench">—</div>
-                </div>
-              </div>
-
-              <div class="kflUrl">WWW.KIWANISFOOTBALL.COM</div>
-            </div>
-
-            <div class="kflAccents" aria-hidden="true"></div>
+            <div class="grid" id="stats"></div>
           </div>
         </div>
 
@@ -444,7 +337,47 @@ body.tplKfl .tplKflWrap{ display:grid; grid-template-columns: 46% 54%; height:10
         </div>
       </div>
     </div>
+  </div></div>
+
+<!-- KFL Template Root -->
+<div id="kflRoot" style="display:none">
+  <div class="kflStage">
+    <div class="accentSlash s1"></div>
+    <div class="accentSlash s2"></div>
+    <div class="accentSlash s3"></div>
+
+    <div class="kflInner">
+      <div class="left">
+        <div class="photoBox">
+          <img id="kflPhotoImg" alt="" style="display:none"/>
+          <div id="kflPhotoFallback" class="photoFallback">—</div>
+        </div>
+        <div class="nameBar" id="kflName">—</div>
+      </div>
+
+      <div class="right">
+        <div class="draft">DRAFT 2025</div>
+
+        <div class="kflLogo">
+          <div class="badge">KFL</div>
+          <div class="sub">KIWANIS FOOTBALL LEAGUE • PANAMA</div>
+        </div>
+
+        <div class="info">
+          <div class="line" id="kflSchoolLine">COLEGIO: —</div>
+          <div class="line small" id="kflHeightLine">ESTATURA: —</div>
+          <div class="line small" id="kflWeightLine">PESO: —</div>
+        </div>
+
+        <div class="sectionTitle">COMBINE PERFORMANCE</div>
+
+        <div class="perf" id="kflPerf"></div>
+
+        <div class="footerSite">WWW.KIWANISFOOTBALL.COM</div>
+      </div>
+    </div>
   </div>
+</div>
 
 <script>
 function getHashParam(name){
@@ -473,6 +406,29 @@ function getHashParam(name){
     exitBtn: $("exitBtn"),
   };
 
+  const kflEl = {
+    root: document.getElementById("kflRoot"),
+    defaultRoot: document.getElementById("defaultRoot"),
+    tplTag: document.getElementById("tplTag"),
+    name: document.getElementById("kflName"),
+    school: document.getElementById("kflSchoolLine"),
+    height: document.getElementById("kflHeightLine"),
+    weight: document.getElementById("kflWeightLine"),
+    perf: document.getElementById("kflPerf"),
+    photoImg: document.getElementById("kflPhotoImg"),
+    photoFallback: document.getElementById("kflPhotoFallback"),
+  };
+
+  function applyTemplateFromHash(){
+    const tpl = (getHashParam("tpl") || "default").toLowerCase();
+    const isKfl = tpl === "kfl";
+    if (kflEl.tplTag) kflEl.tplTag.style.display = isKfl ? "inline-flex" : "none";
+    if (kflEl.root) kflEl.root.style.display = isKfl ? "block" : "none";
+    if (kflEl.defaultRoot) kflEl.defaultRoot.style.display = isKfl ? "none" : "block";
+    return tpl;
+  }
+
+
   function esc(s){
     return String(s ?? "—")
       .replaceAll("&","&amp;")
@@ -496,33 +452,6 @@ function getHashParam(name){
     return ((p[0]?.[0]||"") + (p[p.length-1]?.[0]||"")).toUpperCase();
   }
 
-  function fmtSeconds(v){
-    const n = Number(String(v||"").replace(",", "."));
-    if(!isFinite(n)) return "—";
-    return n.toFixed(2) + "s";
-  }
-
-  function fmtReps(v){
-    const n = Number(String(v||"").replace(",", "."));
-    if(!isFinite(n)) return "—";
-    return String(Math.round(n)) + " reps";
-  }
-
-  function fmtJumpIn(v){
-    const n = Number(String(v||"").replace(",", "."));
-    if(!isFinite(n)) return "—";
-    // KFL wants feet'in"
-    const ft = Math.floor(n / 12);
-    const inch = Math.round(n - ft*12);
-    return `${ft}'${inch}"`;
-  }
-
-  function fmtLbs(v){
-    const n = Number(String(v||"").replace(",", "."));
-    if(!isFinite(n)) return "—";
-    return `${Math.round(n)} LBS`;
-  }
-
   function padId(v){
     const s = String(v ?? "").trim();
     if(!s) return "";
@@ -541,34 +470,34 @@ function getHashParam(name){
     return m ? decodeURIComponent(m[1]) : "";
   }
 
-  function setPhoto(imgEl, fallbackEl, url, name){
-    if(!imgEl) return;
+  function setPhoto(url, name){
+    if(!el.photoImg) return;
 
-    if(fallbackEl){
-      fallbackEl.textContent = initials(name);
-      fallbackEl.style.display = "flex";
+    if(el.photoFallback){
+      el.photoFallback.textContent = initials(name);
+      el.photoFallback.style.display = "flex";
     }
-    imgEl.style.display = "none";
+    el.photoImg.style.display = "none";
 
     const token = Date.now() + Math.random();
-    imgEl.dataset.token = token;
+    el.photoImg.dataset.token = token;
 
-    imgEl.onload = () => {
-      if(imgEl.dataset.token != token) return;
-      if(fallbackEl) fallbackEl.style.display = "none";
-      imgEl.style.display = "block";
+    el.photoImg.onload = () => {
+      if(el.photoImg.dataset.token != token) return;
+      if(el.photoFallback) el.photoFallback.style.display = "none";
+      el.photoImg.style.display = "block";
     };
 
-    imgEl.onerror = () => {
-      if(imgEl.dataset.token != token) return;
-      if(fallbackEl){
-        fallbackEl.textContent = initials(name);
-        fallbackEl.style.display = "flex";
+    el.photoImg.onerror = () => {
+      if(el.photoImg.dataset.token != token) return;
+      if(el.photoFallback){
+        el.photoFallback.textContent = initials(name);
+        el.photoFallback.style.display = "flex";
       }
-      imgEl.style.display = "none";
+      el.photoImg.style.display = "none";
     };
 
-    imgEl.src = url;
+    el.photoImg.src = url;
   }
 
   function render(r, selRaw){
@@ -702,40 +631,148 @@ function getHashParam(name){
 
     if(el.stats) el.stats.innerHTML = cards.join("");
 
-    // Photo via CDN (shared for Default + KFL)
+    // Photo via CDN
     const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
     if(idRaw){
       const url = PHOTO_BASE_URL + padId(idRaw) + ".jpg";
-      setPhoto(el.photoImg, el.photoFallback, url, name);
-      setPhoto(el.kflPhotoImg, el.kflPhotoFallback, url, name);
+      setPhoto(url, name);
     }else{
       if(el.photoFallback){
         el.photoFallback.textContent = initials(name);
         el.photoFallback.style.display = "flex";
       }
       if(el.photoImg) el.photoImg.style.display = "none";
+    }
+  }
 
-      if(el.kflPhotoFallback){
-        el.kflPhotoFallback.textContent = initials(name);
-        el.kflPhotoFallback.style.display = "flex";
+
+  function renderKfl(r, selRaw){
+    const name = pick(r, ["Nombre","Name","Athlete","Player"]) || "—";
+    const school = pick(r, ["Lugar de Estudios","Lugar de estudios","Lugar_de_Estudios","School","Escuela","Colegio","school"]) || "";
+    const height = pick(r, ["Estatura","Altura","Height","Ht","height"]) || "";
+    const weight = pick(r, ["Peso","Weight","Wt","weight"]) || "";
+
+    if (kflEl.name) kflEl.name.textContent = name;
+    if (kflEl.school) kflEl.school.textContent = "COLEGIO: " + (school || "—");
+    if (kflEl.height) kflEl.height.textContent = "ESTATURA: " + (height || "—");
+    if (kflEl.weight){
+      const w = String(weight||"").trim();
+      kflEl.weight.textContent = "PESO: " + (w ? (w + " LBS") : "—");
+    }
+
+    function toNumber(v){
+      if(v === undefined || v === null) return null;
+      const s = String(v).replace(/,/g,".").trim();
+      const mm = s.match(/-?\d+(?:\.\d+)?/);
+      if(!mm) return null;
+      const n = parseFloat(mm[0]);
+      return Number.isFinite(n) ? n : null;
+    }
+    function formatTime(raw){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      const n = toNumber(s);
+      if(n === null) return s;
+      return n.toFixed(2);
+    }
+    function formatNumber(raw, decimals){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      const n = toNumber(s);
+      if(n === null) return s;
+      return (decimals === 0) ? String(Math.round(n)) : n.toFixed(decimals);
+    }
+    function bestExplicit(keys){
+      for(const k of keys){
+        if(Object.prototype.hasOwnProperty.call(r, k) && String(r[k]??"").trim() !== ""){
+          return String(r[k]).trim();
+        }
       }
-      if(el.kflPhotoImg) el.kflPhotoImg.style.display = "none";
+      return "";
+    }
+    function bestFromRow(regex, mode){
+      let bestVal = null;
+      let bestRaw = "";
+      for(const k of Object.keys(r)){
+        if(!regex.test(k)) continue;
+        const raw = r[k];
+        const n = toNumber(raw);
+        if(n === null) continue;
+        const rawS = String(raw ?? "").trim();
+        if(bestVal === null){
+          bestVal = n; bestRaw = rawS;
+        }else{
+          if(mode === "min" && n < bestVal){ bestVal = n; bestRaw = rawS; }
+          if(mode === "max" && n > bestVal){ bestVal = n; bestRaw = rawS; }
+        }
+      }
+      return bestRaw;
     }
 
-    // KFL fields
-    if(el.kflName) el.kflName.textContent = name;
-    if(el.kflSchool) el.kflSchool.textContent = pick(r, ["Lugar de Estudios","School","Colegio"]) || "—";
-    if(el.kflHeight) el.kflHeight.textContent = pick(r, ["Estatura","Height"]) || "—";
-    if(el.kflWeight) el.kflWeight.textContent = fmtLbs(pick(r, ["Peso","Weight"]));
+    const best40 = bestExplicit([
+      "40 YDS DASH (SEGUNDOS)",
+      "40 YDS DASH (SEGUNDOS) 2da Vuelta",
+    ]) || bestFromRow(/40\s*YDS\s*DASH\s*\(SEGUNDOS\)/i, "min");
 
-    if(el.kfl40) el.kfl40.textContent = (best40 === "" || best40 === null) ? "—" : fmtSeconds(best40).replace("s",""); // keep compact like 4.95
-    if(el.kfl5105) el.kfl5105.textContent = (best5105 === "" || best5105 === null) ? "—" : fmtSeconds(best5105).replace("s","");
-    if(el.kflLong) el.kflLong.textContent = (bestBroad === "" || bestBroad === null) ? "—" : fmtJumpIn(bestBroad);
-    if(el.kflBench) {
-      const n = Number(String(bestBench||"").replace(",", "."));
-      el.kflBench.textContent = isFinite(n) ? String(Math.round(n)) : "—";
+    const bestBroad = bestExplicit([
+      "BROAD JUMP (PULGADAS)",
+      "BROAD JUMP (PULGADAS) 2da Vuelta",
+    ]) || bestFromRow(/BROAD\s*JUMP\s*\(PULGADAS\)/i, "max");
+
+    const best5105 = bestExplicit([
+      "5-10-5 (SHUTTLE) RUN",
+      "5-10-5 (SHUTTLE) RUN 2da Vuelta",
+    ]) || bestFromRow(/5\-10\-5\s*\(SHUTTLE\)\s*RUN/i, "min");
+
+    const best3Cone = bestExplicit([
+      "3- CONE DRILL",
+      "3- CONE DRILL 2da Vuelta",
+    ]) || bestFromRow(/3\-\s*CONE\s*DRILL/i, "min");
+
+    const bestBench = bestExplicit([
+      "BENCHPRESS",
+      "BENCH PRESS 2da Vuelta ",
+    ]) || bestFromRow(/BENCH/i, "max");
+
+    function perfCell(label, value){
+      const v = String(value||"").trim() || "—";
+      return `<div class="cell"><div class="label">${esc(label)}</div><div class="value">${esc(v)}</div></div>`;
     }
 
+    const cells = [];
+    cells.push(perfCell("40 YARDS<br>DASH", best40 ? formatTime(best40) : "—"));
+    cells.push(perfCell("5-10-5<br>SHUTTLE", best5105 ? formatTime(best5105) : "—"));
+    cells.push(perfCell("3-CONE<br>DRILL", best3Cone ? formatTime(best3Cone) : "—"));
+    cells.push(perfCell("LONG<br>JUMP", bestBroad ? formatNumber(bestBroad, 0) + '"' : "—"));
+    cells.push(perfCell("BENCH<br>PRESS", bestBench ? formatNumber(bestBench, 0) : "—"));
+    if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
+
+    // Photo CDN
+    const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
+    const url = idRaw ? (PHOTO_BASE_URL + padId(idRaw) + ".jpg") : "";
+    if (url){
+      if (kflEl.photoImg){
+        kflEl.photoImg.onload = ()=>{
+          kflEl.photoImg.style.display = "block";
+          if (kflEl.photoFallback) kflEl.photoFallback.style.display = "none";
+        };
+        kflEl.photoImg.onerror = ()=>{
+          if (kflEl.photoFallback){
+            kflEl.photoFallback.textContent = initials(name);
+            kflEl.photoFallback.style.display = "flex";
+          }
+          if (kflEl.photoImg) kflEl.photoImg.style.display = "none";
+        };
+        kflEl.photoImg.src = url;
+        kflEl.photoImg.alt = name;
+      }
+    }else{
+      if (kflEl.photoFallback){
+        kflEl.photoFallback.textContent = initials(name);
+        kflEl.photoFallback.style.display = "flex";
+      }
+      if (kflEl.photoImg) kflEl.photoImg.style.display = "none";
+    }
   }
 
   function parseCsv(text){
@@ -776,7 +813,7 @@ function getHashParam(name){
     if(!csv) csv = await loadCsv();
     const selN = normId(sel);
     const row = csv.find(r => normId(pick(r,["Formulario#","Formulario","ID","Id","id"])) === selN);
-    if(row) render(row, sel);
+    if(row) ( (getHashParam("tpl")||"default").toLowerCase()==="kfl" ? renderKfl(row, sel) : render(row, sel) );
   }
 
   el.fsBtn?.addEventListener("click", async()=>{
