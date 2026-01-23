@@ -1930,6 +1930,17 @@ dz.addEventListener("drop", (e)=>{
   reader.readAsText(f);
 });
 
+
+// IS_PRO_VIEW_FORCE_COACH
+try{
+  if (IS_PRO_VIEW){
+    // Pro is Coach-style by default; ensure we don't inherit Media/Public mode state.
+    try{ setMediaMode(false); }catch(e){}
+    try{ setScoutMode(false); }catch(e){}
+    try{ setCoachMode(true); }catch(e){}
+  }
+}catch(e){}
+
 // Optional: try auto-load if results.csv exists
 // (works only when served via a local server; some browsers block fetch() for file://)
 
