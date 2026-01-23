@@ -207,7 +207,6 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   background-size: 14px 14px;
   opacity:.55;
   pointer-events:none;
-  z-index:1;
 }
 
 /* diagonal line */
@@ -229,11 +228,10 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 }
 #kflRoot .kflSlashTL{ left:28px; top:28px; }
 #kflRoot .kflSlashBL{ left:28px; bottom:70px; }
-#kflRoot .kflSlashBR{ right: -10px; bottom:70px; }
+#kflRoot .kflSlashBR{ right:28px; bottom:70px; }
 
 #kflRoot .kflInner{
   position:absolute; inset:34px;
-  z-index:2;
   display:grid; grid-template-columns: 38% 62%;
   gap:26px;
 }
@@ -291,12 +289,11 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 #kflRoot .kflKkmLogo{ width:260px; height:auto; opacity:.95; filter: drop-shadow(0 8px 18px rgba(0,0,0,.35)); }
 .kflDevBrand{ font-size:14px; font-weight:900; letter-spacing:2px; opacity:.95; }
 
-#kflRoot .kflRight{ position:relative; color:#fff; padding:8px 4px;  display:flex; flex-direction:column; align-items:center;}
+#kflRoot .kflRight{ position:relative; color:#fff; padding:8px 4px; }
 #kflRoot .kflDraft{
   position:relative;
-  align-self:center;
   display:inline-block;
-  margin:0;
+  margin:0 auto;
   text-align:center; top:auto; right:auto;
   background:#e13b3b; color:#fff;
   padding:18px 26px;
@@ -340,7 +337,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 #kflRoot .kflPerfRow{
   margin-top:18px;
   display:grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap:0;
   align-items:stretch;
 }
@@ -353,7 +350,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   text-align:center;
   text-transform:uppercase;
   font-weight:1000;
-  font-size:16px;
+  font-size:18px;
   letter-spacing:.8px;
   opacity:.95;
   line-height:1.15;
@@ -362,7 +359,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   margin-top:16px;
   text-align:center;
   font-weight:1000;
-  font-size:64px;
+  font-size:72px;
   color:#e13b3b;
   letter-spacing:.5px;
 }
@@ -649,6 +646,25 @@ function getHashParam(name){
       return (decimals === 0) ? String(Math.round(n)) : n.toFixed(decimals);
     }
 
+    function formatFeetInches(raw){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      if(s.includes("\'") || s.includes("\"")) return s;
+      const n = toNumber(s);
+      if(n === null) return s;
+      const inches = Math.round(n);
+      const ft = Math.floor(inches/12);
+      const inch = inches % 12;
+      return (ft >= 3) ? `${ft}\' ${inch}\"` : s;
+    }
+
+    function formatWeightCeil(raw){
+      const n = toNumber(raw);
+      if(n === null) return String(raw ?? "").trim();
+      return String(Math.ceil(n));
+    }
+
+
     function addUnit(raw, unit){
       const s = String(raw ?? "").trim();
       if(!s) return "";
@@ -722,8 +738,9 @@ function getHashParam(name){
 
     const cards = [];
     cards.push(statCard("Age", age));
-    cards.push(statCard("Height", height));
-    cards.push(statCard("Weight", String(weight).trim() ? (String(weight).trim() + " lbs") : ""));
+    cards.push(statCard("Height", formatFeetInches(height) || height));
+    const wDisp = formatWeightCeil(weight);
+    cards.push(statCard("Weight", wDisp ? (wDisp + " lbs") : ""));
 
     if(best40) cards.push(statCard("40yds", addUnit(formatTime(best40), "s")));
     if(bestBroad) cards.push(statCard("Broad Jump", addUnit(formatNumber(bestBroad, 0), "in")));
@@ -749,20 +766,6 @@ function getHashParam(name){
 
 
   function renderKfl(r, selRaw){
-    function formatHeightKfl(v){
-      const s = String(v ?? "").trim();
-      if(!s) return "";
-      if(s.includes("\'") || s.includes("\"")) return s;
-      const mm = s.replace(/,/g,".").match(/-?\d+(?:\.\d+)?/);
-      if(!mm) return s;
-      const n = parseFloat(mm[0]);
-      if(!Number.isFinite(n)) return s;
-      const inches = Math.round(n);
-      const ft = Math.floor(inches/12);
-      const inch = inches % 12;
-      return (ft >= 3) ? `${ft}\' ${inch}\"` : s;
-    }
-
     const name = pick(r, ["Nombre","Name","Athlete","Player"]) || "—";
     const school = pick(r, ["Lugar de Estudios","Lugar de estudios","Lugar_de_Estudios","School","Escuela","Colegio","school"]) || "";
     const height = pick(r, ["Estatura","Altura","Height","Ht","height"]) || "";
@@ -770,15 +773,10 @@ function getHashParam(name){
 
     if (kflEl.name) kflEl.name.textContent = name;
     if (kflEl.school) kflEl.school.textContent = "COLEGIO: " + (school || "—");
-    if (kflEl.height) {
-      const htxt = formatHeightKfl(height);
-      kflEl.height.textContent = "ESTATURA: " + (htxt || "—");
-    }
+    if (kflEl.height) kflEl.height.textContent = "ESTATURA: " + (height || "—");
     if (kflEl.weight){
-      const mm = String(weight ?? "").replace(/,/g,".").trim().match(/-?\d+(?:\.\d+)?/);
-      const wn = mm ? parseFloat(mm[0]) : NaN;
-      const wtxt = Number.isFinite(wn) ? String(Math.round(wn)) : String(weight||"").trim();
-      kflEl.weight.textContent = "PESO: " + (wtxt ? (wtxt + " LBS") : "—");
+      const w = String(weight||"").trim();
+      kflEl.weight.textContent = "PESO: " + (w ? (w + " LBS") : "—");
     }
 
     function toNumber(v){
@@ -861,14 +859,22 @@ function getHashParam(name){
     }
 
     const cells = [];
-    cells.push(perfCell("40 YARDS DASH", best40 ? (formatTime(best40) + " s") : "—"));
-    cells.push(perfCell("5-10-5 SHUTTLE", best5105 ? (formatTime(best5105) + " s") : "—"));
-    cells.push(perfCell("3-CONE DRILL", best3Cone ? (formatTime(best3Cone) + " s") : "—"));
-    cells.push(perfCell("LONG JUMP", bestBroad ? (formatNumber(bestBroad, 0) + '"') : "—"));
-    cells.push(perfCell("BENCH PRESS", bestBench ? (formatNumber(bestBench, 0) + " reps") : "—"));
-    if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
-
-    // Photo CDN
+    function pushIf(label, v){
+      const vv = String(v ?? "").trim();
+      if(!vv || vv==="—" || vv==="-" ) return;
+      cells.push(perfCell(label, vv));
+    }
+    pushIf("40 YARDS DASH", best40 ? (formatTime(best40) + " s") : "—");
+    pushIf("5-10-5 SHUTTLE", best5105 ? (formatTime(best5105) + " s") : "—");
+    pushIf("3-CONE DRILL", best3Cone ? (formatTime(best3Cone) + " s") : "—");
+    pushIf("LONG JUMP", bestBroad ? (formatNumber(bestBroad, 0) + '"') : "—");
+    pushIf("BENCH PRESS", bestBench ? (formatNumber(bestBench, 0)) : "—");
+    if (kflEl.perf) {
+      kflEl.perf.innerHTML = cells.join("");
+      const cols = Math.max(1, Math.min(5, cells.length));
+      kflEl.perf.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    }
+// Photo CDN
     const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
     const url = idRaw ? (PHOTO_BASE_URL + padId(idRaw) + ".jpg") : "";
     if (kflEl.photoFallback){ kflEl.photoFallback.textContent = initials(name); kflEl.photoFallback.style.display = "flex"; }
@@ -885,8 +891,12 @@ function getHashParam(name){
             kflEl.photoFallback.style.display = "flex";
           }
           if (kflEl.photoImg) { kflEl.photoImg.style.display = "none"; }
-
         };
+        if (kflEl.photoImg) kflEl.photoImg.style.display = "none";
+        if (kflEl.photoFallback){
+          kflEl.photoFallback.textContent = initials(name);
+          kflEl.photoFallback.style.display = "flex";
+        }
         kflEl.photoImg.src = url;
         kflEl.photoImg.alt = name;
       }
@@ -930,7 +940,7 @@ function getHashParam(name){
     return parseCsv(await res.text());
   }
 
-  let csv=null, lastSel="", lastTpl="";
+  let csv=null, lastSel="";
   async function hydrate(){
     const sel = getSel();
     const tpl = (getHashParam("tpl") || "default").toLowerCase();
