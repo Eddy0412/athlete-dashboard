@@ -223,14 +223,18 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   position:absolute;
   background:#e13b3b;
   transform:skewX(-25deg);
-  width:110px; height:240px;
+  width:90px; height:240px;
   pointer-events:none;
+  z-index:1;
 }
 #kflRoot .kflSlashTL{ left:28px; top:28px; }
 #kflRoot .kflSlashBL{ left:28px; bottom:70px; }
-#kflRoot .kflSlashBR{ right:28px; bottom:70px; }
+#kflRoot .kflSlashBR{ right: -10px; bottom:70px; }
 
 #kflRoot .kflInner{
+  position:relative;
+  z-index:2;
+
   position:absolute; inset:34px;
   display:grid; grid-template-columns: 38% 62%;
   gap:26px;
@@ -256,6 +260,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 }
 #kflRoot #kflPhotoImg{
   position:absolute; inset:0; width:100%; height:100%;
+  display:block;
   object-fit:cover;
   display:block;
 }
@@ -269,14 +274,14 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 #kflRoot .kflNameBar{
   margin-top:18px;
   background: transparent;
-  border:none;
+  border: none;
   height:88px;
   display:flex; align-items:center;
   padding:0 22px;
-  box-shadow:none;
+  box-shadow: none;
 }
 #kflRoot .kflNameText{
-  font-weight:1000; font-size:56px; color:#fff; text-shadow: 0 6px 18px rgba(0,0,0,.35);
+  font-weight:1000; font-size: 56px; color:#fff; text-shadow: 0 6px 18px rgba(0,0,0,.35);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
@@ -289,8 +294,14 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 #kflRoot .kflKkmLogo{ width:260px; height:auto; opacity:.95; filter: drop-shadow(0 8px 18px rgba(0,0,0,.35)); }
 .kflDevBrand{ font-size:14px; font-weight:900; letter-spacing:2px; opacity:.95; }
 
-#kflRoot .kflRight{ position:relative; color:#fff; padding:8px 4px; }
+#kflRoot .kflRight{ position:relative; color:#fff; padding:8px 4px;  display:flex; flex-direction:column; align-items:center; }
+
 #kflRoot .kflDraft{
+  position:relative;
+  align-self:center;
+  display:inline-block;
+  text-align:center;
+
   position:relative;
   display:inline-block;
   margin:0 auto;
@@ -302,7 +313,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   letter-spacing:1px;
 }
 #kflRoot .kflLogoWrap{
-  margin-top:28px;
+  margin-top: 28px;
   display:flex; align-items:center; justify-content:center;
 }
 #kflRoot .kflShield{
@@ -337,7 +348,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 #kflRoot .kflPerfRow{
   margin-top:18px;
   display:grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap:0;
   align-items:stretch;
 }
@@ -350,7 +361,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   text-align:center;
   text-transform:uppercase;
   font-weight:1000;
-  font-size:18px;
+  font-size: 16px;
   letter-spacing:.8px;
   opacity:.95;
   line-height:1.15;
@@ -359,13 +370,13 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   margin-top:16px;
   text-align:center;
   font-weight:1000;
-  font-size:72px;
+  font-size: 64px;
   color:#e13b3b;
   letter-spacing:.5px;
 }
 
 #kflRoot .kflSite{
-  position:absolute; left:0; right:0; bottom:54px;
+  position:absolute; left:0; right:0; bottom: 54px;
   text-align:center;
   font-weight:1000;
   font-size:22px;
@@ -610,6 +621,27 @@ function getHashParam(name){
     const height = pick(r, ["Estatura","Altura","Height","Ht","height"]) || "";
     const weight = pick(r, ["Peso","Weight","Wt","weight"]) || "";
 
+    function toNumber(v){
+      if(v === undefined || v === null) return null;
+      const s = String(v).replace(/,/g,".").trim();
+      const mm = s.match(/-?\d+(?:\.\d+)?/);
+      if(!mm) return null;
+      const n = parseFloat(mm[0]);
+      return Number.isFinite(n) ? n : null;
+    }
+    function formatHeight(v){
+      const s = String(v ?? "").trim();
+      if(!s) return "";
+      if(s.includes("\'") || s.includes("\"")) return s;
+      const n = toNumber(s);
+      if(n === null) return s;
+      const inches = Math.round(n);
+      const ft = Math.floor(inches/12);
+      const inch = inches % 12;
+      if(ft >= 3) return `${ft}\' ${inch}\"`;
+      return s;
+    }
+
     if(el.name) el.name.innerHTML = esc(name);
     if(el.meta) el.meta.innerHTML = [sport,pos,team].filter(Boolean).map(esc).join(" • ") || "&nbsp;";
     if(el.counter) el.counter.textContent = selRaw ? `#${selRaw}` : "";
@@ -753,11 +785,13 @@ function getHashParam(name){
 
     if (kflEl.name) kflEl.name.textContent = name;
     if (kflEl.school) kflEl.school.textContent = "COLEGIO: " + (school || "—");
-    if (kflEl.height) kflEl.height.textContent = "ESTATURA: " + (height || "—");
-    if (kflEl.weight){
-      const w = String(weight||"").trim();
-      kflEl.weight.textContent = "PESO: " + (w ? (w + " LBS") : "—");
-    }
+    if (kflEl.height) const htxt = formatHeight(height);
+    if (kflEl.height) kflEl.height.textContent = "ESTATURA: " + (htxt || "—");
+if (kflEl.weight){
+      const wn = toNumber(weight);
+    const wtxt = (wn === null) ? String(weight||"").trim() : String(Math.round(wn));
+    if (kflEl.weight) kflEl.weight.textContent = "PESO: " + (wtxt ? (wtxt + " LBS") : "—");
+}
 
     function toNumber(v){
       if(v === undefined || v === null) return null;
@@ -839,11 +873,12 @@ function getHashParam(name){
     }
 
     const cells = [];
-    cells.push(perfCell("40 YARDS DASH", best40 ? formatTime(best40) : "—"));
-    cells.push(perfCell("5-10-5 SHUTTLE", best5105 ? formatTime(best5105) : "—"));
+    cells.push(perfCell("40 YARDS DASH", best40 ? (formatTime(best40) + " s") : "—"));
+    cells.push(perfCell("5-10-5 SHUTTLE", best5105 ? (formatTime(best5105) + " s") : "—"));
+    cells.push(perfCell("3-CONE DRILL", best3Cone ? (formatTime(best3Cone) + " s") : "—"));
     cells.push(perfCell("LONG JUMP", bestBroad ? (formatNumber(bestBroad, 0) + '"') : "—"));
-    cells.push(perfCell("BENCH PRESS", bestBench ? formatNumber(bestBench, 0) : "—"));
-    if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
+    cells.push(perfCell("BENCH PRESS", bestBench ? (formatNumber(bestBench, 0) + " reps") : "—"));
+if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
 
     // Photo CDN
     const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
