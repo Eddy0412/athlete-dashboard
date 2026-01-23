@@ -194,106 +194,185 @@
 body.tplKfl{ background: radial-gradient(1200px 600px at 20% 20%, rgba(0,180,160,.18), rgba(0,0,0,0)) , radial-gradient(900px 500px at 80% 10%, rgba(84,113,183,.22), rgba(0,0,0,0)), #070b10; }
 body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 
+
 /* --- KFL TEMPLATE --- */
 #kflRoot{ position:fixed; inset:0; display:none; overflow:hidden; font-family:var(--font); }
 #kflRoot .kflStage{ position:absolute; inset:0; background:#0b63a4; }
-#kflRoot .kflStage:before{
-  content:""; position:absolute; inset:0;
+
+/* subtle dots pattern top-right */
+#kflRoot .kflStage:after{
+  content:""; position:absolute; top:0; right:0; width:320px; height:240px;
   background:
-    radial-gradient(1200px 700px at 70% 10%, rgba(255,255,255,.08), transparent 60%),
-    linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,0) 35%);
+    radial-gradient(circle at 6px 6px, rgba(0,0,0,.22) 2px, transparent 3px);
+  background-size: 14px 14px;
+  opacity:.55;
   pointer-events:none;
 }
-#kflRoot .kflInner{ position:absolute; inset:32px; display:grid; grid-template-columns: 44% 56%; gap:28px; }
-#kflRoot .left{
-  position:relative; border-radius:16px; overflow:hidden;
+
+/* diagonal line */
+#kflRoot .kflDiag{
+  position:absolute; left:-20%; top:40%;
+  width:160%; height:2px;
+  background:rgba(255,255,255,.18);
+  transform:rotate(-10deg);
+  pointer-events:none;
+}
+
+/* red slashes */
+#kflRoot .kflSlash{
+  position:absolute;
+  background:#e13b3b;
+  transform:skewX(-25deg);
+  width:110px; height:240px;
+  pointer-events:none;
+}
+#kflRoot .kflSlashTL{ left:28px; top:28px; }
+#kflRoot .kflSlashBL{ left:28px; bottom:70px; }
+#kflRoot .kflSlashBR{ right:28px; bottom:70px; }
+
+#kflRoot .kflInner{
+  position:absolute; inset:34px;
+  display:grid; grid-template-columns: 42% 58%;
+  gap:26px;
+}
+
+#kflRoot .kflLeft{ position:relative; display:flex; flex-direction:column; }
+#kflRoot .kflPhotoFrame{
+  position:relative;
+  border-radius:2px;
+  background:#f3d9c3;
+  border:2px solid rgba(0,0,0,.35);
+  box-shadow: 0 22px 70px rgba(0,0,0,.35);
+  height: 560px;
+  overflow:hidden;
+}
+#kflRoot .kflPhotoBg{
+  position:absolute; inset:0;
   background:
-    linear-gradient(0deg, rgba(0,0,0,.35), rgba(0,0,0,0)),
-    repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 10px, rgba(255,255,255,0) 10px 22px),
-    rgba(0,0,0,.18);
-  box-shadow: 0 26px 80px rgba(0,0,0,.45);
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.12) 100%);
+  pointer-events:none;
 }
-#kflRoot .left .photoBox{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
-#kflRoot .left img{ width:100%; height:100%; object-fit:cover; display:block; }
-#kflRoot .left .photoFallback{
-  width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-  font-weight:1000; font-size:72px; letter-spacing:2px; color:rgba(255,255,255,.9);
-  background:rgba(0,0,0,.12);
+#kflRoot #kflPhotoImg{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover;
+  display:block;
 }
-#kflRoot .nameBar{
-  position:absolute; left:0; right:0; bottom:0;
-  background:rgba(255,255,255,.92); color:#0b1b2b;
-  padding:18px 22px; font-weight:1000; font-size:44px; line-height:1;
-  text-transform:none;
-}
-#kflRoot .right{ position:relative; padding:6px 8px; color:#fff; }
-#kflRoot .draft{
-  position:absolute; top:0; right:0;
-  background:#e13b3b; color:#fff; font-weight:1000;
-  padding:16px 22px; font-size:56px; letter-spacing:1px;
-  border-radius:0;
-}
-#kflRoot .kflLogo{
-  margin-top:130px; display:flex; flex-direction:column; align-items:center; gap:10px;
-}
-#kflRoot .kflLogo .badge{
-  width:150px; height:150px; border-radius:22px;
+#kflRoot .kflPhotoFallback{
+  position:absolute; inset:0;
   display:flex; align-items:center; justify-content:center;
-  border:3px solid rgba(255,255,255,.35);
-  background:rgba(0,0,0,.10);
-  font-weight:1000; font-size:56px;
+  font-weight:1000; font-size:92px; letter-spacing:2px;
+  color:rgba(0,0,0,.55);
 }
-#kflRoot .kflLogo .sub{
-  font-weight:900; font-size:20px; opacity:.9; letter-spacing:.6px;
-}
-#kflRoot .info{
-  margin-top:18px; text-align:center; font-weight:900;
-}
-#kflRoot .info .line{ font-size:22px; margin:8px 0; letter-spacing:.4px; }
-#kflRoot .info .small{ font-size:18px; opacity:.95; }
-#kflRoot .sectionTitle{
-  margin-top:44px; text-align:center; font-weight:1000;
-  font-size:34px; letter-spacing:1px;
-}
-#kflRoot .perf{
+
+#kflRoot .kflNameBar{
   margin-top:18px;
-  display:grid; grid-template-columns: repeat(5, 1fr);
-  gap:18px;
+  background:#f3d9c3;
+  border:2px solid rgba(0,0,0,.35);
+  height:88px;
+  display:flex; align-items:center;
+  padding:0 22px;
+  box-shadow: 0 18px 55px rgba(0,0,0,.25);
+}
+#kflRoot .kflNameText{
+  font-weight:1000; font-size:44px; color:#000;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+#kflRoot .kflDev{
+  position:absolute; left:6px; right:6px; bottom:0;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  color:rgba(255,255,255,.9);
+}
+#kflRoot .kflDevLabel{ font-size:12px; letter-spacing:.6px; opacity:.9; }
+#kflRoot .kflDevBrand{ font-size:14px; font-weight:900; letter-spacing:2px; opacity:.95; }
+
+#kflRoot .kflRight{ position:relative; color:#fff; padding:8px 4px; }
+#kflRoot .kflDraft{
+  position:absolute; top:0; right:0;
+  background:#e13b3b; color:#fff;
+  padding:18px 26px;
+  font-weight:1000;
+  font-size:64px;
+  letter-spacing:1px;
+}
+#kflRoot .kflLogoWrap{
+  margin-top:120px;
+  display:flex; align-items:center; justify-content:center;
+}
+#kflRoot .kflShield{
+  width:160px; height:160px;
+  border-radius:22px;
+  border:3px solid rgba(255,255,255,.45);
+  background:rgba(0,0,0,.10);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:1000; font-size:64px;
+}
+#kflRoot .kflInfo{
+  margin-top:18px;
+  text-align:left;
+  padding-left:110px;
+}
+#kflRoot .kflInfoLine{
+  font-weight:1000;
+  font-size:26px;
+  margin:10px 0;
+  letter-spacing:.6px;
+}
+#kflRoot .kflInfoSmall{ font-size:22px; }
+
+#kflRoot .kflPerfTitle{
+  margin-top:46px;
+  text-align:center;
+  font-weight:1000;
+  font-size:36px;
+  letter-spacing:1px;
+}
+
+#kflRoot .kflPerfRow{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:0;
   align-items:stretch;
 }
-#kflRoot .perf .cell{
-  border-left:1px solid rgba(255,255,255,.35);
-  padding-left:16px;
+#kflRoot .kflPerfCell{
+  padding:0 18px;
+  border-left:2px solid rgba(255,255,255,.25);
 }
-#kflRoot .perf .cell:first-child{ border-left:none; padding-left:0; }
-#kflRoot .perf .label{
-  font-weight:900; font-size:16px; opacity:.95; letter-spacing:.4px;
-  text-transform:uppercase; line-height:1.2;
+#kflRoot .kflPerfCell:first-child{ border-left:none; }
+#kflRoot .kflPerfLabel{
+  text-align:center;
+  text-transform:uppercase;
+  font-weight:1000;
+  font-size:14px;
+  letter-spacing:.8px;
+  opacity:.95;
+  line-height:1.15;
 }
-#kflRoot .perf .value{
-  margin-top:14px;
-  font-weight:1000; font-size:54px; color:#e13b3b;
+#kflRoot .kflPerfValue{
+  margin-top:16px;
+  text-align:center;
+  font-weight:1000;
+  font-size:64px;
+  color:#e13b3b;
   letter-spacing:.5px;
 }
-#kflRoot .footerSite{
-  position:absolute; left:0; right:0; bottom:24px;
-  text-align:center; font-weight:1000; letter-spacing:1px;
+
+#kflRoot .kflSite{
+  position:absolute; left:0; right:0; bottom:22px;
+  text-align:center;
+  font-weight:1000;
   font-size:22px;
+  letter-spacing:1px;
 }
-#kflRoot .accentSlash{
-  position:absolute; width:130px; height:260px;
-  background:#e13b3b;
-  transform:skewX(-20deg);
-  opacity:1;
-}
-#kflRoot .accentSlash.s1{ left:22px; top:54px; }
-#kflRoot .accentSlash.s2{ left:22px; bottom:40px; }
-#kflRoot .accentSlash.s3{ right:22px; bottom:64px; }
-@media (max-width: 1024px){
-  #kflRoot .kflInner{ inset:18px; grid-template-columns: 1fr; }
-  #kflRoot .draft{ font-size:44px; }
-  #kflRoot .nameBar{ font-size:36px; }
-  #kflRoot .perf{ grid-template-columns: repeat(2, 1fr); }
+
+@media (max-width: 1100px){
+  #kflRoot .kflInner{ inset:16px; grid-template-columns: 1fr; }
+  #kflRoot .kflPhotoFrame{ height:420px; }
+  #kflRoot .kflDraft{ font-size:48px; }
+  #kflRoot .kflInfo{ padding-left:0; text-align:center; }
+  #kflRoot .kflPerfRow{ grid-template-columns: repeat(2, 1fr); gap:18px; }
+  #kflRoot .kflPerfCell{ border-left:none; border:2px solid rgba(255,255,255,.2); border-radius:16px; padding:14px; }
 }
 </style>
 </head>
@@ -342,38 +421,52 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 <!-- KFL Template Root -->
 <div id="kflRoot" style="display:none">
   <div class="kflStage">
-    <div class="accentSlash s1"></div>
-    <div class="accentSlash s2"></div>
-    <div class="accentSlash s3"></div>
+    <!-- red slashes / accents -->
+    <div class="kflSlash kflSlashTL"></div>
+    <div class="kflSlash kflSlashBL"></div>
+    <div class="kflSlash kflSlashBR"></div>
+
+    <!-- thin diagonal line -->
+    <div class="kflDiag"></div>
 
     <div class="kflInner">
-      <div class="left">
-        <div class="photoBox">
-          <img id="kflPhotoImg" alt="" style="display:none"/>
-          <div id="kflPhotoFallback" class="photoFallback">—</div>
+      <!-- LEFT: photo + name + developed by -->
+      <div class="kflLeft">
+        <div class="kflPhotoFrame">
+          <img id="kflPhotoImg" alt="" />
+          <div id="kflPhotoFallback" class="kflPhotoFallback">—</div>
+          <div class="kflPhotoBg"></div>
         </div>
-        <div class="nameBar" id="kflName">—</div>
+
+        <div class="kflNameBar">
+          <div id="kflName" class="kflNameText">—</div>
+        </div>
+
+        <div class="kflDev">
+          <div class="kflDevLabel">Developed by:</div>
+          <div class="kflDevBrand">KREATIVE KINGDOM MEDIA</div>
+        </div>
       </div>
 
-      <div class="right">
-        <div class="draft">DRAFT 2025</div>
+      <!-- RIGHT: draft + logo + info + performance -->
+      <div class="kflRight">
+        <div class="kflDraft">DRAFT 2025</div>
 
-        <div class="kflLogo">
-          <div class="badge">KFL</div>
-          <div class="sub">KIWANIS FOOTBALL LEAGUE • PANAMA</div>
+        <div class="kflLogoWrap">
+          <div class="kflShield">KFL</div>
         </div>
 
-        <div class="info">
-          <div class="line" id="kflSchoolLine">COLEGIO: —</div>
-          <div class="line small" id="kflHeightLine">ESTATURA: —</div>
-          <div class="line small" id="kflWeightLine">PESO: —</div>
+        <div class="kflInfo">
+          <div class="kflInfoLine" id="kflSchoolLine">COLEGIO: —</div>
+          <div class="kflInfoLine kflInfoSmall" id="kflHeightLine">ESTATURA: —</div>
+          <div class="kflInfoLine kflInfoSmall" id="kflWeightLine">PESO: —</div>
         </div>
 
-        <div class="sectionTitle">COMBINE PERFORMANCE</div>
+        <div class="kflPerfTitle">COMBINE PERFORMANCE</div>
 
-        <div class="perf" id="kflPerf"></div>
+        <div class="kflPerfRow" id="kflPerf"></div>
 
-        <div class="footerSite">WWW.KIWANISFOOTBALL.COM</div>
+        <div class="kflSite">WWW.KIWANISFOOTBALL.COM</div>
       </div>
     </div>
   </div>
@@ -736,24 +829,25 @@ function getHashParam(name){
 
     function perfCell(label, value){
       const v = String(value||"").trim() || "—";
-      return `<div class="cell"><div class="label">${esc(label)}</div><div class="value">${esc(v)}</div></div>`;
+      return `<div class="kflPerfCell"><div class="kflPerfLabel">${esc(label)}</div><div class="kflPerfValue">${esc(v)}</div></div>`;
     }
 
     const cells = [];
     cells.push(perfCell("40 YARDS<br>DASH", best40 ? formatTime(best40) : "—"));
     cells.push(perfCell("5-10-5<br>SHUTTLE", best5105 ? formatTime(best5105) : "—"));
-    cells.push(perfCell("3-CONE<br>DRILL", best3Cone ? formatTime(best3Cone) : "—"));
-    cells.push(perfCell("LONG<br>JUMP", bestBroad ? formatNumber(bestBroad, 0) + '"' : "—"));
+    cells.push(perfCell("LONG<br>JUMP", bestBroad ? (formatNumber(bestBroad, 0) + '"') : "—"));
     cells.push(perfCell("BENCH<br>PRESS", bestBench ? formatNumber(bestBench, 0) : "—"));
     if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
 
     // Photo CDN
     const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
     const url = idRaw ? (PHOTO_BASE_URL + padId(idRaw) + ".jpg") : "";
+    if (kflEl.photoFallback){ kflEl.photoFallback.textContent = initials(name); kflEl.photoFallback.style.display = "flex"; }
+
     if (url){
       if (kflEl.photoImg){
         kflEl.photoImg.onload = ()=>{
-          kflEl.photoImg.style.display = "block";
+          kflEl.photoImg.style.visibility = "visible";
           if (kflEl.photoFallback) kflEl.photoFallback.style.display = "none";
         };
         kflEl.photoImg.onerror = ()=>{
@@ -761,7 +855,8 @@ function getHashParam(name){
             kflEl.photoFallback.textContent = initials(name);
             kflEl.photoFallback.style.display = "flex";
           }
-          if (kflEl.photoImg) kflEl.photoImg.style.display = "none";
+          if (kflEl.photoImg) { kflEl.photoImg.style.visibility = "hidden"; }
+
         };
         kflEl.photoImg.src = url;
         kflEl.photoImg.alt = name;
@@ -771,7 +866,8 @@ function getHashParam(name){
         kflEl.photoFallback.textContent = initials(name);
         kflEl.photoFallback.style.display = "flex";
       }
-      if (kflEl.photoImg) kflEl.photoImg.style.display = "none";
+      if (kflEl.photoImg) { kflEl.photoImg.style.visibility = "hidden"; }
+
     }
   }
 
