@@ -933,7 +933,7 @@ if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
   }
 
   let csv=null, lastSel="";
-  async function hydrate(){
+  async async function hydrate(){
     const sel = getSel();
     const tpl = (getHashParam("tpl") || "default").toLowerCase();
     // Always apply template visibility on hash changes (tpl or sel)
