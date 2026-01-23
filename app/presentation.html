@@ -380,6 +380,19 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   #kflRoot .kflPerfRow{ grid-template-columns: repeat(2, 1fr); gap:18px; }
   #kflRoot .kflPerfCell{ border-left:none; border:2px solid rgba(255,255,255,.2); border-radius:16px; padding:14px; }
 }
+
+
+/* --- KFL alignment + readability tweaks --- */
+#kflRoot .kflRight{ display:flex; flex-direction:column; align-items:center; }
+#kflRoot .kflLogoWrap, #kflRoot .kflMeta, #kflRoot .kflPerfWrap{ text-align:center; align-items:center; justify-content:center; }
+#kflRoot .kflMetaLines{ text-align:center; }
+#kflRoot .kflPerfValue{ white-space:nowrap; position:relative; z-index:4; }
+#kflRoot .kflUnit{ font-size:0.42em; font-weight:900; margin-left:10px; opacity:.95; }
+#kflRoot .kflNum{ display:inline-block; }
+#kflRoot .kflSlash{ z-index:1; }
+#kflRoot .kflInner{ z-index:2; }
+#kflRoot .kflPhotoFrame{ width:100%; }
+#kflRoot .kflSlashBR{ right:-45px; bottom:70px; opacity:.95; }
 </style>
 </head>
 <body>
@@ -766,6 +779,26 @@ function getHashParam(name){
 
 
   function renderKfl(r, selRaw){
+    function formatHeightKfl(v){
+      const s = String(v ?? "").trim();
+      if(!s) return "";
+      if(s.includes("\'") || s.includes("\"")) return s;
+      const mm = s.replace(/,/g,".").match(/-?\d+(?:\.\d+)?/);
+      if(!mm) return s;
+      const n = parseFloat(mm[0]);
+      if(!Number.isFinite(n)) return s;
+      const inches = Math.round(n);
+      const ft = Math.floor(inches/12);
+      const inch = inches % 12;
+      return (ft >= 3) ? `${ft}\' ${inch}\"` : s;
+    }
+    function formatWeightKfl(v){
+      const mm = String(v ?? "").replace(/,/g,".").trim().match(/-?\d+(?:\.\d+)?/);
+      const n = mm ? parseFloat(mm[0]) : NaN;
+      if(!Number.isFinite(n)) return String(v??"").trim();
+      return String(Math.round(n));
+    }
+
     const name = pick(r, ["Nombre","Name","Athlete","Player"]) || "—";
     const school = pick(r, ["Lugar de Estudios","Lugar de estudios","Lugar_de_Estudios","School","Escuela","Colegio","school"]) || "";
     const height = pick(r, ["Estatura","Altura","Height","Ht","height"]) || "";
@@ -773,10 +806,13 @@ function getHashParam(name){
 
     if (kflEl.name) kflEl.name.textContent = name;
     if (kflEl.school) kflEl.school.textContent = "COLEGIO: " + (school || "—");
-    if (kflEl.height) kflEl.height.textContent = "ESTATURA: " + (height || "—");
+    if (kflEl.height) {
+      const htxt = formatHeightKfl(height);
+      kflEl.height.textContent = "ESTATURA: " + (htxt || "—");
+    }
     if (kflEl.weight){
-      const w = String(weight||"").trim();
-      kflEl.weight.textContent = "PESO: " + (w ? (w + " LBS") : "—");
+      const wtxt = formatWeightKfl(weight);
+      kflEl.weight.textContent = "PESO: " + (wtxt ? (wtxt + " LBS") : "—");
     }
 
     function toNumber(v){
@@ -855,7 +891,12 @@ function getHashParam(name){
 
     function perfCell(label, value){
       const v = String(value||"").trim() || "—";
-      return `<div class="kflPerfCell"><div class="kflPerfLabel">${esc(label)}</div><div class="kflPerfValue">${esc(v)}</div></div>`;
+      // split number + unit (e.g. "5.02 s", '87"')
+      let num=v, unit="";
+      const m = v.match(/^([-+]?\d+(?:\.\d+)?)(?:\s*([a-zA-Z]+)|\s*(\"))?$/);
+      if(m){ num=m[1]; unit=m[2] || (m[3]||""); }
+      const valueHtml = unit ? `<span class="kflNum">${esc(num)}</span><span class="kflUnit">${esc(unit)}</span>` : `<span class="kflNum">${esc(v)}</span>`;
+      return `<div class="kflPerfCell"><div class="kflPerfLabel">${esc(label)}</div><div class="kflPerfValue">${valueHtml}</div></div>`;
     }
 
     const cells = [];
@@ -899,7 +940,15 @@ function getHashParam(name){
         }
         kflEl.photoImg.src = url;
         kflEl.photoImg.alt = name;
-      }
+      
+        setTimeout(()=>{
+          if(!kflEl.photoImg) return;
+          if(kflEl.photoImg.complete && kflEl.photoImg.naturalWidth>0){
+            kflEl.photoImg.style.display="block";
+            if(kflEl.photoFallback) kflEl.photoFallback.style.display="none";
+          }
+        }, 50);
+}
     }else{
       if (kflEl.photoFallback){
         kflEl.photoFallback.textContent = initials(name);
