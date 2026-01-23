@@ -560,14 +560,6 @@ function getHashParam(name){
     return s.padStart(3, "0");
   }
 
-const PHOTO_BASE_URL = "https://media.kkmsports.xyz/athletes/";
-function getPhotoUrl(idRaw){
-  if(typeof PHOTO_BASE_URL === "string" && PHOTO_BASE_URL.trim().length){
-    return PHOTO_BASE_URL + padId(idRaw) + ".jpg";
-  }
-  return "";
-}
-
   function normId(v){
     const s = String(v ?? "").trim();
     if(!s) return "";
@@ -638,27 +630,6 @@ function getPhotoUrl(idRaw){
       const n = parseFloat(mm[0]);
       return Number.isFinite(n) ? n : null;
     }
-
-function formatFeetInches(v){
-  const s=String(v??"").trim();
-  if(!s) return "";
-  if(s.includes("\\'")||s.includes("\"")) return s;
-  const n=toNumber(s);
-  if(n===null) return s;
-  const inches=Math.round(n);
-  const ft=Math.floor(inches/12);
-  const inch=inches%12;
-  return (ft>=3)?`${ft}\\' ${inch}\"`:s;
-}
-
-function formatWeightLbs(v){
-  const n=toNumber(v);
-  if(n===null){
-    const s=String(v??"").trim();
-    return s;
-  }
-  return String(Math.round(n));
-}
 
     function formatTime(raw){
       const s = String(raw ?? "").trim();
@@ -801,7 +772,7 @@ function formatWeightLbs(v){
     if (kflEl.school) kflEl.school.textContent = "COLEGIO: " + (school || "—");
     if (kflEl.height) {
       const htxt = formatHeightKfl(height);
-      kflEl.height.textContent = "ESTATURA: " + ((formatFeetInches(htxt )) || "—");
+      kflEl.height.textContent = "ESTATURA: " + (htxt || "—");
     }
     if (kflEl.weight){
       const mm = String(weight ?? "").replace(/,/g,".").trim().match(/-?\d+(?:\.\d+)?/);
@@ -890,22 +861,12 @@ function formatWeightLbs(v){
     }
 
     const cells = [];
-    function pushIf(label, v){
-      const vv = String(v ?? "").trim();
-      if(!vv || vv==="—" || vv==="-" ) return;
-      cells.push(perfCell(label, vv));
-    }
-    pushIf("40 YARDS DASH", best40 ? (formatTime(best40) + " s") : "—");
-    pushIf("5-10-5 SHUTTLE", best5105 ? (formatTime(best5105) + " s") : "—");
-    pushIf("3-CONE DRILL", best3Cone ? (formatTime(best3Cone) + " s") : "—");
-    pushIf("LONG JUMP", bestBroad ? (formatNumber(bestBroad, 0) + '"') : "—");
-    pushIf("BENCH PRESS", bestBench ? (formatNumber(bestBench, 0)) : "—");
-    if (kflEl.perf) {
-      kflEl.perf.innerHTML = cells.join("");
-      const cols = Math.max(1, Math.min(5, cells.length));
-      kflEl.perf.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    }
-
+    cells.push(perfCell("40 YARDS DASH", best40 ? (formatTime(best40) + " s") : "—"));
+    cells.push(perfCell("5-10-5 SHUTTLE", best5105 ? (formatTime(best5105) + " s") : "—"));
+    cells.push(perfCell("3-CONE DRILL", best3Cone ? (formatTime(best3Cone) + " s") : "—"));
+    cells.push(perfCell("LONG JUMP", bestBroad ? (formatNumber(bestBroad, 0) + '"') : "—"));
+    cells.push(perfCell("BENCH PRESS", bestBench ? (formatNumber(bestBench, 0) + " reps") : "—"));
+    if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
 
     // Photo CDN
     const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
@@ -914,13 +875,17 @@ function formatWeightLbs(v){
 
     if (url){
       if (kflEl.photoImg){
-        kflEl.photoImg.onload = () => {
-          if (kflEl.photoImg) kflEl.photoImg.style.display = "block";
+        kflEl.photoImg.onload = ()=>{
+          kflEl.photoImg.style.display = "block";
           if (kflEl.photoFallback) kflEl.photoFallback.style.display = "none";
         };
-        kflEl.photoImg.onerror = () => {
-          if (kflEl.photoImg) kflEl.photoImg.style.display = "none";
-          if (kflEl.photoFallback) kflEl.photoFallback.style.display = "flex";
+        kflEl.photoImg.onerror = ()=>{
+          if (kflEl.photoFallback){
+            kflEl.photoFallback.textContent = initials(name);
+            kflEl.photoFallback.style.display = "flex";
+          }
+          if (kflEl.photoImg) { kflEl.photoImg.style.display = "none"; }
+
         };
         kflEl.photoImg.src = url;
         kflEl.photoImg.alt = name;
