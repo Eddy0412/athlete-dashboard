@@ -225,22 +225,20 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   transform:skewX(-25deg);
   width:90px; height:240px;
   pointer-events:none;
-  z-index:1;
 }
+#kflRoot .kflSlash{ z-index:1; }
+
 #kflRoot .kflSlashTL{ left:28px; top:28px; }
 #kflRoot .kflSlashBL{ left:28px; bottom:70px; }
-#kflRoot .kflSlashBR{ right: -10px; bottom:70px; }
+#kflRoot .kflSlashBR{ right:-12px; bottom:70px; }
 
-#kflRoot .kflInner{
-  position:relative;
-  z-index:2;
-
+#kflRoot .kflInner{ position:relative; z-index:2;
   position:absolute; inset:34px;
   display:grid; grid-template-columns: 38% 62%;
   gap:26px;
 }
 
-#kflRoot .kflLeft{ position:relative; display:flex; flex-direction:column; min-width: 420px; }
+#kflRoot .kflLeft{ position:relative; display:flex; flex-direction:column; }
 #kflRoot .kflPhotoFrame{
   position:relative;
   max-width:520px;
@@ -261,7 +259,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 #kflRoot #kflPhotoImg{
   position:absolute; inset:0; width:100%; height:100%;
   object-fit:cover;
-  display:block;
+  display:none;
 }
 #kflRoot .kflPhotoFallback{
   position:absolute; inset:0;
@@ -293,85 +291,8 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 #kflRoot .kflKkmLogo{ width:260px; height:auto; opacity:.95; filter: drop-shadow(0 8px 18px rgba(0,0,0,.35)); }
 .kflDevBrand{ font-size:14px; font-weight:900; letter-spacing:2px; opacity:.95; }
 
-#kflRoot .kflRight{ position:relative; color:#fff; padding:8px 4px; display:flex; flex-direction:column; align-items:center;
-}
-#kflRoot .kflDraft{
-  position:relative;
-  align-self:center;
-  display:inline-block;
-  margin: 0;
-  text-align:center; top:auto; right:auto;
-  background:#e13b3b; color:#fff;
-  padding:18px 26px;
-  font-weight:1000;
-  font-size:64px;
-  letter-spacing:1px;
-}
-#kflRoot .kflLogoWrap{
-  margin-top:28px;
-  display:flex; align-items:center; justify-content:center;
-}
-#kflRoot .kflShield{
-  width:220px; height:220px;
-  border-radius:22px;
-  border:none;
-  background:transparent;
-  display:flex; align-items:center; justify-content:center;
-  font-weight:1000; font-size:64px;
-}
-#kflRoot .kflInfo{
-  margin-top:18px;
-  text-align:center;
-  padding-left:0;
-}
-#kflRoot .kflInfoLine{
-  font-weight:1000;
-  font-size:26px;
-  margin:10px 0;
-  letter-spacing:.6px;
-}
-#kflRoot .kflInfoSmall{ font-size:22px; }
-
-#kflRoot .kflPerfTitle{
-  margin-top:46px;
-  text-align:center;
-  font-weight:1000;
-  font-size:36px;
-  letter-spacing:1px;
-}
-
-#kflRoot .kflPerfRow{
-  margin-top:18px;
-  display:grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap:0;
-  align-items:stretch;
-}
-#kflRoot .kflPerfCell{
-  padding:0 18px;
-  border-left:2px solid rgba(255,255,255,.25);
-}
-#kflRoot .kflPerfCell:first-child{ border-left:none; }
-#kflRoot .kflPerfLabel{
-  text-align:center;
-  text-transform:uppercase;
-  font-weight:1000;
-  font-size:16px;
-  letter-spacing:.8px;
-  opacity:.95;
-  line-height:1.15;
-}
-#kflRoot .kflPerfValue{
-  margin-top:16px;
-  text-align:center;
-  font-weight:1000;
-  font-size:64px;
-  color:#e13b3b;
-  letter-spacing:.5px;
-}
-
-#kflRoot .kflSite{
-  position:absolute; left:0; right:0; bottom:54px;
+#kflRoot .kflRight{ position:relative; color:#fff; padding:8px 4px; display:flex; flex-direction:column; align-items:center; }
+ bottom:54px;
   text-align:center;
   font-weight:1000;
   font-size:22px;
@@ -379,10 +300,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 }
 
 @media (max-width: 1100px){
-  #kflRoot .kflInner{
-  position:relative;
-  z-index:2;
- inset:16px; grid-template-columns: 1fr; }
+  #kflRoot .kflInner{ inset:16px; grid-template-columns: 1fr; }
   #kflRoot .kflPhotoFrame{ height:420px; }
   #kflRoot .kflDraft{ font-size:48px; }
   #kflRoot .kflInfo{ padding-left:0; text-align:center; }
@@ -617,20 +535,6 @@ function getHashParam(name){
     // Core fields
     const age = pick(r, ["Edad","Age","age"]) || "";
     const height = pick(r, ["Estatura","Altura","Height","Ht","height"]) || "";
-
-    function formatHeight(v){
-      const s = String(v ?? "").trim();
-      if(!s) return "";
-      if(s.includes("'") || s.includes('"')) return s;
-      const n = toNumber(s);
-      if(n === null) return s;
-      // if value looks like inches
-      const inches = Math.round(n);
-      const ft = Math.floor(inches/12);
-      const inch = inches % 12;
-      if(ft >= 3) return `${ft}' ${inch}"`;
-      return s;
-    }
     const weight = pick(r, ["Peso","Weight","Wt","weight"]) || "";
 
     if(el.name) el.name.innerHTML = esc(name);
@@ -649,6 +553,18 @@ function getHashParam(name){
       if(!mm) return null;
       const n = parseFloat(mm[0]);
       return Number.isFinite(n) ? n : null;
+    }
+    function formatHeight(v){
+      const raw = String(v ?? "").trim();
+      if(!raw) return "";
+      if(raw.includes("'") || raw.includes('"')) return raw;
+      const n = toNumber(raw);
+      if(n === null) return raw;
+      const inches = Math.round(n);
+      const ft = Math.floor(inches/12);
+      const inch = inches % 12;
+      if(ft >= 3) return `${ft}' ${inch}"`;
+      return raw;
     }
 
     function formatTime(raw){
@@ -776,14 +692,13 @@ function getHashParam(name){
 
     if (kflEl.name) kflEl.name.textContent = name;
     if (kflEl.school) kflEl.school.textContent = "COLEGIO: " + (school || "—");
-    if (kflEl.height) const htxt = formatHeight(height);
-    if (kflEl.height) kflEl.height.textContent = "ESTATURA: " + (htxt || "—");
-if (kflEl.weight){
+    if (kflEl.height) kflEl.height.textContent = "ESTATURA: " + (formatHeight(height) || "—");
+    if (kflEl.weight){
       const w = String(weight||"").trim();
       const wn = toNumber(w);
-      const wtxt = (wn === null) ? (w ? w : "") : String(Math.round(wn));
+      const wtxt = (wn === null) ? w : String(Math.round(wn));
       kflEl.weight.textContent = "PESO: " + (wtxt ? (wtxt + " LBS") : "—");
-}
+    }
 
     function toNumber(v){
       if(v === undefined || v === null) return null;
@@ -888,7 +803,8 @@ if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
             kflEl.photoFallback.textContent = initials(name);
             kflEl.photoFallback.style.display = "flex";
           }
-          
+          if (kflEl.photoImg) { kflEl.photoImg.style.display = "none"; }
+
         };
         kflEl.photoImg.src = url;
         kflEl.photoImg.alt = name;
@@ -898,7 +814,8 @@ if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
         kflEl.photoFallback.textContent = initials(name);
         kflEl.photoFallback.style.display = "flex";
       }
-      
+      if (kflEl.photoImg) { kflEl.photoImg.style.display = "none"; }
+
     }
   }
 
@@ -933,7 +850,7 @@ if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
   }
 
   let csv=null, lastSel="";
-  async async function hydrate(){
+  async function hydrate(){
     const sel = getSel();
     const tpl = (getHashParam("tpl") || "default").toLowerCase();
     // Always apply template visibility on hash changes (tpl or sel)
