@@ -225,14 +225,16 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   transform:skewX(-25deg);
   width:90px; height:240px;
   pointer-events:none;
+  z-index:1;
 }
-#kflRoot .kflSlash{ z-index:1; }
-
 #kflRoot .kflSlashTL{ left:28px; top:28px; }
 #kflRoot .kflSlashBL{ left:28px; bottom:70px; }
-#kflRoot .kflSlashBR{ right:-12px; bottom:70px; }
+#kflRoot .kflSlashBR{ right: -10px; bottom:70px; }
 
-#kflRoot .kflInner{ position:relative; z-index:2;
+#kflRoot .kflInner{
+  position:relative;
+  z-index:2;
+
   position:absolute; inset:34px;
   display:grid; grid-template-columns: 38% 62%;
   gap:26px;
@@ -258,8 +260,9 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 }
 #kflRoot #kflPhotoImg{
   position:absolute; inset:0; width:100%; height:100%;
+  display:block;
   object-fit:cover;
-  display:none;
+  display:block;
 }
 #kflRoot .kflPhotoFallback{
   position:absolute; inset:0;
@@ -271,14 +274,14 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 #kflRoot .kflNameBar{
   margin-top:18px;
   background: transparent;
-  border:none;
+  border: none;
   height:88px;
   display:flex; align-items:center;
   padding:0 22px;
-  box-shadow:none;
+  box-shadow: none;
 }
 #kflRoot .kflNameText{
-  font-weight:1000; font-size:56px; color:#fff; text-shadow: 0 6px 18px rgba(0,0,0,.35);
+  font-weight:1000; font-size: 56px; color:#fff; text-shadow: 0 6px 18px rgba(0,0,0,.35);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
@@ -291,8 +294,89 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 #kflRoot .kflKkmLogo{ width:260px; height:auto; opacity:.95; filter: drop-shadow(0 8px 18px rgba(0,0,0,.35)); }
 .kflDevBrand{ font-size:14px; font-weight:900; letter-spacing:2px; opacity:.95; }
 
-#kflRoot .kflRight{ position:relative; color:#fff; padding:8px 4px; display:flex; flex-direction:column; align-items:center; }
- bottom:54px;
+#kflRoot .kflRight{ position:relative; color:#fff; padding:8px 4px;  display:flex; flex-direction:column; align-items:center; }
+
+#kflRoot .kflDraft{
+  position:relative;
+  align-self:center;
+  display:inline-block;
+  text-align:center;
+
+  position:relative;
+  display:inline-block;
+  margin:0 auto;
+  text-align:center; top:auto; right:auto;
+  background:#e13b3b; color:#fff;
+  padding:18px 26px;
+  font-weight:1000;
+  font-size:64px;
+  letter-spacing:1px;
+}
+#kflRoot .kflLogoWrap{
+  margin-top: 28px;
+  display:flex; align-items:center; justify-content:center;
+}
+#kflRoot .kflShield{
+  width:220px; height:220px;
+  border-radius:22px;
+  border:none;
+  background:transparent;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:1000; font-size:64px;
+}
+#kflRoot .kflInfo{
+  margin-top:18px;
+  text-align:center;
+  padding-left:0;
+}
+#kflRoot .kflInfoLine{
+  font-weight:1000;
+  font-size:26px;
+  margin:10px 0;
+  letter-spacing:.6px;
+}
+#kflRoot .kflInfoSmall{ font-size:22px; }
+
+#kflRoot .kflPerfTitle{
+  margin-top:46px;
+  text-align:center;
+  font-weight:1000;
+  font-size:36px;
+  letter-spacing:1px;
+}
+
+#kflRoot .kflPerfRow{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap:0;
+  align-items:stretch;
+}
+#kflRoot .kflPerfCell{
+  padding:0 18px;
+  border-left:2px solid rgba(255,255,255,.25);
+}
+#kflRoot .kflPerfCell:first-child{ border-left:none; }
+#kflRoot .kflPerfLabel{
+  text-align:center;
+  text-transform:uppercase;
+  font-weight:1000;
+  font-size: 16px;
+  letter-spacing:.8px;
+  opacity:.95;
+  line-height:1.15;
+}
+#kflRoot .kflPerfValue{
+  margin-top:16px;
+  text-align:center;
+  font-weight:1000;
+  font-size: 64px;
+  color:#e13b3b;
+  letter-spacing:.5px;
+}
+
+#kflRoot .kflSite{
+  position:absolute; left:0; right:0; bottom: 54px;
   text-align:center;
   font-weight:1000;
   font-size:22px;
@@ -537,6 +621,27 @@ function getHashParam(name){
     const height = pick(r, ["Estatura","Altura","Height","Ht","height"]) || "";
     const weight = pick(r, ["Peso","Weight","Wt","weight"]) || "";
 
+    function toNumber(v){
+      if(v === undefined || v === null) return null;
+      const s = String(v).replace(/,/g,".").trim();
+      const mm = s.match(/-?\d+(?:\.\d+)?/);
+      if(!mm) return null;
+      const n = parseFloat(mm[0]);
+      return Number.isFinite(n) ? n : null;
+    }
+    function formatHeight(v){
+      const s = String(v ?? "").trim();
+      if(!s) return "";
+      if(s.includes("\'") || s.includes("\"")) return s;
+      const n = toNumber(s);
+      if(n === null) return s;
+      const inches = Math.round(n);
+      const ft = Math.floor(inches/12);
+      const inch = inches % 12;
+      if(ft >= 3) return `${ft}\' ${inch}\"`;
+      return s;
+    }
+
     if(el.name) el.name.innerHTML = esc(name);
     if(el.meta) el.meta.innerHTML = [sport,pos,team].filter(Boolean).map(esc).join(" • ") || "&nbsp;";
     if(el.counter) el.counter.textContent = selRaw ? `#${selRaw}` : "";
@@ -553,18 +658,6 @@ function getHashParam(name){
       if(!mm) return null;
       const n = parseFloat(mm[0]);
       return Number.isFinite(n) ? n : null;
-    }
-    function formatHeight(v){
-      const raw = String(v ?? "").trim();
-      if(!raw) return "";
-      if(raw.includes("'") || raw.includes('"')) return raw;
-      const n = toNumber(raw);
-      if(n === null) return raw;
-      const inches = Math.round(n);
-      const ft = Math.floor(inches/12);
-      const inch = inches % 12;
-      if(ft >= 3) return `${ft}' ${inch}"`;
-      return raw;
     }
 
     function formatTime(raw){
@@ -692,13 +785,13 @@ function getHashParam(name){
 
     if (kflEl.name) kflEl.name.textContent = name;
     if (kflEl.school) kflEl.school.textContent = "COLEGIO: " + (school || "—");
-    if (kflEl.height) kflEl.height.textContent = "ESTATURA: " + (formatHeight(height) || "—");
-    if (kflEl.weight){
-      const w = String(weight||"").trim();
-      const wn = toNumber(w);
-      const wtxt = (wn === null) ? w : String(Math.round(wn));
-      kflEl.weight.textContent = "PESO: " + (wtxt ? (wtxt + " LBS") : "—");
-    }
+    if (kflEl.height) const htxt = formatHeight(height);
+    if (kflEl.height) kflEl.height.textContent = "ESTATURA: " + (htxt || "—");
+if (kflEl.weight){
+      const wn = toNumber(weight);
+    const wtxt = (wn === null) ? String(weight||"").trim() : String(Math.round(wn));
+    if (kflEl.weight) kflEl.weight.textContent = "PESO: " + (wtxt ? (wtxt + " LBS") : "—");
+}
 
     function toNumber(v){
       if(v === undefined || v === null) return null;
@@ -795,7 +888,7 @@ if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
     if (url){
       if (kflEl.photoImg){
         kflEl.photoImg.onload = ()=>{
-          kflEl.photoImg.style.display = "block";
+          kflEl.photoImg.style.visibility = "visible";
           if (kflEl.photoFallback) kflEl.photoFallback.style.display = "none";
         };
         kflEl.photoImg.onerror = ()=>{
@@ -803,7 +896,7 @@ if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
             kflEl.photoFallback.textContent = initials(name);
             kflEl.photoFallback.style.display = "flex";
           }
-          if (kflEl.photoImg) { kflEl.photoImg.style.display = "none"; }
+          if (kflEl.photoImg) { kflEl.photoImg.style.visibility = "hidden"; }
 
         };
         kflEl.photoImg.src = url;
@@ -814,7 +907,7 @@ if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
         kflEl.photoFallback.textContent = initials(name);
         kflEl.photoFallback.style.display = "flex";
       }
-      if (kflEl.photoImg) { kflEl.photoImg.style.display = "none"; }
+      if (kflEl.photoImg) { kflEl.photoImg.style.visibility = "hidden"; }
 
     }
   }
