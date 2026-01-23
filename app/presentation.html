@@ -232,18 +232,20 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 
 #kflRoot .kflInner{
   position:absolute; inset:34px;
-  display:grid; grid-template-columns: 42% 58%;
+  display:grid; grid-template-columns: 38% 62%;
   gap:26px;
 }
 
 #kflRoot .kflLeft{ position:relative; display:flex; flex-direction:column; }
 #kflRoot .kflPhotoFrame{
   position:relative;
+  max-width:520px;
+  margin:0 auto;
   border-radius:2px;
   background:#f3d9c3;
   border:2px solid rgba(0,0,0,.35);
   box-shadow: 0 22px 70px rgba(0,0,0,.35);
-  height: 560px;
+  height: 650px;
   overflow:hidden;
 }
 #kflRoot .kflPhotoBg{
@@ -266,15 +268,15 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 
 #kflRoot .kflNameBar{
   margin-top:18px;
-  background:#f3d9c3;
-  border:2px solid rgba(0,0,0,.35);
+  background: transparent;
+  border:none;
   height:88px;
   display:flex; align-items:center;
   padding:0 22px;
-  box-shadow: 0 18px 55px rgba(0,0,0,.25);
+  box-shadow:none;
 }
 #kflRoot .kflNameText{
-  font-weight:1000; font-size:44px; color:#000;
+  font-weight:1000; font-size:56px; color:#fff; text-shadow: 0 6px 18px rgba(0,0,0,.35);
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
@@ -284,11 +286,15 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   color:rgba(255,255,255,.9);
 }
 #kflRoot .kflDevLabel{ font-size:12px; letter-spacing:.6px; opacity:.9; }
-#kflRoot .kflDevBrand{ font-size:14px; font-weight:900; letter-spacing:2px; opacity:.95; }
+#kflRoot .kflKkmLogo{ width:260px; height:auto; opacity:.95; filter: drop-shadow(0 8px 18px rgba(0,0,0,.35)); }
+.kflDevBrand{ font-size:14px; font-weight:900; letter-spacing:2px; opacity:.95; }
 
 #kflRoot .kflRight{ position:relative; color:#fff; padding:8px 4px; }
 #kflRoot .kflDraft{
-  position:absolute; top:0; right:0;
+  position:relative;
+  display:inline-block;
+  margin:0 auto;
+  text-align:center; top:auto; right:auto;
   background:#e13b3b; color:#fff;
   padding:18px 26px;
   font-weight:1000;
@@ -296,21 +302,21 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   letter-spacing:1px;
 }
 #kflRoot .kflLogoWrap{
-  margin-top:120px;
+  margin-top:28px;
   display:flex; align-items:center; justify-content:center;
 }
 #kflRoot .kflShield{
-  width:160px; height:160px;
+  width:220px; height:220px;
   border-radius:22px;
-  border:3px solid rgba(255,255,255,.45);
-  background:rgba(0,0,0,.10);
+  border:none;
+  background:transparent;
   display:flex; align-items:center; justify-content:center;
   font-weight:1000; font-size:64px;
 }
 #kflRoot .kflInfo{
   margin-top:18px;
-  text-align:left;
-  padding-left:110px;
+  text-align:center;
+  padding-left:0;
 }
 #kflRoot .kflInfoLine{
   font-weight:1000;
@@ -344,7 +350,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   text-align:center;
   text-transform:uppercase;
   font-weight:1000;
-  font-size:14px;
+  font-size:18px;
   letter-spacing:.8px;
   opacity:.95;
   line-height:1.15;
@@ -353,13 +359,13 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   margin-top:16px;
   text-align:center;
   font-weight:1000;
-  font-size:64px;
+  font-size:72px;
   color:#e13b3b;
   letter-spacing:.5px;
 }
 
 #kflRoot .kflSite{
-  position:absolute; left:0; right:0; bottom:22px;
+  position:absolute; left:0; right:0; bottom:54px;
   text-align:center;
   font-weight:1000;
   font-size:22px;
@@ -444,16 +450,16 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 
         <div class="kflDev">
           <div class="kflDevLabel">Developed by:</div>
-          <div class="kflDevBrand">KREATIVE KINGDOM MEDIA</div>
+          <img class="kflKkmLogo" src="kkm_logo.png" alt="Kreative Kingdom Media" />
         </div>
       </div>
 
       <!-- RIGHT: draft + logo + info + performance -->
       <div class="kflRight">
-        <div class="kflDraft">DRAFT 2025</div>
+        <div class="kflDraft">DRAFT 2026</div>
 
         <div class="kflLogoWrap">
-          <div class="kflShield">KFL</div>
+          <img class="kflShield" id="kflLogoImg" src="kfl_logo.png" alt="KFL" />
         </div>
 
         <div class="kflInfo">
@@ -833,10 +839,10 @@ function getHashParam(name){
     }
 
     const cells = [];
-    cells.push(perfCell("40 YARDS<br>DASH", best40 ? formatTime(best40) : "—"));
-    cells.push(perfCell("5-10-5<br>SHUTTLE", best5105 ? formatTime(best5105) : "—"));
-    cells.push(perfCell("LONG<br>JUMP", bestBroad ? (formatNumber(bestBroad, 0) + '"') : "—"));
-    cells.push(perfCell("BENCH<br>PRESS", bestBench ? formatNumber(bestBench, 0) : "—"));
+    cells.push(perfCell("40 YARDS DASH", best40 ? formatTime(best40) : "—"));
+    cells.push(perfCell("5-10-5 SHUTTLE", best5105 ? formatTime(best5105) : "—"));
+    cells.push(perfCell("LONG JUMP", bestBroad ? (formatNumber(bestBroad, 0) + '"') : "—"));
+    cells.push(perfCell("BENCH PRESS", bestBench ? formatNumber(bestBench, 0) : "—"));
     if (kflEl.perf) kflEl.perf.innerHTML = cells.join("");
 
     // Photo CDN
