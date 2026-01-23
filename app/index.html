@@ -1279,6 +1279,8 @@ function parseCsvText(csvText, label){
   });
 }
 
+
+$("loadDefault")?.addEventListener("click", (e)=>{ try{e.preventDefault();}catch(_){} loadDefaultCsv(); });
 async function loadDefaultCsv(){
   // Keep behavior aligned with v1.0.116 (simple fetch + parse),
   // but make the URL GitHub Pages-safe when the page is opened with a trailing "?" or other querystrings.
@@ -1824,7 +1826,7 @@ if (posSel){
 
 
 
-$("photos").addEventListener("change", (e) => {
+$("\1")?.addEventListener("change", (e) => {
   photoMap.clear();
   const files = e.target.files ? Array.from(e.target.files) : [];
   for (const f of files) {
@@ -1837,7 +1839,7 @@ $("photos").addEventListener("change", (e) => {
   else if (activeIndex >= 0) { selectAthlete(activeIndex); }
 });
 
-$("file").addEventListener("change", (e) => {
+$("\1")?.addEventListener("change", (e) => {
   const f = e.target.files?.[0];
   if(!f) return;
   const reader = new FileReader();
@@ -1845,8 +1847,8 @@ $("file").addEventListener("change", (e) => {
   reader.readAsText(f);
 });
 
-$("search").addEventListener("input", applyFilter);
-$("loadDefault").addEventListener("click", loadDefaultCsv);
+$("\1")?.addEventListener("input", applyFilter);
+$("\1")?.addEventListener("click", loadDefaultCsv);
 // Presentation window sync (index controls, external fullscreen presenter)
 // Most reliable: parent updates presenter URL hash on selection + persists latest athlete to localStorage.
 let _presentWin = null;
@@ -2017,6 +2019,8 @@ if (IS_PRO_VIEW){
 try{ setMediaMode(false); }catch(e){}
   try{ setScoutMode(false); }catch(e){}
   try{ setCoachMode(true); }catch(e){}
+  try{ sessionStorage.setItem("coachModeOn","1"); sessionStorage.setItem("scoutModeOn","0"); sessionStorage.setItem("mediaModeOn","0"); }catch(e){}
+
 }
 // Media mode toggle (independent; used for shared/public-facing UI)
 const mediaBtn = document.getElementById("toggleMedia");
@@ -2274,7 +2278,14 @@ function initModalWiring(){
       // Upgrade CTA (placeholder link)
       setTimeout(()=>{
         const b = document.getElementById("upgradeProBtn");
-        if (b) b.onclick = ()=> window.open("?view=pro", "_blank");
+        if (b) b.onclick = ()=>{
+  try{ sessionStorage.setItem("coachModeOn","1"); sessionStorage.setItem("scoutModeOn","0"); sessionStorage.setItem("mediaModeOn","0"); }catch(e){}
+  // preserve current selection if available
+  let sel="";
+  try{ const r = (rows && rows[activeIndex]) ? rows[activeIndex] : null; sel = r && r[COL.id] ? String(r[COL.id]).trim() : ""; }catch(e){}
+  const hash = sel ? ("#sel=" + encodeURIComponent(sel)) : "";
+  window.location.href = "?view=pro" + hash;
+};
       }, 0);
     });
   }
