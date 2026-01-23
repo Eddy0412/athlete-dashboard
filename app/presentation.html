@@ -904,12 +904,20 @@ function getHashParam(name){
   let csv=null, lastSel="";
   async function hydrate(){
     const sel = getSel();
-    if(!sel || sel===lastSel) return;
-    lastSel=sel;
+    const tpl = (getHashParam("tpl") || "default").toLowerCase();
+    // Always apply template visibility on hash changes (tpl or sel)
+    try{ applyTemplateFromHash(); }catch(e){}
+    if(!sel) return;
+    // Only skip if BOTH selection and template are unchanged
+    if(sel===lastSel && tpl===lastTpl) return;
+    lastSel=sel; lastTpl=tpl;
+
     if(!csv) csv = await loadCsv();
     const selN = normId(sel);
     const row = csv.find(r => normId(pick(r,["Formulario#","Formulario","ID","Id","id"])) === selN);
-    if(row) ( (getHashParam("tpl")||"default").toLowerCase()==="kfl" ? renderKfl(row, sel) : render(row, sel) );
+    if(row){
+      (tpl==="kfl" ? renderKfl(row, sel) : render(row, sel));
+    }
   }
 
   el.fsBtn?.addEventListener("click", async()=>{
