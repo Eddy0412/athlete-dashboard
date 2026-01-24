@@ -1,0 +1,541 @@
+    :root{
+      --bg:#0b0f17;
+      --card:#121a27;
+      --muted:#8aa0b6;
+      --text:#e8f0ff;
+      --line:#1e2a3c;
+      --accent:#09a7d4;
+      --accent2:#5471b7;
+      --good:#3ddc97;
+      --bad:#ff6b6b;
+      --warn:#ffd166;
+      --radius:16px;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(1200px 800px at 20% 10%, rgba(9,167,212,.18), transparent 55%),
+                 radial-gradient(1000px 700px at 80% 20%, rgba(84,113,183,.18), transparent 55%),
+                 var(--bg); color:var(--text);}
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(11,15,23,.72);
+      border-bottom:1px solid var(--line);
+    }
+    .wrap{max-width:1200px;margin:0 auto;padding:18px 16px;}
+    /* Keep header controls below the title (stable + no "pushed up" toolbar) */
+    .title{display:flex;flex-direction:column;gap:12px;align-items:flex-start;justify-content:flex-start}
+    h1{margin:0;font-size:18px;letter-spacing:.2px}
+    .sub{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+    .titleBar{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;width:100%;}
+    .topRightControls{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
+    /* In Media View, only show Media toggle (hide other mode/load controls) */
+    html.mediaView #toggleScout,
+    html.mediaView #toggleCoach,
+    html.mediaView #photosLabel,
+    html.mediaView #csvLabel{display:none !important;}
+    .row{display:grid;grid-template-columns: 420px 1fr;gap:14px;align-items:start}
+    @media (max-width: 980px){ .row{grid-template-columns:1fr} }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{padding:14px 14px 10px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;justify-content:space-between}
+    .card .bd{padding:14px}
+    .pill{
+      font-size:12px; color: #d8ecff;
+      border:1px solid rgba(9,167,212,.35);
+      background: rgba(9,167,212,.12);
+      padding:6px 10px;border-radius:999px;
+      white-space:nowrap;
+    }
+    /* Admin view pill */
+    .pill.pillAdmin{
+      font-size:10px;
+      padding:3px 10px;
+      border-color: rgba(0,200,170,.55);
+      background: rgba(0,200,170,.12);
+      color:#e8fff8;
+    }
+    .pillPro{
+      font-size:10px;
+      padding:3px 10px;
+      border-radius:999px;
+      border:1px solid rgba(81,202,245,.28);
+      background: rgba(0,180,120,.14);
+      color:#eafff6;
+    }
+
+
+/* Intelligence tiers (v1.0.122) */
+.tierPill{ font-size:10px; padding:0px 6px; border-radius:999px; border:1px solid rgba(255,255,255,.14); letter-spacing:.3px; }
+.tier-elite{ background:rgba(102,217,239,.14); border-color:rgba(102,217,239,.35); }
+.tier-good{ background:rgba(81,202,245,.12); border-color:rgba(81,202,245,.32); }
+.tier-avg{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.14); }
+.tier-low{ background:rgba(255,107,107,.10); border-color:rgba(255,107,107,.30); }
+
+    /* Public view indicator (subtle, small) */
+    .pillPublic{
+      font-size:10px;
+      padding:0px 6px;
+      letter-spacing:0.3px;
+      border:1px solid rgba(255,209,102,.35);
+      background: rgba(255,209,102,.12);
+      color:#fff1c2;
+      line-height:18px;
+      height:18px;
+      display:inline-flex;
+      align-items:center;
+    }
+.pillMedia{
+      font-size:10px;
+      padding:0px 6px;
+      letter-spacing:0.3px;
+      border:1px solid rgba(81,202,245,.22);
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      height:16px;
+      background: rgba(81,202,245,.12);
+      color:#d7f6ff;
+    }
+
+    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;}
+
+    .btn{
+      appearance:none;border:1px solid rgba(9,167,212,.35);
+      background: rgba(9,167,212,.12); color:var(--text);
+      padding:9px 12px;border-radius:12px; cursor:pointer;
+      font-weight:600; font-size:13px;
+    }
+    .btn:hover{filter:brightness(1.1)}
+    .input{
+      width:280px; max-width:100%;
+      padding:10px 12px;border-radius:12px;
+      border:1px solid var(--line); background: rgba(255,255,255,.03);
+      color:var(--text); outline:none;
+    }
+    .hint{color:var(--muted);font-size:12px;line-height:1.35}
+    .drop{
+      border:1px dashed rgba(138,160,182,.45);
+      border-radius:14px; padding:10px 12px;
+      background: rgba(255,255,255,.02);
+    }
+    .drop strong{color:#cfe7ff}
+    table{width:100%; border-collapse:collapse; font-size:13px}
+    thead th{
+      text-align:left; font-weight:700;
+      padding:10px 10px; color:#cfe7ff;
+      border-bottom:1px solid var(--line);
+      position:sticky; top:0; background: rgba(18,26,39,.85); backdrop-filter: blur(10px);
+      z-index:1;
+    }
+    tbody td{padding:10px 10px;border-bottom:1px solid rgba(30,42,60,.7); color:#dfeaff}
+    tbody tr{cursor:pointer}
+    tbody tr:hover{background: rgba(9,167,212,.08)}
+    tbody tr.active{background: rgba(84,113,183,.16)}
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    @media (max-width: 980px){ .grid2{grid-template-columns:1fr} }
+
+    .kpis{display:grid;grid-template-columns: repeat(3, 1fr);gap:12px}
+    @media (max-width: 980px){ .kpis{grid-template-columns:1fr} }
+    .kpi{border:1px solid rgba(30,42,60,.9); border-radius:14px; padding:12px; background: rgba(255,255,255,.02)}
+    .kpi .label{color:var(--muted);font-size:12px}
+    .kpi .value{font-size:18px;font-weight:800;margin-top:6px}
+    .kpi .meta{margin-top:6px;color:var(--muted);font-size:12px}
+
+    .badge{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+    }
+    .badge.good{border-color:rgba(61,220,151,.35); background: rgba(61,220,151,.1); color:#c9ffe8}
+    .badge.bad{border-color:rgba(255,107,107,.35); background: rgba(255,107,107,.08); color:#ffd1d1}
+    .badge.warn{border-color:rgba(255,209,102,.35); background: rgba(255,209,102,.1); color:#fff1c2}
+
+    .twoCol{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;align-items:start}
+    @media (max-width: 980px){ .twoCol{grid-template-columns:1fr} }
+
+    .small{font-size:12px;color:var(--muted)}
+    .muted{color:var(--muted)}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
+canvas{width:100% !important; height:320px !important}
+  
+    /* --- Scout Mode (single-page layout switch) --- */
+    #scoutPhotoBlock{display:none;}
+    body.scoutMode #dashPhotoBlock{display:none !important;}
+    body.scoutMode #scoutPhotoBlock{display:block !important;}
+
+    /* Hide position controls/tooltip in Scout Mode */
+    body.scoutMode #posTooltip{display:none !important;}
+    body.scoutMode #posInfoBtn{display:none !important;}
+    body.scoutMode #posSelect{ color:#fff !important; }
+
+    /* Save real estate in scout mode */
+    body.scoutMode #twoColWrap{display:none !important;}
+    body.scoutMode #attemptsWrap{display:none !important;}
+    body.scoutMode #barsWrap{display:none !important;}
+
+    /* --- Media Mode: Scout-like layout, but separate from Scout Mode toggle --- */
+#mediaTemplateSelect{display:none;}
+html.mediaView #mediaTemplateSelect, body.mediaMode #mediaTemplateSelect{display:inline-block;}
+#mediaTemplateSelect{background:#0f1720;color:#fff;border:1px solid rgba(138,160,182,.45);border-radius:12px;}
+#mediaTemplateSelect option{color:#111;background:#fff;}
+
+    body.mediaMode #dashPhotoBlock{display:none !important;}
+    body.mediaMode #scoutPhotoBlock{display:block !important;}
+    body.mediaMode #posTooltip{display:none !important;}
+    body.mediaMode #posInfoBtn{display:none !important;}
+    body.mediaMode #posSelect{display:none !important;}
+    body.mediaMode #twoColWrap{display:none !important;}
+    body.mediaMode #attemptsWrap{display:none !important;}
+    body.mediaMode #barsWrap{display:none !important;}
+
+    /* Media profile tweaks: hide phone/email, show Age */
+    #scoutAgeItem{display:none;}
+    body.mediaMode #scoutAgeItem{display:block;}
+    body.mediaMode #scoutPhoneItem{display:none !important;}
+    body.mediaMode #scoutEmailItem{display:none !important;}
+
+
+    /* --- Coach Mode: hide only Athlete Profile row, keep graphs --- */
+    body.coachMode #dashPhotoBlock{display:none !important;}
+    body.coachMode #scoutPhotoBlock{display:block !important;}
+    body.coachMode #posTooltip{display:none !important;}
+    body.coachMode #posInfoBtn{display:none !important;}
+    body.coachMode #posSelect{display:none !important;}
+
+
+    #search{padding-right:52px;}
+
+    /* subtle clear search */
+    #clearSearch:hover{ color:#e8f0ff; }
+    #clearSearch:focus{ outline:none; }
+
+    .avatarMissing{
+      position:relative;
+      width:34px;height:34px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.04);
+      color:var(--muted);
+      font-weight:700;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 34px;
+    }
+    .avatarMissing:before{ content:"—"; }
+
+    .avatarBox{ position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+    .avatarInitials{
+      width:100%; height:100%;
+      display:flex; align-items:center; justify-content:center;
+      color:var(--muted);
+      font-weight:800;
+      font-size:12px;
+      letter-spacing:.5px;
+      user-select:none;
+    }
+
+
+/* Link-style controls (from v1.0.118 look) */
+.linkBtn{
+  background:transparent !important;
+  border:none !important;
+  padding:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  font-weight:600;
+  color:var(--muted);
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.linkBtn:hover{ color:var(--text); }
+.btnIcon svg{width:13px;height:13px;flex:0 0 13px;}
+.controlsSpacer{flex:1 1 auto;min-width:0px;}
+
+
+.btn svg{width:13px;height:13px;vertical-align:-2px;margin-right:6px;}
+
+.kv .k, .contactLabel{font-weight:800;}
+
+.controlsRight{display:flex;gap:10px;align-items:center;}
+  .controlsRight #menuBtn{margin-right:auto;}
+
+
+
+/* Header height lock removed in v1.0.118 (prevents small-screen misalignment) */
+
+/* --- Responsive Drawer Nav + Mobile Modal Upgrades (v1.0.118 FULL) --- */
+html, body{overflow-x:hidden;}
+#menuBtn{display:none;} /* desktop hidden */
+
+#drawerOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  z-index:10020; /* above header */
+}
+#navDrawer{
+  position:fixed;
+  inset:0;
+  width:min(420px, 92vw);
+  height:100vh;
+  right:0;
+  left:auto;
+  transform: translateX(110%);
+  transition: transform .18s ease;
+  background: rgba(11,15,23,.92);
+  border-left:1px solid rgba(30,42,60,.9);
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  z-index:10030; /* above overlay */
+  display:flex;
+  flex-direction:column;
+}
+.drawerHd{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:14px;
+  border-bottom:1px solid rgba(30,42,60,.9);
+  background: rgba(18,26,39,.65);
+  backdrop-filter: blur(10px);
+}
+.drawerTitle{font-weight:900;letter-spacing:.2px}
+.drawerBody{
+  padding:14px;
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.drawerBody{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:14px;
+}
+/* Keep original button/link styles; only align items nicely in the drawer */
+.drawerBody .btn,
+.drawerBody .linkBtn{justify-content:flex-start;}
+
+/* Primary actions inside drawer should be centered like Scout/Coach */
+.drawerBody .drawerPrimary{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+/* Scout Profile responsiveness */
+@media (max-width: 820px){
+  #scoutPhotoBlock .twoCol{grid-template-columns:1fr !important;}
+  #athletePhotoScout{width:100% !important; max-width:340px; aspect-ratio:1/1; height:auto !important; margin:0 auto;}
+}
+
+#athletePhotoScout{width:min(340px, 100%); height:340px;}
+
+
+body.drawerOpen #drawerOverlay{display:block;}
+body.drawerOpen #navDrawer{transform: translateX(0);}
+
+body.scrollLocked{overscroll-behavior: none;}
+
+@media (max-width: 980px){
+  /* show Menu button + keep Refresh visible; everything else moves into drawer via JS */
+  #menuBtn{display:inline-flex;}
+  header{height:auto;min-height:auto;}
+  header .wrap.title{height:auto;padding-top:14px;}
+  .controls{width:100%;}
+  /* Keep Refresh/About grouped; search stays outside drawer */
+  .controlsRight{gap:12px; width:100%; justify-content:flex-end;}
+  .controlsRight #searchWrap{flex:1 1 auto; min-width:0;}
+  .controlsRight #search{width:100%;}
+  /* slightly tighter header spacing on mobile */
+  .btn{padding:9px 11px;}
+  .input{width:240px;}
+}
+
+/* Modal upgrades */
+#modalOverlay{z-index:10100 !important;}
+#modalBox{
+  width:min(860px, 96vw) !important;
+  max-height: min(86vh, 720px) !important;
+  overflow:hidden !important;
+  display:flex !important;
+  flex-direction:column !important;
+}
+#modalContent{
+  overflow:auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+@media (max-width: 520px){
+
+  /* Must-confirm: in Media View (?view=media) on smartphone widths, hide GitHub + Changelog */
+  html.mediaView #githubBtn,
+  html.mediaView #versionBtn{display:none !important;}
+  #modalOverlay{padding:12px !important;}
+  #modalBox{width:96vw !important; max-height: 90vh !important; border-radius:16px !important;}
+  #modalBox > div:first-child{flex-direction:column !important; align-items:stretch !important;}
+  #modalClose{width:100%;}
+}
+
+/* Mobile athlete list: show only photo + name (compact) */
+@media (max-width: 720px){
+  table{font-size:14px}
+  thead{display:none}
+  tbody tr{
+    display:flex;
+    align-items:center;
+    padding:10px 12px;
+    border-bottom:1px solid rgba(30,42,60,.7);
+  }
+  tbody td{padding:0;border-bottom:0;}
+  /* Keep first cell only */
+  tbody td:nth-child(n+2){display:none !important;}
+  tbody td:first-child{flex:1 1 auto; min-width:0;}
+  tbody td:first-child strong{display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+}
+
+/* Extra-small phones (iPhone SE width-ish): fix Athlete Profile photo sizing */
+@media (max-width: 420px){
+  html, body{overflow-x:hidden;}
+  /* Tighten padding so the photo card never overflows on 375px widths */
+  #dashPhotoBlock .bd{padding-left:12px !important; padding-right:12px !important;}
+  /* Wrapper around the photo + badges */
+  #dashPhotoBlock .bd > div{
+    width:100% !important;
+    max-width:340px !important;
+  }
+  /* Photo box itself */
+  #athletePhotoLarge{
+    width:100% !important;
+    max-width:none !important;
+    height:auto !important;
+    aspect-ratio:1/1;
+    box-sizing:border-box;
+  }
+}
+
+/* Scout contact card (was missing explicit layout styles) */
+.contactCard{
+  border:1px solid rgba(30,42,60,.9);
+  border-radius:16px;
+  padding:12px;
+  background: rgba(255,255,255,.02);
+}
+.contactGrid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+.contactItem .label{color:var(--muted);font-size:12px;font-weight:800;}
+.contactItem .value{font-weight:800;word-break:break-word;}
+@media (max-width: 520px){
+  .contactGrid{grid-template-columns:1fr;}
+}
+
+
+
+/* Ensure Position dropdown options remain readable across browsers */
+#posSelect, #posSelect option { color: #111 !important; }
+#posSelect option { background: #fff; }
+
+
+/* Intelligence visibility (v1.0.121) */
+html.publicView #scorePill,
+html.publicView #intelCard,
+html.publicView .tierPill,
+html.publicView .sortWrap{ display:none !important; }
+
+html.mediaView #scorePill,
+html.mediaView #intelCard,
+html.mediaView .tierPill,
+html.mediaView .sortWrap{ display:none !important; }
+
+/* Pro View: like Public, but with intelligence enabled */
+html.proView #csvLabel,
+html.proView #photosLabel,
+html.proView #file,
+html.proView #photos,
+html.proView #toggleScout,
+html.proView #toggleCoach,
+html.proView #toggleMedia{ display:none !important; }
+
+html.proView #presentBtn{ display:none !important; }
+html.proView #versionBtn{ display:none !important; }
+/* Public View: hide advanced controls */
+.publicView #photosLabel,
+.publicView #csvLabel,
+.publicView #githubBtn,
+.publicView #versionBtn{display:none !important;}
+.publicView #toggleMedia{display:none !important;}
+
+  /* Media view: lock Media Mode button without changing visual style */
+  #toggleMedia:disabled{opacity:1; cursor:default;}
+
+/* Public view: hide Present button */
+html.publicView #presentBtn{display:none !important;}
+
+/* Media view: hide GitHub + Changelog buttons (all widths) */
+html.mediaView #githubBtn,
+html.mediaView #versionBtn{display:none !important;}
+
+/* Strengths & Flags icons */
+.sfIcon{ display:inline-block; width:18px; margin-right:6px; transform: translateY(1px); }
+.sfGood{ color: rgba(180,255,220,.95); }
+.sfWarn{ color: rgba(255,210,140,.95); }
+
+/* Sort dropdown readability */
+#sortSelect{ color:#fff !important; }
+#sortSelect option{ color:#111; }
+
+/* Position dropdown readability */
+#posSelect{ color:#fff; }
+#posSelect option{ color:#111; }
+
+/* Position dropdown color fix (safe override) */
+select#posSelect{ color:#fff !important; }
+select#posSelect option{ color:#111 !important; }
+
+
+/* Watchlist UI (v1.0.122) */
+#watchBtn{ padding:6px 10px; font-weight:800; }
+#watchBtn.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
+#notesBox{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); color:#fff; }
+
+/* Hide in Public/Media views */
+html.publicView #watchBtn,
+html.publicView #notesBox,
+html.publicView #notesSaved,
+html.publicView #watchOnly{ display:none !important; }
+html.mediaView #watchBtn,
+html.mediaView #notesBox,
+html.mediaView #notesSaved,
+html.mediaView #watchOnly{ display:none !important; }
+
+/* Watchlist UI extras (v1.0.122) */
+#watchFilterBtn{ padding:6px 10px; font-weight:800; }
+#watchFilterBtn.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
+#watchCountPill{ border-color:rgba(255,215,0,.25); background:rgba(255,215,0,.08); }
+html.publicView #watchFilterBtn,
+html.publicView #watchCountPill{ display:none !important; }
+html.mediaView #watchFilterBtn,
+html.mediaView #watchCountPill{ display:none !important; }
+
+#watchCountPill.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
