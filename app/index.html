@@ -84,7 +84,7 @@
     }
 
 
-/* Intelligence tiers (v1.0.124) */
+/* Intelligence tiers (v1.0.122) */
 .tierPill{ font-size:10px; padding:0px 6px; border-radius:999px; border:1px solid rgba(255,255,255,.14); letter-spacing:.3px; }
 .tier-elite{ background:rgba(102,217,239,.14); border-color:rgba(102,217,239,.35); }
 .tier-good{ background:rgba(81,202,245,.12); border-color:rgba(81,202,245,.32); }
@@ -525,7 +525,7 @@ select#posSelect{ color:#fff !important; }
 select#posSelect option{ color:#111 !important; }
 
 
-/* Watchlist UI (v1.0.124) */
+/* Watchlist UI (v1.0.122) */
 #watchBtn{ padding:6px 10px; font-weight:800; }
 #watchBtn.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
 #notesBox{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); color:#fff; }
@@ -540,7 +540,7 @@ html.mediaView #notesBox,
 html.mediaView #notesSaved,
 html.mediaView #watchOnly{ display:none !important; }
 
-/* Watchlist UI extras (v1.0.124) */
+/* Watchlist UI extras (v1.0.122) */
 #watchFilterBtn{ padding:6px 10px; font-weight:800; }
 #watchFilterBtn.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
 #watchCountPill{ border-color:rgba(255,215,0,.25); background:rgba(255,215,0,.08); }
@@ -556,7 +556,7 @@ html.mediaView #watchCountPill{ display:none !important; }
 <header>
 <div class="wrap title"><div class="titleBar">
 <div>
-<h1>Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.124</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillPro" id="proPill" style="display:none;margin-left:6px">Pro</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span><span class="pill pillAdmin" id="adminPill" style="display:none;margin-left:6px">Admin</span></h1>
+<h1>Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.122</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillPro" id="proPill" style="display:none;margin-left:6px">Pro</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span><span class="pill pillAdmin" id="adminPill" style="display:none;margin-left:6px">Admin</span></h1>
 <div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
 </div><div class="topRightControls"><button class="linkBtn btnIcon" id="loadDefault" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24">
 <path d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-14.9-2M4 16a8 8 0 0014.9 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
@@ -953,7 +953,7 @@ let SORT_KEY = "name";
 let POP_CACHE = {};      // metricKey -> array of best values across population
 let INTEL_CACHE = [];
 
-/** ---------- Watchlist + Notes (v1.0.124) ---------- **/
+/** ---------- Watchlist + Notes (v1.0.122) ---------- **/
 const WATCH_STORE_KEY = "acd_watchlist_v1";
 let WATCH = {}; // id -> { starred:bool, notes:string }
 let WATCH_ONLY = false;
@@ -1238,45 +1238,6 @@ function badgeForPercentile(p){
 
 function safe(v){ return (v === null || v === undefined || v === "") ? "—" : String(v); }
 
-
-
-/* ---- Global formatting polyfills (v1.0.124 refresh fix) ---- */
-(function(){
-  function _toNum(val){
-    const s = String(val ?? "").trim();
-    if(!s) return null;
-    const mm = s.replace(/,/g,".").match(/-?\d+(?:\.\d+)?/);
-    if(!mm) return null;
-    const n = parseFloat(mm[0]);
-    return Number.isFinite(n) ? n : null;
-  }
-  if (typeof window.formatHeightFtIn !== "function"){
-    window.formatHeightFtIn = function(val){
-      const s = String(val ?? "").trim();
-      if(!s) return "—";
-      if (s.includes("'") || s.includes("’")) return s;
-      const n=_toNum(s);
-      if(n===null) return s;
-      const inches = Math.round(n);
-      const ft = Math.floor(inches/12);
-      const inch = inches % 12;
-      return (ft >= 3) ? `${ft}' ${inch}"` : s;
-    };
-  }
-  if (typeof window.formatWeightRounded !== "function"){
-    window.formatWeightRounded = function(val, withUnit=true){
-      const s = String(val ?? "").trim();
-      if(!s) return "—";
-      const n=_toNum(s);
-      if(n===null){
-        return withUnit ? (s.toLowerCase().includes("lb") ? s : (s + " lbs")) : s;
-      }
-      const rounded = Math.round(n);
-      return withUnit ? `${rounded} lbs` : String(rounded);
-    };
-  }
-})();
-
 /** ---------- CSV Loading ---------- **/
 function setStatus(text){
   $("statusPill").textContent = text;
@@ -1318,8 +1279,6 @@ function parseCsvText(csvText, label){
   });
 }
 
-
-$("loadDefault")?.addEventListener("click", (e)=>{ try{e.preventDefault();}catch(_){} loadDefaultCsv(); });
 async function loadDefaultCsv(){
   // Keep behavior aligned with v1.0.116 (simple fetch + parse),
   // but make the URL GitHub Pages-safe when the page is opened with a trailing "?" or other querystrings.
@@ -1402,7 +1361,7 @@ function renderTable(){
         </div>
       </td>
       <td data-label="Age">${safe(r[COL.age])}</td>
-      <td data-label="Weight">${safe(formatWeightRounded(r[COL.weight], false))}</td>
+      <td data-label="Weight">${safe(r[COL.weight])}</td>
       <td data-label="School">${safe(r[COL.school])}</td>
     `;
     tr.addEventListener("click", () => selectAthlete(x.idx));
@@ -1518,7 +1477,7 @@ function selectAthlete(originalIdx){
   const r = rows[originalIdx];
   const intel = INTEL_CACHE[originalIdx] || null;
 
-  // Watchlist + Notes (v1.0.124)
+  // Watchlist + Notes (v1.0.122)
   const wlId = wlIdFromRow(r);
   const watchBtn = document.getElementById("watchBtn");
   const notesBox = document.getElementById("notesBox");
@@ -1557,7 +1516,7 @@ function selectAthlete(originalIdx){
 
   const photoUrl = photoUrlForRow(r);
   $("athleteName").textContent = safe(r[COL.name]);
-$("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(formatHeightFtIn(r[COL.height]))} • ${safe(formatWeightRounded(r[COL.weight], false))} lb • ${safe(r[COL.school])}`;
+$("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height])} • ${safe(r[COL.weight])} lb • ${safe(r[COL.school])}`;
   updateLargePhoto(r);
   // Athletic Score pill (v1.0.121)
   const scorePill = document.getElementById("scorePill");
@@ -1593,37 +1552,20 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(formatHeightF
     el.textContent = (val === null || val === undefined || String(val).trim() === "") ? "—" : String(val).trim();
   };
 
-  const formatHeightFtIn = (val)=>{
-    const s = String(val ?? "").trim();
+  const formatLbs = (val) => {
+    if (val === null || val === undefined) return "—";
+    const s = String(val).trim();
     if (!s) return "—";
-    // If already formatted like 5' 9" keep it
-    if (s.includes("'") || s.includes("’")) return s;
-    // Extract numeric (inches)
-    const mm = s.replace(/,/g,".").match(/-?\d+(?:\.\d+)?/);
-    if (!mm) return s;
-    const n = parseFloat(mm[0]);
-    if (!Number.isFinite(n)) return s;
-    const inches = Math.round(n);
-    const ft = Math.floor(inches/12);
-    const inch = inches % 12;
-    return (ft >= 3) ? `${ft}' ${inch}"` : s;
-  };
-
-  const formatWeightRounded = (val, withUnit=true)=>{
-    const s = String(val ?? "").trim();
-    if (!s) return "—";
-    const mm = s.replace(/,/g,".").match(/-?\d+(?:\.\d+)?/);
-    if (!mm) return withUnit ? (s.toLowerCase().includes("lb") ? s : (s + " lbs")) : s;
-    const n = parseFloat(mm[0]);
-    if (!Number.isFinite(n)) return withUnit ? (s.toLowerCase().includes("lb") ? s : (s + " lbs")) : s;
-    const rounded = Math.round(n);
-    return withUnit ? `${rounded} lbs` : String(rounded);
+    // Avoid double-units if CSV already includes them
+    if (/\b(lb|lbs|pounds|kg|kgs)\b/i.test(s)) return s;
+    // If numeric-ish, append lbs
+    return s + " lbs";
   };
 
   setText("scoutDob", r[COL.dob]);
   setText("scoutAge", r[COL.age]);
-  setText("scoutHeight", formatHeightFtIn(r[COL.height]));
-  setText("scoutWeight", formatWeightRounded(r[COL.weight], true));
+  setText("scoutHeight", r[COL.height]);
+  setText("scoutWeight", formatLbs(r[COL.weight]));
   setText("scoutPhone", r[COL.phone]);
   setText("scoutEmail", r[COL.email]);
 
@@ -1865,7 +1807,7 @@ if (posSel){
 
 
 
-$("\1")?.addEventListener("change", (e) => {
+$("photos").addEventListener("change", (e) => {
   photoMap.clear();
   const files = e.target.files ? Array.from(e.target.files) : [];
   for (const f of files) {
@@ -1878,7 +1820,7 @@ $("\1")?.addEventListener("change", (e) => {
   else if (activeIndex >= 0) { selectAthlete(activeIndex); }
 });
 
-$("\1")?.addEventListener("change", (e) => {
+$("file").addEventListener("change", (e) => {
   const f = e.target.files?.[0];
   if(!f) return;
   const reader = new FileReader();
@@ -1886,8 +1828,8 @@ $("\1")?.addEventListener("change", (e) => {
   reader.readAsText(f);
 });
 
-$("\1")?.addEventListener("input", applyFilter);
-$("\1")?.addEventListener("click", loadDefaultCsv);
+$("search").addEventListener("input", applyFilter);
+$("loadDefault").addEventListener("click", loadDefaultCsv);
 // Presentation window sync (index controls, external fullscreen presenter)
 // Most reliable: parent updates presenter URL hash on selection + persists latest athlete to localStorage.
 let _presentWin = null;
@@ -1971,17 +1913,6 @@ dz.addEventListener("drop", (e)=>{
   reader.readAsText(f);
 });
 
-
-// IS_PRO_VIEW_FORCE_COACH
-try{
-  if (IS_PRO_VIEW){
-    // Pro is Coach-style by default; ensure we don't inherit Media/Public mode state.
-    try{ setMediaMode(false); }catch(e){}
-    try{ setScoutMode(false); }catch(e){}
-    try{ setCoachMode(true); }catch(e){}
-  }
-}catch(e){}
-
 // Optional: try auto-load if results.csv exists
 // (works only when served via a local server; some browsers block fetch() for file://)
 
@@ -2052,14 +1983,9 @@ if (!IS_PUBLIC_VIEW) {
 
 // Pro view: default to Coach layout + intelligence UI (locked; no toggles)
 if (IS_PRO_VIEW){
-  
-  try{ document.documentElement.classList.remove("publicView","mediaView"); }catch(e){}
-  try{ document.body.classList.remove("mediaMode","scoutMode"); }catch(e){}
-try{ setMediaMode(false); }catch(e){}
+  try{ setMediaMode(false); }catch(e){}
   try{ setScoutMode(false); }catch(e){}
   try{ setCoachMode(true); }catch(e){}
-  try{ sessionStorage.setItem("coachModeOn","1"); sessionStorage.setItem("scoutModeOn","0"); sessionStorage.setItem("mediaModeOn","0"); }catch(e){}
-
 }
 // Media mode toggle (independent; used for shared/public-facing UI)
 const mediaBtn = document.getElementById("toggleMedia");
@@ -2317,14 +2243,7 @@ function initModalWiring(){
       // Upgrade CTA (placeholder link)
       setTimeout(()=>{
         const b = document.getElementById("upgradeProBtn");
-        if (b) b.onclick = ()=>{
-  try{ sessionStorage.setItem("coachModeOn","1"); sessionStorage.setItem("scoutModeOn","0"); sessionStorage.setItem("mediaModeOn","0"); }catch(e){}
-  // preserve current selection if available
-  let sel="";
-  try{ const r = (rows && rows[activeIndex]) ? rows[activeIndex] : null; sel = r && r[COL.id] ? String(r[COL.id]).trim() : ""; }catch(e){}
-  const hash = sel ? ("#sel=" + encodeURIComponent(sel)) : "";
-  window.location.href = "?view=pro" + hash;
-};
+        if (b) b.onclick = ()=> window.open("?view=pro", "_blank");
       }, 0);
     });
   }
@@ -2340,7 +2259,7 @@ function initModalWiring(){
 
 
 
-<div style="margin-top:6px;font-weight:900">v1.0.124</div>
+<div style="margin-top:6px;font-weight:900">v1.0.122</div>
 <ul style="margin:6px 0 0 18px">
   <li>Added Watchlist (★) and Notes (saved locally per athlete) for Admin + Pro workflows.</li>
   <li>Watchlist-only filter and star indicator in athlete list.</li>
