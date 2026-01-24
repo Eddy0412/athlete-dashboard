@@ -1238,6 +1238,45 @@ function badgeForPercentile(p){
 
 function safe(v){ return (v === null || v === undefined || v === "") ? "—" : String(v); }
 
+
+
+/* ---- Global formatting polyfills (v1.0.124 refresh fix) ---- */
+(function(){
+  function _toNum(val){
+    const s = String(val ?? "").trim();
+    if(!s) return null;
+    const mm = s.replace(/,/g,".").match(/-?\d+(?:\.\d+)?/);
+    if(!mm) return null;
+    const n = parseFloat(mm[0]);
+    return Number.isFinite(n) ? n : null;
+  }
+  if (typeof window.formatHeightFtIn !== "function"){
+    window.formatHeightFtIn = function(val){
+      const s = String(val ?? "").trim();
+      if(!s) return "—";
+      if (s.includes("'") || s.includes("’")) return s;
+      const n=_toNum(s);
+      if(n===null) return s;
+      const inches = Math.round(n);
+      const ft = Math.floor(inches/12);
+      const inch = inches % 12;
+      return (ft >= 3) ? `${ft}' ${inch}"` : s;
+    };
+  }
+  if (typeof window.formatWeightRounded !== "function"){
+    window.formatWeightRounded = function(val, withUnit=true){
+      const s = String(val ?? "").trim();
+      if(!s) return "—";
+      const n=_toNum(s);
+      if(n===null){
+        return withUnit ? (s.toLowerCase().includes("lb") ? s : (s + " lbs")) : s;
+      }
+      const rounded = Math.round(n);
+      return withUnit ? `${rounded} lbs` : String(rounded);
+    };
+  }
+})();
+
 /** ---------- CSV Loading ---------- **/
 function setStatus(text){
   $("statusPill").textContent = text;
