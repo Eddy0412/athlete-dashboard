@@ -1,3 +1,13 @@
+(function () {
+  "use strict";
+  // Global namespace (single export surface)
+  const ACD = (window.ACD = window.ACD || {});
+  ACD.version = ACD.version || "1.0.123";
+
+  // Boot guard: prevents double-initialization if scripts are injected twice
+  if (ACD._booted) return;
+  ACD._booted = true;
+
 // FULL production build (v1.0.118 baseline)
 const IS_DEMO = false;
 
@@ -361,6 +371,41 @@ function formatWeightLbsRounded(v){
   return `${Math.round(n)} lbs`;
 }
 
+function formatHeightFeetInches(v){
+  if (v === null || v === undefined) return "—";
+  const sRaw = String(v).trim();
+  if (!sRaw) return "—";
+
+  // If already formatted like 5'10" (or 5' 10"), keep as-is (trim only)
+  if (/[0-9]\s*'/.test(sRaw)) return sRaw;
+
+  // Extract first number (supports "70", "70 in", "178cm", "1.78m")
+  const numMatch = sRaw.match(/[-+]?[0-9]*\.?[0-9]+/);
+  if (!numMatch) return "—";
+  let n = parseFloat(numMatch[0]);
+  if (!Number.isFinite(n)) return "—";
+
+  // Heuristics for unit conversion (keep minimal & safe)
+  // If looks like centimeters (e.g., 170–230) and contains "cm" OR large plain number
+  const lower = sRaw.toLowerCase();
+  let inches = n;
+
+  if (lower.includes("cm") || (!lower.includes("in") && !lower.includes('"') && !lower.includes("ft") && n >= 120 && n <= 260)){
+    inches = n / 2.54;
+  } else if (lower.includes("m") && n > 1.2 && n < 2.6){
+    // meters to inches (e.g., 1.78m)
+    inches = (n * 100) / 2.54;
+  }
+
+  const totalIn = Math.round(inches);
+  if (!Number.isFinite(totalIn) || totalIn <= 0) return "—";
+
+  const ft = Math.floor(totalIn / 12);
+  const inch = totalIn % 12;
+  if (ft <= 0) return "—";
+  return `${ft}'${inch}"`;
+}
+
 function normalizeStr(s){
   return String(s ?? "").toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -678,7 +723,7 @@ function selectAthlete(originalIdx){
 
   const photoUrl = photoUrlForRow(r);
   $("athleteName").textContent = safe(r[COL.name]);
-$("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height])} • ${safe(r[COL.weight])} lb • ${safe(r[COL.school])}`;
+$("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${formatHeightFeetInches(r[COL.height])} • ${safe(r[COL.weight])} lb • ${safe(r[COL.school])}`;
   updateLargePhoto(r);
   // Athletic Score pill (v1.0.121)
   const scorePill = document.getElementById("scorePill");
@@ -726,7 +771,7 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
 
   setText("scoutDob", r[COL.dob]);
   setText("scoutAge", r[COL.age]);
-  setText("scoutHeight", r[COL.height]);
+  setText("scoutHeight", formatHeightFeetInches(r[COL.height]));
   //setText("scoutWeight", formatLbs(r[COL.weight]));
   setText("scoutWeight", formatWeightLbsRounded(r[COL.weight]));
   setText("scoutPhone", r[COL.phone]);
@@ -1589,3 +1634,4 @@ initResponsiveNav();
 
 setStatus("Ready");
 
+})();
