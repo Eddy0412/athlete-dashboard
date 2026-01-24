@@ -539,3 +539,38 @@ html.mediaView #watchFilterBtn,
 html.mediaView #watchCountPill{ display:none !important; }
 
 #watchCountPill.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
+
+/* ================= MINIMAL SCROLLBAR (v1.0.123) =================
+   - WebKit (Chrome/Edge/Safari): ::-webkit-scrollbar*
+   - Firefox: scrollbar-width + scrollbar-color
+   Keep subtle + cohesive with dark UI.
+*/
+:root{
+  /* Scrollbar tokens (tweak here only) */
+  --scrollbar-track: rgba(255,255,255,.04);
+  --scrollbar-thumb: rgba(138,160,182,.28);
+  --scrollbar-thumb-hover: rgba(138,160,182,.42);
+}
+
+/* Firefox */
+*{
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* WebKit */
+::-webkit-scrollbar{
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track{
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb{
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 3px solid var(--scrollbar-track); /* creates the minimalist "pill" thumb */
+}
+::-webkit-scrollbar-thumb:hover{
+  background: var(--scrollbar-thumb-hover);
+}
