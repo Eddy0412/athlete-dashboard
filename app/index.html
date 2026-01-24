@@ -556,7 +556,7 @@ html.mediaView #watchCountPill{ display:none !important; }
 <header>
 <div class="wrap title"><div class="titleBar">
 <div>
-<h1>Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.122</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillPro" id="proPill" style="display:none;margin-left:6px">Pro</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span><span class="pill pillAdmin" id="adminPill" style="display:none;margin-left:6px">Admin</span></h1>
+<h1>Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.123</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillPro" id="proPill" style="display:none;margin-left:6px">Pro</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span><span class="pill pillAdmin" id="adminPill" style="display:none;margin-left:6px">Admin</span></h1>
 <div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
 </div><div class="topRightControls"><button class="linkBtn btnIcon" id="loadDefault" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24">
 <path d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-14.9-2M4 16a8 8 0 0014.9 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
@@ -1199,6 +1199,14 @@ function toNum(v){
   return Number.isFinite(n) ? n : null;
 }
 
+function formatWeightLbsRounded(v){
+  const n = typeof v === "number"
+    ? v
+    : parseFloat(String(v ?? "").replace(",", "."));
+  if (!Number.isFinite(n)) return "—";
+  return `${Math.round(n)} lbs`;
+}
+
 function normalizeStr(s){
   return String(s ?? "").toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -1565,7 +1573,8 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
   setText("scoutDob", r[COL.dob]);
   setText("scoutAge", r[COL.age]);
   setText("scoutHeight", r[COL.height]);
-  setText("scoutWeight", formatLbs(r[COL.weight]));
+  //setText("scoutWeight", formatLbs(r[COL.weight]));
+  setText("scoutWeight", formatWeightLbsRounded(r[COL.weight]));
   setText("scoutPhone", r[COL.phone]);
   setText("scoutEmail", r[COL.email]);
 
