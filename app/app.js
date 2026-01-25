@@ -1662,4 +1662,14 @@ initResponsiveNav();
 
 setStatus("Ready");
 
-})();
+/* GitHub button: moved from inline onclick -> JS binding */
+try{
+  const gb = document.getElementById("githubBtn");
+  if (gb && !gb._bound){
+    gb._bound = true;
+    gb.addEventListener("click", ()=>{
+      window.open("https://github.com/Eddy0412/athlete-dashboard", "_blank");
+    });
+  }
+}catch(e){}
+
