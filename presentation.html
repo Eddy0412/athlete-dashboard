@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<title>Presentation Mode v1.0.120</title>
+<style>
+  :root{
+    --bg:#070b16;
+    --panel: rgba(255,255,255,.06);
+    --border: rgba(255,255,255,.14);
+    --text:#eef3ff;
+    --muted:#a7b3d6;
+    --accent:#51CAF5;
+    --accent2:#5471B7;
+    --radius:18px;
+    --shadow: 0 20px 70px rgba(0,0,0,.55);
+    --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:var(--font);
+    color:var(--text);
+    background:
+      radial-gradient(1200px 600px at 20% -10%, rgba(81,202,245,.16), transparent 60%),
+      radial-gradient(900px 500px at 90% 10%, rgba(84,113,183,.18), transparent 60%),
+      var(--bg);
+    overflow:hidden;
+  }
+
+  /* ===== 16:9 Presentation Lock ===== */
+
+#viewport{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#070b16;
+  overflow:hidden;
+}
+
+/* Base design size (you can tweak width, ratio matters) */
+#stage16x9{
+  width:1920px;
+  height:1080px; /* 19:6 ratio */
+  transform-origin: center center;
+}
+
+
+  .wrap{
+    height:100%;
+    display:grid;
+    grid-template-rows: auto 1fr;
+  }
+
+  .topbar{
+    padding: 14px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    border-bottom: 1px solid rgba(255,255,255,.10);
+    background: linear-gradient(to bottom, rgba(7,11,22,.88), rgba(7,11,22,.55));
+    backdrop-filter: blur(10px);
+  }
+  .brand{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    min-width: 220px;
+  }
+  .brand .title{
+    font-weight: 800;
+    letter-spacing: .2px;
+    font-size: 16px;
+    margin:0;
+  }
+  .brand .sub{
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .btn{
+    appearance:none;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,.06);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor:pointer;
+    font-size: 13px;
+    line-height:1;
+    user-select:none;
+  }
+  .btn:hover{ border-color: rgba(81,202,245,.35); }
+  .btn:active{ transform: translateY(1px); }
+  .btnGhost{ background: transparent; }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    border:1px solid rgba(255,255,255,.18);
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(255,255,255,.06);
+  }
+
+  .stage{
+    padding: 18px;
+    display:grid;
+    place-items:center;
+  }
+  .card{
+    width: min(1100px, 100%);
+    border: 1px solid rgba(255,255,255,.12);
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+  .cardInner{
+    padding: 22px;
+    display:grid;
+    grid-template-columns: 340px 1fr;
+    gap: 18px;
+  }
+
+  .photo{
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 16px;
+    background: rgba(0,0,0,.18);
+    overflow:hidden;
+    min-height: 360px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color: rgba(255,255,255,.45);
+    position:relative;
+  }
+  .photo img{
+    width:100%;
+    height:100%;
+    object-fit: cover;
+    display:block;
+  }
+
+  .name{
+    font-size: 40px;
+    font-weight: 900;
+    letter-spacing: .2px;
+    margin:0 0 10px 0;
+  }
+  .metaRow{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom: 14px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .stat{
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(0,0,0,.16);
+    border-radius: 14px;
+    padding: 12px;
+  }
+  .stat .k{
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .stat .v{
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: .2px;
+  }
+
+  .footerHint{
+    padding: 12px 18px;
+    border-top: 1px solid rgba(255,255,255,.10);
+    color: var(--muted);
+    font-size: 12px;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  @media (max-width: 900px){
+    .cardInner{ grid-template-columns: 1fr; }
+    .photo{ min-height: 260px; }
+    .name{ font-size: 32px; }
+    .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 520px){
+    .stage{ padding: 12px; }
+    .cardInner{ padding: 14px; }
+    .name{ font-size: 26px; }
+    .grid{ grid-template-columns: 1fr; }
+  }
+
+#photoFallback{ font-size:64px; letter-spacing:1px; }
+
+/* Template: KFL (minimal variant) */
+body.tplKfl{ background: radial-gradient(1200px 600px at 20% 20%, rgba(0,180,160,.18), rgba(0,0,0,0)) , radial-gradient(900px 500px at 80% 10%, rgba(84,113,183,.22), rgba(0,0,0,0)), #070b10; }
+body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
+
+
+/* --- KFL TEMPLATE --- */
+#kflRoot{ position:fixed; inset:0; display:none; overflow:hidden; font-family:var(--font); }
+#kflRoot .kflStage{ position:absolute; inset:0; background:#0b63a4; }
+
+/* subtle dots pattern top-right */
+#kflRoot .kflStage:after{
+  content:""; position:absolute; top:0; right:0; width:320px; height:240px;
+  background:
+    radial-gradient(circle at 6px 6px, rgba(0,0,0,.22) 2px, transparent 3px);
+  background-size: 14px 14px;
+  opacity:.55;
+  pointer-events:none;
+}
+
+/* diagonal line */
+#kflRoot .kflDiag{
+  position:absolute; left:-20%; top:40%;
+  width:160%; height:2px;
+  background:rgba(255,255,255,.18);
+  transform:rotate(-10deg);
+  pointer-events:none;
+}
+
+/* red slashes */
+#kflRoot .kflSlash{
+  position:absolute;
+  background:#e13b3b;
+  transform:skewX(-25deg);
+  width:110px; height:240px;
+  pointer-events:none;
+}
+#kflRoot .kflSlashTL{ left:28px; top:28px; }
+#kflRoot .kflSlashBL{ left:28px; bottom:70px; }
+#kflRoot .kflSlashBR{ right:28px; bottom:70px; }
+
+#kflRoot .kflInner{
+  position:absolute; inset:34px;
+  display:grid; grid-template-columns: 38% 62%;
+  gap:26px;
+}
+
+#kflRoot .kflLeft{ position:relative; display:flex; flex-direction:column; }
+#kflRoot .kflPhotoFrame{
+  position:relative;
+  max-width:520px;
+  margin:0 auto;
+  border-radius:2px;
+  /* background removed */
+  border:2px solid rgba(0,0,0,.35);
+  box-shadow: 0 22px 70px rgba(0,0,0,.35);
+  height: 650px;
+  overflow:hidden;
+}
+#kflRoot .kflPhotoBg{
+  position:absolute; inset:0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.12) 100%);
+  pointer-events:none;
+}
+#kflRoot #kflPhotoImg{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover;
+  display:block;
+}
+#kflRoot .kflPhotoFallback{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:1000; font-size:92px; letter-spacing:2px;
+  color:rgba(0,0,0,.55);
+}
+
+#kflRoot .kflNameBar{
+  margin-top:18px;
+  background: transparent;
+  border:none;
+  height:88px;
+  display:flex; align-items:center;
+  padding: 0 22px 0 96px;
+  box-shadow:none;
+}
+#kflRoot .kflNameText{
+  font-weight:1000; font-size:56px; color:#fff; text-shadow: 0 6px 18px rgba(0,0,0,.35);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+#kflRoot .kflDev{
+  position:absolute; left:6px; right:6px; bottom:0;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  color:rgba(255,255,255,.9);
+}
+#kflRoot .kflDevLabel{ font-size:12px; letter-spacing:.6px; opacity:.9; }
+#kflRoot .kflKkmLogo{ width:260px; height:auto; opacity:.95; filter: drop-shadow(0 8px 18px rgba(0,0,0,.35)); }
+.kflDevBrand{ font-size:14px; font-weight:900; letter-spacing:2px; opacity:.95; }
+
+#kflRoot .kflRight{ position:relative; color:#fff; padding:8px 4px; }
+#kflRoot .kflDraft{
+  position:relative;
+  display:inline-block;
+  margin:0 auto;
+  text-align:center; top:auto; right:auto;
+  background:#e13b3b; color:#fff;
+  padding:18px 26px;
+  font-weight:1000;
+  font-size:64px;
+  letter-spacing:1px;
+}
+#kflRoot .kflLogoWrap{
+  margin-top:28px;
+  display:flex; align-items:center; justify-content:center;
+}
+#kflRoot .kflShield{
+  width:220px; height:220px;
+  border-radius:22px;
+  border:none;
+  background:transparent;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:1000; font-size:64px;
+}
+#kflRoot .kflInfo{
+  margin-top:18px;
+  text-align:center;
+  padding-left:0;
+}
+#kflRoot .kflInfoLine{
+  font-weight:1000;
+  font-size:26px;
+  margin:10px 0;
+  letter-spacing:.6px;
+}
+#kflRoot .kflInfoSmall{ font-size:22px; }
+
+#kflRoot .kflPerfTitle{
+  margin-top:46px;
+  text-align:center;
+  font-weight:1000;
+  font-size:36px;
+  letter-spacing:1px;
+}
+
+#kflRoot .kflPerfRow{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:0;
+  align-items:stretch;
+}
+#kflRoot .kflPerfCell{
+  padding:0 18px;
+  border-left:2px solid rgba(255,255,255,.25);
+}
+#kflRoot .kflPerfCell:first-child{ border-left:none; }
+#kflRoot .kflPerfLabel{
+  text-align:center;
+  text-transform:uppercase;
+  font-weight:1000;
+  font-size:18px;
+  letter-spacing:.8px;
+  opacity:.95;
+  line-height:1.15;
+}
+#kflRoot .kflPerfValue{
+  margin-top:16px;
+  text-align:center;
+  font-weight:1000;
+  font-size:72px;
+  color:#e13b3b;
+  letter-spacing:.5px;
+}
+
+#kflRoot .kflSite{
+  position:absolute; left:0; right:0; bottom:54px;
+  text-align:center;
+  font-weight:1000;
+  font-size:22px;
+  letter-spacing:1px;
+}
+
+@media (max-width: 1100px){
+  #kflRoot .kflInner{ inset:16px; grid-template-columns: 1fr; }
+  #kflRoot .kflPhotoFrame{ height:420px; }
+  #kflRoot .kflDraft{ font-size:48px; }
+  #kflRoot .kflInfo{ padding-left:0; text-align:center; }
+  #kflRoot .kflPerfRow{ grid-template-columns: repeat(2, 1fr); gap:18px; }
+  #kflRoot .kflPerfCell{ border-left:none; border:2px solid rgba(255,255,255,.2); border-radius:16px; padding:14px; }
+}
+
+
+/* --- KFL alignment + readability tweaks --- */
+#kflRoot .kflRight{ display:flex; flex-direction:column; align-items:center; }
+#kflRoot .kflLogoWrap, #kflRoot .kflMeta, #kflRoot .kflPerfWrap{ text-align:center; align-items:center; justify-content:center; }
+#kflRoot .kflMetaLines{ text-align:center; }
+#kflRoot .kflPerfValue{ white-space:nowrap; position:relative; z-index:4; }
+#kflRoot .kflUnit{ font-size:0.42em; font-weight:900; margin-left:10px; opacity:.95; }
+#kflRoot .kflNum{ display:inline-block; }
+#kflRoot .kflSlash{ z-index:1; }
+#kflRoot .kflInner{ z-index:2; }
+#kflRoot .kflPhotoFrame{ width:100%; }
+#kflRoot .kflSlashBR{ right:-45px; bottom:70px; opacity:.95; }
+
+
+/* --- KFL cosmetic tweaks (no logic changes) --- */
+#kflRoot .kflLeft{ align-items:flex-start; }
+#kflRoot .kflNameWrap{ width:100%; text-align:left; padding-left:0; }
+#kflRoot .kflName{ text-align:left; }
+
+/* Photo frame styling */
+#kflRoot .kflPhotoFrame{
+  border-radius:14px;
+  overflow:hidden;
+  border:4px solid rgba(255,255,255,0.85);
+}
+#kflRoot #kflPhotoImg{
+  border-radius:12px;
+}
+
+/* Fallback initials: subtle dark overlay so background still shows */
+#kflRoot .kflPhotoFallback{
+  border-radius:12px;
+  background:rgba(0,0,0,0.28);
+  color:rgba(255,255,255,0.9);
+  backdrop-filter: blur(1px);
+}
+</style>
+</head>
+<body>
+<div id="tplTag" style="position:fixed;top:18px;left:18px;z-index:50;display:none;padding:6px 10px;border-radius:999px;font-weight:900;letter-spacing:.4px;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.35);backdrop-filter:blur(6px)">KFL</div>
+
+  <div id="viewport">
+  <div id="stage16x9">
+    <div id="defaultRoot">
+      <div class="wrap">
+
+    <div class="topbar">
+      <div class="brand">
+        <h1 class="title">Presentation Mode</h1>
+        <div class="sub">Arrow keys: Prev/Next • F: Fullscreen • Esc: Exit fullscreen</div>
+      </div>
+      <div class="actions">
+        <span class="pill" id="counterPill">— / —</span>
+        <button class="btn" id="prevBtn" type="button">Prev</button>
+        <button class="btn" id="nextBtn" type="button">Next</button>
+        <button class="btn btnGhost" id="fsBtn" type="button">Fullscreen</button>
+        <button class="btn btnGhost" id="exitBtn" type="button">Exit</button>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="card" role="region" aria-label="Presentation card">
+        <div class="cardInner">
+          <div class="photo">
+            <img id="photoImg" alt="" style="display:none"/>
+            <div id="photoFallback">No photo</div>
+          </div>
+
+          <div>
+            <h2 class="name" id="name">—</h2>
+            <div class="metaRow" id="metaRow"></div>
+
+            <div class="grid" id="stats"></div>
+          </div>
+        </div>
+
+        <div class="footerHint">
+          <div id="school">—</div>
+          <div id="location">—</div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+
+<!-- KFL Template Root -->
+<div id="kflRoot" style="display:none">
+  <div class="kflStage">
+    <!-- red slashes / accents -->
+    <div class="kflSlash kflSlashTL"></div>
+    <div class="kflSlash kflSlashBL"></div>
+    <div class="kflSlash kflSlashBR"></div>
+
+    <!-- thin diagonal line -->
+    <div class="kflDiag"></div>
+
+    <div class="kflInner">
+      <!-- LEFT: photo + name + developed by -->
+      <div class="kflLeft">
+        <div class="kflPhotoFrame">
+          <img id="kflPhotoImg" alt="" />
+          <div id="kflPhotoFallback" class="kflPhotoFallback">—</div>
+          <div class="kflPhotoBg"></div>
+        </div>
+
+        <div class="kflNameBar">
+          <div id="kflName" class="kflNameText">—</div>
+        </div>
+
+        <div class="kflDev">
+          <div class="kflDevLabel">Developed by:</div>
+          <img class="kflKkmLogo" src="kkm_logo.png" alt="Kreative Kingdom Media" />
+        </div>
+      </div>
+
+      <!-- RIGHT: draft + logo + info + performance -->
+      <div class="kflRight">
+        <div class="kflDraft">DRAFT 2026</div>
+
+        <div class="kflLogoWrap">
+          <img class="kflShield" id="kflLogoImg" src="kfl_logo.png" alt="KFL" />
+        </div>
+
+        <div class="kflInfo">
+          <div class="kflInfoLine" id="kflSchoolLine">COLEGIO: —</div>
+          <div class="kflInfoLine kflInfoSmall" id="kflHeightLine">ESTATURA: —</div>
+          <div class="kflInfoLine kflInfoSmall" id="kflWeightLine">PESO: —</div>
+        </div>
+
+        <div class="kflPerfTitle">COMBINE PERFORMANCE</div>
+
+        <div class="kflPerfRow" id="kflPerf"></div>
+
+        <div class="kflSite">WWW.KIWANISFOOTBALL.COM</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function getHashParam(name){
+  try{
+    const h = (location.hash || "").replace(/^#/, "");
+    const p = new URLSearchParams(h);
+    return p.get(name) || "";
+  }catch(e){ return ""; }
+}
+
+(function(){
+  const PHOTO_BASE_URL = "https://media.kkmsports.xyz/kfl2026/";
+
+  const $ = (id)=>document.getElementById(id);
+
+  const el = {
+    name: $("name"),
+    meta: $("metaRow"),
+    stats: $("stats"),
+    school: $("school"),
+    location: $("location"),
+    photoImg: $("photoImg"),
+    photoFallback: $("photoFallback"),
+    counter: $("counterPill"),
+    fsBtn: $("fsBtn"),
+    exitBtn: $("exitBtn"),
+  };
+
+  const kflEl = {
+    root: document.getElementById("kflRoot"),
+    defaultRoot: document.getElementById("defaultRoot"),
+    tplTag: document.getElementById("tplTag"),
+    name: document.getElementById("kflName"),
+    school: document.getElementById("kflSchoolLine"),
+    height: document.getElementById("kflHeightLine"),
+    weight: document.getElementById("kflWeightLine"),
+    perf: document.getElementById("kflPerf"),
+    photoImg: document.getElementById("kflPhotoImg"),
+    photoFallback: document.getElementById("kflPhotoFallback"),
+  };
+
+  function applyTemplateFromHash(){
+    const tpl = (getHashParam("tpl") || "default").toLowerCase();
+    const isKfl = tpl === "kfl";
+    if (kflEl.tplTag) kflEl.tplTag.style.display = isKfl ? "inline-flex" : "none";
+    if (kflEl.root) kflEl.root.style.display = isKfl ? "block" : "none";
+    if (kflEl.defaultRoot) kflEl.defaultRoot.style.display = isKfl ? "none" : "block";
+    return tpl;
+  }
+
+
+  function esc(s){
+    return String(s ?? "—")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#39;");
+  }
+
+  function pick(obj, keys){
+    for(const k of keys){
+      if(obj && obj[k] !== undefined && obj[k] !== "") return obj[k];
+    }
+    return "";
+  }
+
+  function initials(name){
+    const s = String(name||"").trim();
+    if(!s) return "—";
+    const p = s.split(/\s+/);
+    return ((p[0]?.[0]||"") + (p[p.length-1]?.[0]||"")).toUpperCase();
+  }
+
+  function padId(v){
+    const s = String(v ?? "").trim();
+    if(!s) return "";
+    return s.padStart(3, "0");
+  }
+
+  function normId(v){
+    const s = String(v ?? "").trim();
+    if(!s) return "";
+    return s.replace(/^0+/, "") || "0";
+  }
+
+  function getSel(){
+    const h = window.location.hash || "";
+    const m = h.match(/#sel=([^&]+)/i);
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+
+  function setPhoto(url, name){
+    if(!el.photoImg) return;
+
+    if(el.photoFallback){
+      el.photoFallback.textContent = initials(name);
+      el.photoFallback.style.display = "flex";
+    }
+    el.photoImg.style.display = "none";
+
+    const token = Date.now() + Math.random();
+    el.photoImg.dataset.token = token;
+
+    el.photoImg.onload = () => {
+      if(el.photoImg.dataset.token != token) return;
+      if(el.photoFallback) el.photoFallback.style.display = "none";
+      el.photoImg.style.display = "block";
+    };
+
+    el.photoImg.onerror = () => {
+      if(el.photoImg.dataset.token != token) return;
+      if(el.photoFallback){
+        el.photoFallback.textContent = initials(name);
+        el.photoFallback.style.display = "flex";
+      }
+      el.photoImg.style.display = "none";
+    };
+
+    el.photoImg.src = url;
+  }
+
+  function render(r, selRaw){
+    const name = pick(r, ["Nombre","Name","Athlete","Player"]) || "—";
+    const pos  = pick(r, ["Pos","Position","Posición"]) || "";
+    const sport = pick(r, ["Sport","Deporte"]) || "";
+    const team = pick(r, ["Team","Equipo"]) || "";
+
+    // Core fields
+    const age = pick(r, ["Edad","Age","age"]) || "";
+    const height = pick(r, ["Estatura","Altura","Height","Ht","height"]) || "";
+    const weight = pick(r, ["Peso","Weight","Wt","weight"]) || "";
+
+    if(el.name) el.name.innerHTML = esc(name);
+    if(el.meta) el.meta.innerHTML = [sport,pos,team].filter(Boolean).map(esc).join(" • ") || "&nbsp;";
+    if(el.counter) el.counter.textContent = selRaw ? `#${selRaw}` : "";
+
+    // School (non-negotiable)
+    const school = pick(r, ["Lugar de Estudios","Lugar de estudios","Lugar_de_Estudios","School","Escuela","Colegio","school"]) || "";
+    if(el.school) el.school.innerHTML = school ? esc(school) : "—";
+
+    // Helpers to compute "best" from multiple columns if needed
+    function toNumber(v){
+      if(v === undefined || v === null) return null;
+      const s = String(v).replace(/,/g,".").trim();
+      const mm = s.match(/-?\d+(?:\.\d+)?/);
+      if(!mm) return null;
+      const n = parseFloat(mm[0]);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function formatTime(raw){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      if(/[a-zA-Z]/.test(s)) return s;
+      const n = toNumber(s);
+      if(n === null) return s;
+      return n.toFixed(2);
+    }
+
+    function formatNumber(raw, decimals){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      if(/[a-zA-Z]/.test(s)) return s;
+      const n = toNumber(s);
+      if(n === null) return s;
+      return (decimals === 0) ? String(Math.round(n)) : n.toFixed(decimals);
+    }
+
+    function formatFeetInches(raw){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      if(s.includes("\'") || s.includes("\"")) return s;
+      const n = toNumber(s);
+      if(n === null) return s;
+      const inches = Math.round(n);
+      const ft = Math.floor(inches/12);
+      const inch = inches % 12;
+      return (ft >= 3) ? `${ft}\' ${inch}\"` : s;
+    }
+
+    function formatWeightCeil(raw){
+      const n = toNumber(raw);
+      if(n === null) return String(raw ?? "").trim();
+      return String(Math.ceil(n));
+    }
+
+
+    function addUnit(raw, unit){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      const lower = s.toLowerCase();
+      // If already contains unit or non-numeric suffix, don't append
+      if(lower.includes(unit.toLowerCase())) return s;
+      // If it contains any letters (like 'sec', 'in', 'reps') assume unit present
+      if(/[a-zA-Z]/.test(s)) return s;
+      return s + " " + unit;
+    }
+
+    function statCard(label, value){
+      const vv = String(value ?? "").trim();
+      const show = vv ? vv : "—";
+      return `<div class="stat"><div class="k">${esc(label)}</div><div class="v">${esc(show)}</div></div>`;
+    }
+
+    function bestFromRow(regex, mode){
+      let bestVal = null;
+      let bestRaw = "";
+      for(const k of Object.keys(r)){
+        if(!regex.test(k)) continue;
+        const raw = r[k];
+        const n = toNumber(raw);
+        if(n === null) continue;
+        const rawS = String(raw ?? "").trim();
+        if(bestVal === null){
+          bestVal = n; bestRaw = rawS;
+        }else{
+          if(mode === "min" && n < bestVal){ bestVal = n; bestRaw = rawS; }
+          if(mode === "max" && n > bestVal){ bestVal = n; bestRaw = rawS; }
+        }
+      }
+      return bestRaw;
+    }
+
+    function bestExplicit(keys){
+      for(const k of keys){
+        if(Object.prototype.hasOwnProperty.call(r, k) && String(r[k]??"").trim() !== ""){
+          return String(r[k]).trim();
+        }
+      }
+      return "";
+    }
+
+    // Best results (Coach-profile style)
+    // 40 YDS DASH (SEGUNDOS) — best of attempts (includes "2da Vuelta")
+    const best40 = bestExplicit([
+      "40 YDS DASH (SEGUNDOS)",
+      "40 YDS DASH (SEGUNDOS) 2da Vuelta",
+      "40yds","40 yds","40yd","40 yd","40","40 Time","Tiempo 40","Tiempo_40",
+      "40yds (s)","40yd (s)","Tiempo 40yd","Tiempo 40 yds"
+    ]) || bestFromRow(/40\s*YDS\s*DASH\s*\(SEGUNDOS\)|40\s*yds?\s*dash|40\s*yds?|forty|tiempo\s*40/i, "min");
+
+    const bestBroad = bestExplicit(["Broad Jump","Salto Largo","Salto","Best Broad","Best Broad Jump","Best Broad jump","Broad Jump Best","BestBroad"]) ||
+                      bestFromRow(/(^|\b)(broad\s*jump|broad)(\b|$)/i, "max");
+
+    const best5105 = bestExplicit(["5-10-5","5 10 5","Pro Shuttle","Shuttle","Tiempo 5-10-5","Best 5-10-5","Best 5-10-5 (Pro Shuttle)","Best Pro Shuttle","Best Shuttle","5-10-5 Best","Pro Shuttle Best","Best5105"]) ||
+                     bestFromRow(/(^|\b)(5\s*-\s*10\s*-\s*5|5\s*10\s*5|5105|pro\s*shuttle|shuttle)(\b|$)/i, "min");
+
+    // 3- CONE DRILL — best of attempts (includes "2da Vuelta")
+    const best3Cone = bestExplicit([
+      "3- CONE DRILL",
+      "3- CONE DRILL 2da Vuelta",
+      "3-Cone","3 Cone","3Cone","Cone","Tiempo 3-Cone","Tiempo_3_Cone",
+      "Best 3-cone","Best 3 Cone","Best 3Cone","3-cone Best","3Cone Best","Best3Cone"
+    ]) || bestFromRow(/3\s*-\s*CONE\s*DRILL|3\s*-?\s*cone|3cone|three\s*cone|cone/i, "min");
+
+    const bestBench = bestExplicit(["Bench","Bench Press","Press Banca","Banca","BP","Reps Bench","Best Bench","Best Bench Press","Best BP","Bench Best","BP Best","BestBench"]) ||
+                      bestFromRow(/(^|\b)(bench|bench\s*press|bp|press\s*reps|reps)(\b|$)/i, "max");
+
+    const cards = [];
+    cards.push(statCard("Age", age));
+    cards.push(statCard("Height", formatFeetInches(height) || height));
+    const wDisp = formatWeightCeil(weight);
+    cards.push(statCard("Weight", wDisp ? (wDisp + " lbs") : ""));
+
+    if(best40) cards.push(statCard("40yds", addUnit(formatTime(best40), "s")));
+    if(bestBroad) cards.push(statCard("Broad Jump", addUnit(formatNumber(bestBroad, 0), "in")));
+    if(best5105) cards.push(statCard("5-10-5", addUnit(formatTime(best5105), "s")));
+    if(best3Cone) cards.push(statCard("3-Cone", addUnit(formatTime(best3Cone), "s")));
+    if(bestBench) cards.push(statCard("Bench", addUnit(formatNumber(bestBench, 0), "reps")));
+
+    if(el.stats) el.stats.innerHTML = cards.join("");
+
+    // Photo via CDN
+    const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
+    if(idRaw){
+      const url = PHOTO_BASE_URL + padId(idRaw) + ".jpg";
+      setPhoto(url, name);
+    }else{
+      if(el.photoFallback){
+        el.photoFallback.textContent = initials(name);
+        el.photoFallback.style.display = "flex";
+      }
+      if(el.photoImg) el.photoImg.style.display = "none";
+    }
+  }
+
+
+  function renderKfl(r, selRaw){
+    function formatHeightKfl(v){
+      const s = String(v ?? "").trim();
+      if(!s) return "";
+      if(s.includes("\'") || s.includes("\"")) return s;
+      const mm = s.replace(/,/g,".").match(/-?\d+(?:\.\d+)?/);
+      if(!mm) return s;
+      const n = parseFloat(mm[0]);
+      if(!Number.isFinite(n)) return s;
+      const inches = Math.round(n);
+      const ft = Math.floor(inches/12);
+      const inch = inches % 12;
+      return (ft >= 3) ? `${ft}\' ${inch}\"` : s;
+    }
+    function formatWeightKfl(v){
+      const mm = String(v ?? "").replace(/,/g,".").trim().match(/-?\d+(?:\.\d+)?/);
+      const n = mm ? parseFloat(mm[0]) : NaN;
+      if(!Number.isFinite(n)) return String(v??"").trim();
+      return String(Math.round(n));
+    }
+
+    const name = pick(r, ["Nombre","Name","Athlete","Player"]) || "—";
+    const school = pick(r, ["Lugar de Estudios","Lugar de estudios","Lugar_de_Estudios","School","Escuela","Colegio","school"]) || "";
+    const height = pick(r, ["Estatura","Altura","Height","Ht","height"]) || "";
+    const weight = pick(r, ["Peso","Weight","Wt","weight"]) || "";
+
+    if (kflEl.name) kflEl.name.textContent = name;
+    if (kflEl.school) kflEl.school.textContent = "COLEGIO: " + (school || "—");
+    if (kflEl.height) {
+      const htxt = formatHeightKfl(height);
+      kflEl.height.textContent = "ESTATURA: " + (htxt || "—");
+    }
+    if (kflEl.weight){
+      const wtxt = formatWeightKfl(weight);
+      kflEl.weight.textContent = "PESO: " + (wtxt ? (wtxt + " LBS") : "—");
+    }
+
+    function toNumber(v){
+      if(v === undefined || v === null) return null;
+      const s = String(v).replace(/,/g,".").trim();
+      const mm = s.match(/-?\d+(?:\.\d+)?/);
+      if(!mm) return null;
+      const n = parseFloat(mm[0]);
+      return Number.isFinite(n) ? n : null;
+    }
+    function formatTime(raw){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      const n = toNumber(s);
+      if(n === null) return s;
+      return n.toFixed(2);
+    }
+    function formatNumber(raw, decimals){
+      const s = String(raw ?? "").trim();
+      if(!s) return "";
+      const n = toNumber(s);
+      if(n === null) return s;
+      return (decimals === 0) ? String(Math.round(n)) : n.toFixed(decimals);
+    }
+    function bestExplicit(keys){
+      for(const k of keys){
+        if(Object.prototype.hasOwnProperty.call(r, k) && String(r[k]??"").trim() !== ""){
+          return String(r[k]).trim();
+        }
+      }
+      return "";
+    }
+    function bestFromRow(regex, mode){
+      let bestVal = null;
+      let bestRaw = "";
+      for(const k of Object.keys(r)){
+        if(!regex.test(k)) continue;
+        const raw = r[k];
+        const n = toNumber(raw);
+        if(n === null) continue;
+        const rawS = String(raw ?? "").trim();
+        if(bestVal === null){
+          bestVal = n; bestRaw = rawS;
+        }else{
+          if(mode === "min" && n < bestVal){ bestVal = n; bestRaw = rawS; }
+          if(mode === "max" && n > bestVal){ bestVal = n; bestRaw = rawS; }
+        }
+      }
+      return bestRaw;
+    }
+
+    const best40 = bestExplicit([
+      "40 YDS DASH (SEGUNDOS)",
+      "40 YDS DASH (SEGUNDOS) 2da Vuelta",
+    ]) || bestFromRow(/40\s*YDS\s*DASH\s*\(SEGUNDOS\)/i, "min");
+
+    const bestBroad = bestExplicit([
+      "BROAD JUMP (PULGADAS)",
+      "BROAD JUMP (PULGADAS) 2da Vuelta",
+    ]) || bestFromRow(/BROAD\s*JUMP\s*\(PULGADAS\)/i, "max");
+
+    const best5105 = bestExplicit([
+      "5-10-5 (SHUTTLE) RUN",
+      "5-10-5 (SHUTTLE) RUN 2da Vuelta",
+    ]) || bestFromRow(/5\-10\-5\s*\(SHUTTLE\)\s*RUN/i, "min");
+
+    const best3Cone = bestExplicit([
+      "3- CONE DRILL",
+      "3- CONE DRILL 2da Vuelta",
+    ]) || bestFromRow(/3\-\s*CONE\s*DRILL/i, "min");
+
+    const bestBench = bestExplicit([
+      "BENCHPRESS",
+      "BENCH PRESS 2da Vuelta ",
+    ]) || bestFromRow(/BENCH/i, "max");
+
+    function perfCell(label, value){
+      const v = String(value||"").trim() || "—";
+      // split number + unit (e.g. "5.02 s", '87"')
+      let num=v, unit="";
+      const m = v.match(/^([-+]?\d+(?:\.\d+)?)(?:\s*([a-zA-Z]+)|\s*(\"))?$/);
+      if(m){ num=m[1]; unit=m[2] || (m[3]||""); }
+      const valueHtml = unit ? `<span class="kflNum">${esc(num)}</span><span class="kflUnit">${esc(unit)}</span>` : `<span class="kflNum">${esc(v)}</span>`;
+      return `<div class="kflPerfCell"><div class="kflPerfLabel">${esc(label)}</div><div class="kflPerfValue">${valueHtml}</div></div>`;
+    }
+
+    const cells = [];
+    function pushIf(label, v){
+      const vv = String(v ?? "").trim();
+      if(!vv || vv==="—" || vv==="-" ) return;
+      cells.push(perfCell(label, vv));
+    }
+    pushIf("40 YARDS DASH", best40 ? (formatTime(best40) + " s") : "—");
+    pushIf("5-10-5 SHUTTLE", best5105 ? (formatTime(best5105) + " s") : "—");
+    pushIf("3-CONE DRILL", best3Cone ? (formatTime(best3Cone) + " s") : "—");
+    pushIf("LONG JUMP", bestBroad ? (formatNumber(bestBroad, 0) + ' in') : "—");
+    pushIf("BENCH PRESS", bestBench ? (formatNumber(bestBench, 0)) : "—");
+    if (kflEl.perf) {
+      kflEl.perf.innerHTML = cells.join("");
+      const cols = Math.max(1, Math.min(5, cells.length));
+      kflEl.perf.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    }
+// Photo CDN
+    const idRaw = pick(r, ["Formulario#","Formulario","ID","Id","id"]);
+    const url = idRaw ? (PHOTO_BASE_URL + padId(idRaw) + ".jpg") : "";
+    if (kflEl.photoFallback){ kflEl.photoFallback.textContent = initials(name); kflEl.photoFallback.style.display = "flex"; }
+
+    if (url){
+      if (kflEl.photoImg){
+        kflEl.photoImg.onload = ()=>{
+          kflEl.photoImg.style.display = "block";
+          if (kflEl.photoFallback) kflEl.photoFallback.style.display = "none";
+        };
+        kflEl.photoImg.onerror = ()=>{
+          if (kflEl.photoFallback){
+            kflEl.photoFallback.textContent = initials(name);
+            kflEl.photoFallback.style.display = "flex";
+          }
+          if (kflEl.photoImg) { kflEl.photoImg.style.display = "none"; }
+        };
+        if (kflEl.photoImg) kflEl.photoImg.style.display = "none";
+        if (kflEl.photoFallback){
+          kflEl.photoFallback.textContent = initials(name);
+          kflEl.photoFallback.style.display = "flex";
+        }
+        kflEl.photoImg.src = url;
+        kflEl.photoImg.alt = name;
+      
+        setTimeout(()=>{
+          if(!kflEl.photoImg) return;
+          if(kflEl.photoImg.complete && kflEl.photoImg.naturalWidth>0){
+            kflEl.photoImg.style.display="block";
+            if(kflEl.photoFallback) kflEl.photoFallback.style.display="none";
+          }
+        }, 50);
+}
+    }else{
+      if (kflEl.photoFallback){
+        kflEl.photoFallback.textContent = initials(name);
+        kflEl.photoFallback.style.display = "flex";
+      }
+      if (kflEl.photoImg) { kflEl.photoImg.style.display = "none"; }
+
+    }
+  }
+
+  function parseCsv(text){
+    const rows = [];
+    let i=0,f="",row=[],q=false;
+    const pf=()=>{row.push(f);f="";};
+    const pr=()=>{rows.push(row);row=[];};
+    while(i<text.length){
+      const c=text[i];
+      if(q){
+        if(c=='"' && text[i+1]=='"'){f+='"';i+=2;continue;}
+        if(c=='"'){q=false;i++;continue;}
+        f+=c;i++;continue;
+      }
+      if(c=='"'){q=true;i++;continue;}
+      if(c==','){pf();i++;continue;}
+      if(c=='\n'){pf();pr();i++;continue;}
+      if(c=='\r'){i++;continue;}
+      f+=c;i++;
+    }
+    pf(); if(row.length) pr();
+    const h=rows.shift();
+    return rows.map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]||""])));
+  }
+
+  function scaleStage(){
+  const stage = document.getElementById("stage16x9");
+  if(!stage) return;
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  const scale = Math.min(vw / 1920, vh / 1080);
+
+  stage.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener("resize", scaleStage);
+scaleStage();
+
+
+  async function loadCsv(){
+    const dir = window.location.origin + window.location.pathname.replace(/[^\/]*$/, "");
+    const res = await fetch(new URL("./results.csv", dir), { cache:"no-store" });
+    if(!res.ok) throw new Error("results.csv not found");
+    return parseCsv(await res.text());
+  }
+
+  let csv=null, lastSel="";
+  async function hydrate(){
+    const sel = getSel();
+    const tpl = (getHashParam("tpl") || "default").toLowerCase();
+    // Always apply template visibility on hash changes (tpl or sel)
+    try{ applyTemplateFromHash(); }catch(e){}
+    if(!sel) return;
+    // Only skip if BOTH selection and template are unchanged
+    if(sel===lastSel && tpl===lastTpl) return;
+    lastSel=sel; lastTpl=tpl;
+
+    if(!csv) csv = await loadCsv();
+    const selN = normId(sel);
+    const row = csv.find(r => normId(pick(r,["Formulario#","Formulario","ID","Id","id"])) === selN);
+    if(row){
+      (tpl==="kfl" ? renderKfl(row, sel) : render(row, sel));
+    }
+  }
+
+  el.fsBtn?.addEventListener("click", async()=>{
+    try{
+      if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    }catch(e){}
+  });
+
+  el.exitBtn?.addEventListener("click", ()=>{ try{ window.close(); }catch(e){} });
+
+  window.addEventListener("hashchange", hydrate);
+  hydrate();
+})();
+</script>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
