@@ -374,58 +374,37 @@ function formatWeightLbsRounded(v){
 function formatHeightFeetInches(v){
   if (v === null || v === undefined) return "—";
 
-  // Normalize to string for parsing (keep original if already formatted)
-  const raw = String(v).trim();
-  if (!raw) return "—";
-
-  // If already formatted like 5'10" / 6'0" / 5’10”
-  if (/[0-9]\s*['’]\s*[0-9]{1,2}\s*"?/.test(raw)) {
-    // Normalize curly apostrophe to straight
-    return raw.replace("’","'");
-  }
-
-  // Remove unit labels if present
-  const s = raw
-    .toLowerCase()
-    .replace(/(feet|foot|ft|inches|inch|in|cm|centimeters|centimetres|m|meters|metres)/g, "")
-    .replace(/,/g, ".")
-    .trim();
-
-  // Patterns like: 5-10, 5 10, 5.10 (common "feet.inches" input)
-  let m = s.match(/^(\d)\s*[-\s]\s*(\d{1,2})$/);
-  if (!m) m = s.match(/^(\d)\.(\d{1,2})$/);
-  if (m){
-    const feet = parseInt(m[1], 10);
-    const inches = parseInt(m[2], 10);
-    if (Number.isFinite(feet) && Number.isFinite(inches) && feet >= 3 && feet <= 8 && inches >= 0 && inches <= 11){
-      return `${feet}'${inches}"`;
+  const sRaw = String(v).trim();
+    if (!sRaw) return "—";
+  
+    // If already formatted like 5'10" (or 5' 10"), keep as-is (trim only)
+    if (/[0-9]\s*'/.test(sRaw)) return sRaw;
+  
+    // Extract first number (supports "70", "70 in", "178cm", "1.78m")
+    const numMatch = sRaw.match(/[-+]?[0-9]*\.?[0-9]+/);
+    if (!numMatch) return "—";
+    let n = parseFloat(numMatch[0]);
+    if (!Number.isFinite(n)) return "—";
+  
+    // Heuristics for unit conversion (keep minimal & safe)
+    // If looks like centimeters (e.g., 170–230) and contains "cm" OR large plain number
+    const lower = sRaw.toLowerCase();
+    let inches = n;
+  
+    if (lower.includes("cm") || (!lower.includes("in") && !lower.includes('"') && !lower.includes("ft") && n >= 120 && n <= 260)){
+      inches = n / 2.54;
+    } else if (lower.includes("m") && n > 1.2 && n < 2.6){
+      // meters to inches (e.g., 1.78m)
+      inches = (n * 100) / 2.54;
     }
-  }
-
-  // Pure numeric path
-  let num = Number(s);
-  if (!Number.isFinite(num)) return "—";
-
-  // Heuristic: meters (typical: 1.40–2.20)
-  if (num >= 1.0 && num <= 2.6){
-    num = num * 100; // -> cm
-  }
-
-  // Heuristic: if value looks like cm (typical human height 140–220)
-  if (num > 100){
-    num = Math.round(num / 2.54); // -> inches
-  }
-
-  // Heuristic: if value looks like feet-only (5, 6, 7)
-  if (num >= 3 && num <= 8 && Number.isInteger(num)){
-    return `${num}'0"`;
-  }
-
-  const inchesTotal = Math.round(num); // treat remaining as inches
-  const feet = Math.floor(inchesTotal / 12);
-  const rem = inchesTotal % 12;
-  if (!Number.isFinite(feet) || feet <= 0) return "—";
-  return `${feet}'${rem}"`;
+  
+    const totalIn = Math.round(inches);
+    if (!Number.isFinite(totalIn) || totalIn <= 0) return "—";
+  
+    const ft = Math.floor(totalIn / 12);
+    const inch = totalIn % 12;
+    if (ft <= 0) return "—";
+    return `${ft}'${inch}"`;
 }
 
 function normalizeStr(s){
