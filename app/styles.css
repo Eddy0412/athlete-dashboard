@@ -540,30 +540,28 @@ html.mediaView #watchCountPill{ display:none !important; }
 
 #watchCountPill.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
 
-/* ================= ATHLETE LIST SCROLLBAR (inline scroll container) =================
-   Athlete list uses an inline-styled div: max-height:560px; overflow:auto;
-   Chromium applies scrollbar styling when attached to the scrolling element.
+/* ================= ATHLETE LIST SCROLLBAR =================
+   Clean, subtle, UI-consistent scrollbar
 */
-div[style*="overflow:auto"][style*="max-height:560px"]{
+
+.athleteTableScroll{
   scrollbar-width: thin; /* Firefox */
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-color: rgba(138,160,182,.35) transparent;
 }
 
-div[style*="overflow:auto"][style*="max-height:560px"]::-webkit-scrollbar{
-  width: 10px;
-  height: 10px;
+.athleteTableScroll::-webkit-scrollbar{
+  width: 8px;
 }
 
-div[style*="overflow:auto"][style*="max-height:560px"]::-webkit-scrollbar-track{
-  background: var(--scrollbar-track);
+.athleteTableScroll::-webkit-scrollbar-track{
+  background: transparent;
 }
 
-div[style*="overflow:auto"][style*="max-height:560px"]::-webkit-scrollbar-thumb{
-  background: var(--scrollbar-thumb);
+.athleteTableScroll::-webkit-scrollbar-thumb{
+  background: rgba(138,160,182,.35);
   border-radius: 999px;
-  border: 3px solid var(--scrollbar-track);
 }
 
-div[style*="overflow:auto"][style*="max-height:560px"]::-webkit-scrollbar-thumb:hover{
-  background: var(--scrollbar-thumb-hover);
+.athleteTableScroll::-webkit-scrollbar-thumb:hover{
+  background: rgba(138,160,182,.55);
 }
