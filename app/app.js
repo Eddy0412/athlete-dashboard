@@ -1,25 +1,16 @@
+(function () {
+  "use strict";
+  // Global namespace (single export surface)
+  const ACD = (window.ACD = window.ACD || {});
+  ACD.version = ACD.version || "1.0.123";
+
+  // Boot guard: prevents double-initialization if scripts are injected twice
+  if (ACD._booted) return;
+  ACD._booted = true;
+
 // FULL production build (v1.0.118 baseline)
 const IS_DEMO = false;
 
-
-
-const APP_VERSION = "1.0.123";
-
-async function loadChangelogIntoModal(){
-  const el = document.getElementById("changelogBody");
-  if (!el) return;
-
-  const url = `./changelog.html?v=${encodeURIComponent(APP_VERSION)}&t=${Date.now()}`;
-
-  try{
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    el.innerHTML = await res.text();
-  }catch(err){
-    console.warn("Changelog fetch failed.", err);
-    // leave placeholder
-  }
-}
 
 // View modes: default FULL, optional public view via ?view=public
 const VIEW_MODE = (new URLSearchParams(window.location.search).get('view') || '').toLowerCase();
@@ -1432,8 +1423,109 @@ function initModalWiring(){
 
   if (versionBtn){
     versionBtn.addEventListener("click", ()=>{
-      loadChangelogIntoModal();
-    openModal("Version & Changelog", `<div id="changelogBody">Loading changelog…</div>`);
+      openModal("Version & Changelog", `<div style="display:grid;gap:10px">
+  <div style="font-weight:900">What’s new</div>
+  <div><b>v1.0.120</b> — Presenter Mode polish + best-results display (UI updates).</div>
+
+  <div style="margin-top:10px;font-weight:900">Changelog</div>
+
+
+
+
+<div style="margin-top:6px;font-weight:900">v1.0.122</div>
+<ul style="margin:6px 0 0 18px">
+  <li>Added Watchlist (★) and Notes (saved locally per athlete) for Admin + Pro workflows.</li>
+  <li>Watchlist-only filter and star indicator in athlete list.</li>
+</ul>
+
+<div style="margin-top:6px;font-weight:900">v1.0.121</div>
+<ul style="margin:6px 0 0 18px">
+  <li>Added Intelligence UI (Admin + Pro only): percentiles, tiers, Athletic Score, sorting, Strengths &amp; Flags.</li>
+  <li>New <span class="mono">?view=pro</span>: Coach-style view with intelligence enabled and Pro pill.</li>
+  <li>Strengths &amp; Flags now display in two rows, with icons for quick scanning.</li>
+  <li>Coach Mode header label switches to <span class="mono">Athlete Profile</span> (Scout Mode restores <span class="mono">Scout Profile</span>).</li>
+  <li>Improved Sort dropdown readability (selected item stays white; list options are dark).</li>
+</ul>
+
+<div style="margin-top:6px;font-weight:900">v1.0.120</div>
+<ul style="margin:6px 0 0 18px">
+  <li>Presentation Mode improvements: synced athlete selection via <span class="mono">#sel=</span> and stable CDN photos.</li>
+  <li>Presenter shows best attempts only: 40yds, Broad Jump, 5-10-5, 3-Cone, Bench (with units and 2-decimal time formatting).</li>
+  <li>Spanish CSV field support in presenter: <span class="mono">Edad</span>, <span class="mono">Estatura</span>, <span class="mono">Peso</span>, <span class="mono">Lugar de Estudios</span>.</li>
+  <li>Presenter placeholders: missing tests still render as <span class="mono">—</span>; initials fallback enlarged for readability.</li>
+</ul>
+
+
+<div style="margin-top:6px;font-weight:900">v1.0.118</div>
+<ul style="margin:6px 0 0 18px">
+  <li>Added <span class="mono">?view=public</span> mode for sharing a simplified UI externally.</li>
+  <li>Public View hides: Load Photos, Load CSV, GitHub, and Changelog buttons.</li>
+  <li>Public View keeps <b>Scout Mode</b> and <b>Coach Mode</b> toggles available.</li>
+  <li>Header controls aligned under the title; improved spacing so Search/Refresh/About are not pushed up on mobile.</li>
+  <li>Added a subtle <b>Public</b> pill indicator when Public View is active.</li>
+</ul>
+
+<div style="margin-top:6px;font-weight:900">v1.0.118</div>
+<ul style="margin:6px 0 0 18px">
+  <li>Added responsive hamburger drawer nav (overlay header, tap-to-close, click-safe buttons).</li>
+  <li>Mobile modals improved: max-size, internal scroll, iOS-safe scrolling, background scroll lock.</li>
+  <li>Kept Athlete Search visible outside drawer next to Menu + Refresh on mobile.</li>
+  <li>Optimized Athlete List on mobile to show only photo + name (compact rows).</li>
+  <li>Improved small-phone (≈375px) Athlete Profile responsiveness; fixed photo box clipping.</li>
+  <li>Improved Position dropdown option readability.</li>
+  <li>Scout/Coach contact details: added <span class="mono">lbs</span> unit for weight.</li>
+  <li>Updated guidance text to draft-day coaching suggestions.</li>
+</ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Added complete version history (v1.0.118 → v1.0.118) inside the Changelog modal.</li>
+    <li>Kept About/Changelog modal behavior identical to the stable build.</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Locked header height to 128px (prevents layout jumps).</li>
+    <li>Improved toolbar spacing (no overlap with content).</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Refresh control switched to link-style to match About/Changelog group.</li>
+    <li>Initial header height lock introduced (later refined in v1.0.118).</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>controlsSpacer min-width set to 0px.</li>
+    <li>“Load Photos Folder” renamed to “Load Photos”.</li>
+    <li>GitHub link updated to repository URL.</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Header right-side control order finalized: Refresh | GitHub | About | Changelog.</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Navigation layout fixes (single-row header).</li>
+    <li>GitHub button added to header controls.</li>
+    <li>controlsSpacer tuned for better alignment.</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v1.0.118</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Merged stable modal system from v8.1j-alpha with updated header link-style controls.</li>
+    <li>Standardized small SVG icon sizing for header controls.</li>
+  </ul>
+
+  <div style="margin-top:6px;font-weight:900">v8.1j-alpha</div>
+  <ul style="margin:6px 0 0 18px">
+    <li>Baseline build with smooth working About/Changelog modals.</li>
+    <li>Left list initials fallback for missing photos.</li>
+  </ul>
+</div>`);
     });
   }
 }
@@ -1507,3 +1599,4 @@ initResponsiveNav();
 
 setStatus("Ready");
 
+})();
