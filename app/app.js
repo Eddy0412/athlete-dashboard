@@ -711,7 +711,7 @@ function selectAthlete(originalIdx){
 
   const photoUrl = photoUrlForRow(r);
   $("athleteName").textContent = safe(r[COL.name]);
-$("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height])} • ${safe(r[COL.weight])} lb • ${safe(r[COL.school])}`;
+$("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${formatHeightFeetInches(r[COL.height])} • ${safe(r[COL.weight])} lb • ${safe(r[COL.school])}`;
   updateLargePhoto(r);
   // Athletic Score pill (v1.0.121)
   const scorePill = document.getElementById("scorePill");
@@ -759,7 +759,8 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
 
   setText("scoutDob", r[COL.dob]);
   setText("scoutAge", r[COL.age]);
-  setText("scoutHeight", r[COL.height]);
+  //setText("scoutHeight", r[COL.height]);
+  setText("scoutHeight", formatHeightFeetInches(r[COL.height]));
   //setText("scoutWeight", formatLbs(r[COL.weight]));
   setText("scoutWeight", formatWeightLbsRounded(r[COL.weight]));
   setText("scoutPhone", r[COL.phone]);
