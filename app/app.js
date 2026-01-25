@@ -1,22 +1,3 @@
-
-async function loadChangelogIntoModal(){
-  const el = document.getElementById("changelogBody");
-  if (!el) return;
-
-  // Cache-bust using version
-  const v = (window.ACD && ACD.version) ? ACD.version : "1.0.123";
-  const url = `./changelog.html?v=${encodeURIComponent(v)}`;
-
-  try{
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    el.innerHTML = await res.text();
-  }catch(err){
-    console.warn("Changelog fetch failed; showing placeholder.", err);
-    // Keep placeholder; no crash
-  }
-}
-
 // FULL production build (v1.0.118 baseline)
 const IS_DEMO = false;
 
@@ -1433,6 +1414,8 @@ function initModalWiring(){
   if (versionBtn){
     versionBtn.addEventListener("click", ()=>{
       openModal("Version & Changelog", `<div id="changelogBody">Loading changelog…</div>`);
+      // Load external changelog.html (single source of truth)
+      loadChangelogIntoModal();
     });
   }
 }
