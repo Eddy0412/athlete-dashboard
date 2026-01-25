@@ -539,29 +539,3 @@ html.mediaView #watchFilterBtn,
 html.mediaView #watchCountPill{ display:none !important; }
 
 #watchCountPill.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
-
-/* ================= ATHLETE LIST SCROLLBAR =================
-   Clean, subtle, UI-consistent scrollbar
-*/
-
-.athleteTableScroll{
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: rgba(138,160,182,.35) transparent;
-}
-
-.athleteTableScroll::-webkit-scrollbar{
-  width: 8px;
-}
-
-.athleteTableScroll::-webkit-scrollbar-track{
-  background: transparent;
-}
-
-.athleteTableScroll::-webkit-scrollbar-thumb{
-  background: rgba(138,160,182,.35);
-  border-radius: 999px;
-}
-
-.athleteTableScroll::-webkit-scrollbar-thumb:hover{
-  background: rgba(138,160,182,.55);
-}
