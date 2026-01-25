@@ -852,8 +852,6 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height]
   // Sync selection to Presenter
   try{ _pushToPresenter(r); }catch(e){}
 
-  // Sync selection to presenter window (if open)
-  _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
 }
 
 function renderRadar(r){
