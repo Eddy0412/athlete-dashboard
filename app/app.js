@@ -12,11 +12,58 @@
 const IS_DEMO = false;
 
 
-// View modes: default FULL, optional public view via ?view=public
-const VIEW_MODE = (new URLSearchParams(window.location.search).get('view') || '').toLowerCase();
-const IS_PUBLIC_VIEW = VIEW_MODE === 'public';
-const IS_MEDIA_VIEW = VIEW_MODE === 'media';
-const IS_PRO_VIEW = VIEW_MODE === 'pro';
+// View modes: default FULL, optional view via ?view=public / ?view=media / ?view=pro
+// Softgate for Pro: client-side only (keeps honest people honest; not real security)
+const PRO_GATE_KEY = "acd_pro_unlocked_v1";
+const PRO_CODE = "KFLPRO"; // TODO: change this to your current Pro code
+
+function isProUnlocked(){
+  try{ return localStorage.getItem(PRO_GATE_KEY) === "1"; }catch(e){ return false; }
+}
+function setProUnlocked(on){
+  try{
+    if (on) localStorage.setItem(PRO_GATE_KEY, "1");
+    else localStorage.removeItem(PRO_GATE_KEY);
+  }catch(e){}
+}
+function unlockPro(promptText){
+  const code = String(window.prompt(promptText || "Enter Pro access code") || "").trim();
+  if (!code) return false;
+  const ok = code === PRO_CODE;
+  if (ok) setProUnlocked(true);
+  return ok;
+}
+
+// Resolve view params + optional unlock=1 flow (no bulk redirects; only touch URL when needed)
+const _qs = new URLSearchParams(window.location.search);
+let VIEW_MODE = String(_qs.get("view") || "").toLowerCase();
+const _wantsUnlock = _qs.get("unlock") === "1";
+
+// Secret URL unlock: ?unlock=1 (will prompt once, then clean the URL)
+if (_wantsUnlock){
+  const ok = unlockPro("Pro view is locked. Enter access code:");
+  _qs.delete("unlock");
+  if (ok) _qs.set("view", "pro");
+  const clean = window.location.pathname + (_qs.toString() ? ("?" + _qs.toString()) : "");
+  try{ window.history.replaceState({}, "", clean); }catch(e){}
+  VIEW_MODE = ok ? "pro" : String(_qs.get("view") || "").toLowerCase();
+}
+
+// Enforce softgate when someone tries ?view=pro
+let _effectiveView = VIEW_MODE;
+if (VIEW_MODE === "pro" && !isProUnlocked()){
+  const ok = unlockPro("Pro view is locked. Enter access code:");
+  if (!ok){
+    _effectiveView = "public";
+    _qs.set("view", "public");
+    const clean = window.location.pathname + (_qs.toString() ? ("?" + _qs.toString()) : "");
+    try{ window.history.replaceState({}, "", clean); }catch(e){}
+  }
+}
+
+const IS_PUBLIC_VIEW = _effectiveView === "public";
+const IS_MEDIA_VIEW = _effectiveView === "media";
+const IS_PRO_VIEW   = _effectiveView === "pro";
 
 // Guard: Media pill only for Media VIEW (?view=media), not Media Mode toggle
 try{
@@ -1671,13 +1718,45 @@ try{
       window.open("https://github.com/Eddy0412/athlete-dashboard", "_blank");
     });
   }
+
+/* Pro softgate: Unlock button wiring (desktop + drawer) */
+try{
+  const ub = document.getElementById("unlockProBtn");
+  if (ub && !ub._bound){
+    ub._bound = true;
+
+    const syncLabel = ()=>{
+      try{
+        ub.textContent = isProUnlocked() ? "Pro Unlocked" : "Unlock Pro";
+        ub.style.opacity = isProUnlocked() ? ".85" : "1";
+      }catch(e){}
+    };
+    syncLabel();
+
+    ub.addEventListener("click", ()=>{
+      // If already unlocked, just jump to Pro
+      if (!isProUnlocked()){
+        const ok = unlockPro("Enter Pro access code:");
+        if (!ok) return;
+      }
+      const u = new URL(window.location.href);
+      u.searchParams.set("view","pro");
+      u.searchParams.delete("unlock");
+      window.location.href = u.toString();
+    });
+  }
 }catch(e){}
+
 
   // ---- Public API (debug + safe external hooks) ----
   ACD.selectAthlete = selectAthlete;
   ACD.formatHeightFeetInches = formatHeightFeetInches;
   ACD.applyFilter = applyFilter;
   ACD.loadDefaultCsv = loadDefaultCsv;
+
+  ACD.isProUnlocked = isProUnlocked;
+  ACD.unlockPro = unlockPro;
+  ACD.setProUnlocked = setProUnlocked;
 
   ACD.loadedAt = new Date().toISOString();
   console.log("[ACD] loaded", ACD.version, ACD.loadedAt);
