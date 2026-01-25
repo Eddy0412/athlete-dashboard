@@ -1,5 +1,9 @@
     :root{
-      --bg:#0b0f17;
+      
+  --scrollbar-track: rgba(255,255,255,.04);
+  --scrollbar-thumb: rgba(138,160,182,.30);
+  --scrollbar-thumb-hover: rgba(138,160,182,.52);
+--bg:#0b0f17;
       --card:#121a27;
       --muted:#8aa0b6;
       --text:#e8f0ff;
@@ -539,3 +543,47 @@ html.mediaView #watchFilterBtn,
 html.mediaView #watchCountPill{ display:none !important; }
 
 #watchCountPill.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
+
+/* ================= MINIMAL SCROLLBARS =================
+   Notes:
+   - Chromium (Chrome/Edge) uses ::-webkit-scrollbar
+   - Firefox uses scrollbar-width / scrollbar-color
+   - Applied to the athlete list scroll container + modal/drawer scroll areas
+*/
+
+/* Firefox */
+.athleteTableScroll,
+#modalContent,
+.drawerBody{
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Chromium/WebKit */
+.athleteTableScroll::-webkit-scrollbar,
+#modalContent::-webkit-scrollbar,
+.drawerBody::-webkit-scrollbar{
+  width: 8px;
+  height: 8px;
+}
+
+.athleteTableScroll::-webkit-scrollbar-track,
+#modalContent::-webkit-scrollbar-track,
+.drawerBody::-webkit-scrollbar-track{
+  background: var(--scrollbar-track);
+  border-radius: 999px;
+}
+
+.athleteTableScroll::-webkit-scrollbar-thumb,
+#modalContent::-webkit-scrollbar-thumb,
+.drawerBody::-webkit-scrollbar-thumb{
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--scrollbar-track); /* subtle inset */
+}
+
+.athleteTableScroll::-webkit-scrollbar-thumb:hover,
+#modalContent::-webkit-scrollbar-thumb:hover,
+.drawerBody::-webkit-scrollbar-thumb:hover{
+  background: var(--scrollbar-thumb-hover);
+}
