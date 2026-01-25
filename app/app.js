@@ -375,36 +375,64 @@ function formatHeightFeetInches(v){
   if (v === null || v === undefined) return "—";
 
   const sRaw = String(v).trim();
-    if (!sRaw) return "—";
-  
-    // If already formatted like 5'10" (or 5' 10"), keep as-is (trim only)
-    if (/[0-9]\s*'/.test(sRaw)) return sRaw;
-  
-    // Extract first number (supports "70", "70 in", "178cm", "1.78m")
-    const numMatch = sRaw.match(/[-+]?[0-9]*\.?[0-9]+/);
-    if (!numMatch) return "—";
-    let n = parseFloat(numMatch[0]);
-    if (!Number.isFinite(n)) return "—";
-  
-    // Heuristics for unit conversion (keep minimal & safe)
-    // If looks like centimeters (e.g., 170–230) and contains "cm" OR large plain number
-    const lower = sRaw.toLowerCase();
-    let inches = n;
-  
-    if (lower.includes("cm") || (!lower.includes("in") && !lower.includes('"') && !lower.includes("ft") && n >= 120 && n <= 260)){
-      inches = n / 2.54;
-    } else if (lower.includes("m") && n > 1.2 && n < 2.6){
-      // meters to inches (e.g., 1.78m)
-      inches = (n * 100) / 2.54;
+  if (!sRaw) return "—";
+
+  // If already formatted like 5'10" (or 5' 10"), keep as-is (trim only)
+  if (/[0-9]\s*'/.test(sRaw)) return sRaw;
+
+  const lower = sRaw.toLowerCase();
+
+  // Common human-entered patterns:
+  //  - 5-10, 5 10, 5ft 10in, 5’10 (curly)
+  //  - 5.10 meaning 5 feet 10 inches (common in spreadsheets)
+  //  - 70 (inches) / 178cm / 1.78m
+  const mDash = sRaw.match(/^\s*(\d)\s*[- ]\s*(\d{1,2})\s*$/);
+  if (mDash){
+    const ft = parseInt(mDash[1], 10);
+    const inch = parseInt(mDash[2], 10);
+    if (ft >= 3 && ft <= 8 && inch >= 0 && inch <= 11) return `${ft}'${inch}"`;
+  }
+
+  const mDot = sRaw.match(/^\s*(\d)\s*\.\s*(\d{1,2})\s*$/);
+  if (mDot){
+    const ft = parseInt(mDot[1], 10);
+    const inch = parseInt(mDot[2], 10);
+    // Treat 5.10 as 5'10" (only when it looks like feet + inches, not meters)
+    if (!lower.includes("m") && ft >= 3 && ft <= 8 && inch >= 0 && inch <= 11){
+      return `${ft}'${inch}"`;
     }
-  
-    const totalIn = Math.round(inches);
-    if (!Number.isFinite(totalIn) || totalIn <= 0) return "—";
-  
-    const ft = Math.floor(totalIn / 12);
-    const inch = totalIn % 12;
-    if (ft <= 0) return "—";
-    return `${ft}'${inch}"`;
+  }
+
+  // Extract first number (supports "70", "70 in", "178cm", "1.78m")
+  const numMatch = sRaw.match(/[-+]?[0-9]*\.?[0-9]+/);
+  if (!numMatch) return "—";
+  let n = parseFloat(numMatch[0]);
+  if (!Number.isFinite(n)) return "—";
+
+  // Heuristics for unit conversion (minimal & safe)
+  let inches = n;
+
+  // centimeters
+  if (lower.includes("cm") || (!lower.includes("in") && !lower.includes('"') && !lower.includes("ft") && n >= 120 && n <= 260)){
+    inches = n / 2.54;
+  } else if (lower.includes("m") && n > 1.2 && n < 2.6){
+    // meters to inches (e.g., 1.78m)
+    inches = (n * 100) / 2.54;
+  } else if (n >= 40 && n <= 96){
+    // looks like inches already (typical athlete range)
+    inches = n;
+  } else if (n >= 4 && n <= 8 && !lower.includes("m")){
+    // plain feet value like "6" -> 6'0"
+    inches = n * 12;
+  }
+
+  const totalIn = Math.round(inches);
+  if (!Number.isFinite(totalIn) || totalIn <= 0) return "—";
+
+  const ft = Math.floor(totalIn / 12);
+  const inch = totalIn % 12;
+  if (ft <= 0) return "—";
+  return `${ft}'${inch}"`;
 }
 
 function normalizeStr(s){
