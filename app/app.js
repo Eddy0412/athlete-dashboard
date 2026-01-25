@@ -371,6 +371,29 @@ function formatWeightLbsRounded(v){
   return `${Math.round(n)} lbs`;
 }
 
+function formatHeightFeetInches(v){
+  if (v === null || v === undefined || v === "") return "—";
+
+  // If already formatted like 5'10" or 6'0"
+  if (typeof v === "string" && v.includes("'")) {
+    return v;
+  }
+
+  let inches = Number(v);
+  if (isNaN(inches)) return "—";
+
+  // Heuristic: if value looks like cm, convert to inches
+  // Typical human height in cm: 140–220
+  if (inches > 100) {
+    inches = Math.round(inches / 2.54);
+  }
+
+  const feet = Math.floor(inches / 12);
+  const rem = inches % 12;
+
+  return `${feet}'${rem}"`;
+}
+
 function normalizeStr(s){
   return String(s ?? "").toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
