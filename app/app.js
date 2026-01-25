@@ -1,5 +1,23 @@
 // FULL production build (v1.0.118 baseline)
 const IS_DEMO = false;
+const APP_VERSION = "1.0.123";
+
+async function loadChangelogIntoModal(){
+  const el = document.getElementById("changelogBody");
+  if (!el) return;
+
+  const url = `./changelog.html?v=${encodeURIComponent(APP_VERSION)}&t=${Date.now()}`;
+
+  try{
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    el.innerHTML = await res.text();
+  }catch(err){
+    console.warn("Changelog fetch failed.", err);
+    // keep whatever is currently shown (Loading...)
+  }
+}
+
 
 
 // View modes: default FULL, optional public view via ?view=public
@@ -1413,9 +1431,8 @@ function initModalWiring(){
 
   if (versionBtn){
     versionBtn.addEventListener("click", ()=>{
-      openModal("Version & Changelog", `<div id="changelogBody">Loading changelog…</div>`);
-      // Load external changelog.html (single source of truth)
       loadChangelogIntoModal();
+      openModal("Version & Changelog", `<div id="changelogBody">Loading changelog…</div>`);
     });
   }
 }
