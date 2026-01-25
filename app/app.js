@@ -1673,4 +1673,13 @@ try{
   }
 }catch(e){}
 
+  // ---- Public API (debug + safe external hooks) ----
+  ACD.selectAthlete = selectAthlete;
+  ACD.formatHeightFeetInches = formatHeightFeetInches;
+  ACD.applyFilter = applyFilter;
+  ACD.loadDefaultCsv = loadDefaultCsv;
+
+  ACD.loadedAt = new Date().toISOString();
+  console.log("[ACD] loaded", ACD.version, ACD.loadedAt);
+
 })();
