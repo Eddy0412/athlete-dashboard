@@ -32,26 +32,6 @@
     overflow:hidden;
   }
 
-  /* ===== 16:9 Presentation Lock ===== */
-
-#viewport{
-  position:fixed;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#070b16;
-  overflow:hidden;
-}
-
-/* Base design size (you can tweak width, ratio matters) */
-#stage16x9{
-  width:1920px;
-  height:1080px; /* 19:6 ratio */
-  transform-origin: center center;
-}
-
-
   .wrap{
     height:100%;
     display:grid;
@@ -294,7 +274,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
   border:none;
   height:88px;
   display:flex; align-items:center;
-  padding: 0 22px 0 96px;
+  padding: 0 22px 0 60px;
   box-shadow:none;
 }
 #kflRoot .kflNameText{
@@ -444,11 +424,7 @@ body.tplKfl .card{ border-color: rgba(0,255,220,.18); }
 <body>
 <div id="tplTag" style="position:fixed;top:18px;left:18px;z-index:50;display:none;padding:6px 10px;border-radius:999px;font-weight:900;letter-spacing:.4px;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.35);backdrop-filter:blur(6px)">KFL</div>
 
-  <div id="viewport">
-  <div id="stage16x9">
-    <div id="defaultRoot">
-      <div class="wrap">
-
+  <div id="defaultRoot"><div class="wrap">
     <div class="topbar">
       <div class="brand">
         <h1 class="title">Presentation Mode</h1>
@@ -551,7 +527,7 @@ function getHashParam(name){
 }
 
 (function(){
-  const PHOTO_BASE_URL = "https://media.kkmsports.xyz/kfl2026/";
+  const PHOTO_BASE_URL = "https://media.kkmsports.xyz/athletes/";
 
   const $ = (id)=>document.getElementById(id);
 
@@ -1032,22 +1008,6 @@ function getHashParam(name){
     return rows.map(r=>Object.fromEntries(h.map((k,i)=>[k,r[i]||""])));
   }
 
-  function scaleStage(){
-  const stage = document.getElementById("stage16x9");
-  if(!stage) return;
-
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-
-  const scale = Math.min(vw / 1920, vh / 1080);
-
-  stage.style.transform = `scale(${scale})`;
-}
-
-window.addEventListener("resize", scaleStage);
-scaleStage();
-
-
   async function loadCsv(){
     const dir = window.location.origin + window.location.pathname.replace(/[^\/]*$/, "");
     const res = await fetch(new URL("./results.csv", dir), { cache:"no-store" });
@@ -1088,10 +1048,6 @@ scaleStage();
 })();
 </script>
 
-      </div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>

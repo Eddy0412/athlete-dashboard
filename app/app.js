@@ -127,7 +127,7 @@ const COL = {
 };
 
 // Photo CDN (Bluehost) - expects filenames like 002.jpg
-const PHOTO_BASE_URL = "https://media.kkmsports.xyz/athletes/";
+const PHOTO_BASE_URL = "https://media.kkmsports.xyz/kfl2026/";
 
 function padId(id){
   const s = String(id).trim();
