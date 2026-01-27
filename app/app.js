@@ -1525,7 +1525,7 @@ function initModalWiring(){
             </iframe>
           </div>
           
-          <div class="small muted">Tip: Watch this before using the tool during testing (Jan 27–29).</div>
+          <div class="small muted">Tip: Watch this before using the tool.</div>
 
         
           <hr style="border:0;border-top:1px solid rgba(255,255,255,.12);margin:8px 0">
