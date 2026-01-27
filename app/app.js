@@ -1510,6 +1510,23 @@ function initModalWiring(){
               <li><b>Coach Mode:</b> Scout Profile layout + keeps performance charts/sections below.</li>
             </ul>
           </div>
+          <hr style="border:0;border-top:1px solid rgba(255,255,255,.12);margin:8px 0">
+
+          <div style="font-weight:900;font-size:15px;margin-bottom:6px">Video Tutorial</div>
+          
+          <div style="position:relative;padding-top:56.25%;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.02)">
+            <iframe
+              src="https://www.youtube.com/embed/eJANWtnYrFQ"
+              title="Athlete Combine Dashboard – Video Tutorial"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              style="position:absolute;top:0;left:0;width:100%;height:100%;">
+            </iframe>
+          </div>
+          
+          <div class="small muted">Tip: Watch this before using the tool during testing (Jan 27–29).</div>
+
         
           <hr style="border:0;border-top:1px solid rgba(255,255,255,.12);margin:8px 0">
           <div style="font-weight:900;font-size:15px;margin-bottom:6px">What's in Pro Mode</div>
