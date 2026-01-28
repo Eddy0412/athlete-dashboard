@@ -607,7 +607,11 @@ function applyFilter(){
   const q = normalizeStr($("search").value);
   filtered = rows
     .map((r, idx) => ({ r, idx }))
-    .filter(x => normalizeStr(x.r[COL.name]).includes(q))
+    //.filter(x => normalizeStr(x.r[COL.name]).includes(q))
+    .filter(x => {
+  const hay = `${x.r[COL.name] ?? ""} ${x.r[COL.id] ?? ""}`;
+  return normalizeStr(hay).includes(q);
+})
     .filter(x => !WATCH_ONLY || wlIsStarred(wlIdFromRow(x.r)))
     .sort(sortComparator);
   renderTable();
