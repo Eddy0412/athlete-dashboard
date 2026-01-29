@@ -588,52 +588,6 @@ html.mediaView #watchCountPill{ display:none !important; }
   background: var(--scrollbar-thumb-hover);
 }
 
-/* === Athlete list column sort arrows (minimalist) === */
-
-.thSort {
-  gap: 4px;
-}
-
-.thArrow {
-  width: 10px;
-  height: 10px;
-  display: inline-block;
-  position: relative;
-  opacity: 0;
-  transition: opacity .15s ease, transform .15s ease;
-}
-
-/* Arrow shape using borders (chevron style) */
-.thArrow::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid rgba(232,240,255,.55);
-  border-bottom: 1.5px solid rgba(232,240,255,.55);
-  transform: rotate(45deg);
-}
-
-/* Active ascending */
-.thArrow.asc {
-  opacity: .85;
-  transform: translateY(-1px);
-}
-.thArrow.asc::before {
-  transform: rotate(-135deg); /* up */
-}
-
-/* Active descending */
-.thArrow.desc {
-  opacity: .85;
-  transform: translateY(1px);
-}
-.thArrow.desc::before {
-  transform: rotate(45deg); /* down */
-}
-
 
 /* Softgate: hide Pro unlock control in Public/Media views */
 html.publicView #unlockProBtn,
