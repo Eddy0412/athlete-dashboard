@@ -161,6 +161,90 @@ const posOverrides = new Map();
 
 /** ---------- Intelligence (v1.0.121) ---------- **/
 let SORT_KEY = "name";
+
+// Athlete list header sorting (Name/Age/Weight) — tri-state: none -> asc -> desc -> none
+let TABLE_SORT = { key: "", dir: "" }; // dir: "asc" | "desc" | ""
+
+function _tableSortValue(r, key){
+  if (!r) return null;
+  if (key === "name") return normalizeStr(r[COL.name]);
+  if (key === "age") return toNum(r[COL.age]);
+  if (key === "weight") return toNum(r[COL.weight]);
+  return null;
+}
+
+function _compareTableSort(a, b){
+  // a/b are {r, idx}
+  const key = TABLE_SORT.key;
+  const dir = TABLE_SORT.dir;
+  if (!key || !dir) return sortComparator(a, b);
+
+  const av = _tableSortValue(a.r, key);
+  const bv = _tableSortValue(b.r, key);
+
+  // Nulls last
+  const aNull = (av === null || av === undefined || av === "");
+  const bNull = (bv === null || bv === undefined || bv === "");
+  if (aNull && bNull) return 0;
+  if (aNull) return 1;
+  if (bNull) return -1;
+
+  let cmp = 0;
+  if (typeof av === "number" && typeof bv === "number") cmp = av - bv;
+  else cmp = String(av).localeCompare(String(bv));
+
+  return dir === "desc" ? -cmp : cmp;
+}
+
+function _setHeaderArrows(){
+  try{
+    const keys = ["name","age","weight"];
+    keys.forEach(k=>{
+      const el = document.querySelector(`.thArrow[data-arrow-for="${k}"]`);
+      if (!el) return;
+
+      el.classList.remove("asc","desc");
+
+      if (TABLE_SORT.key !== k || !TABLE_SORT.dir){
+        el.style.opacity = "0";
+        return;
+      }
+
+      el.style.opacity = "1";
+      el.classList.add(TABLE_SORT.dir); // asc | desc
+    });
+  }catch(e){}
+}
+
+function initAthleteListHeaderSort(){
+  try{
+    const els = document.querySelectorAll(".thSort[data-sortcol]");
+    if (!els || !els.length) return;
+    els.forEach(el=>{
+      if (el._bound) return;
+      el._bound = true;
+      const key = String(el.getAttribute("data-sortcol") || "").trim();
+      const toggle = ()=>{
+        if (!key) return;
+        if (TABLE_SORT.key !== key){
+          TABLE_SORT = { key, dir:"asc" };
+        } else if (TABLE_SORT.dir === "asc"){
+          TABLE_SORT = { key, dir:"desc" };
+        } else if (TABLE_SORT.dir === "desc"){
+          TABLE_SORT = { key:"", dir:"" }; // reset to default sortSelect behavior
+        } else {
+          TABLE_SORT = { key, dir:"asc" };
+        }
+        _setHeaderArrows();
+        applyFilter();
+      };
+      el.addEventListener("click", toggle);
+      el.addEventListener("keydown", (e)=>{ if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+    });
+    _setHeaderArrows();
+  }catch(e){}
+}
+
 let POP_CACHE = {};      // metricKey -> array of best values across population
 let POP_CACHE_GROUP = { skill:{}, linemen:{}, allPurpose:{} }; // group -> metricKey -> array
 let INTEL_CACHE = [];
@@ -704,7 +788,7 @@ function applyFilter(){
   return normalizeStr(hay).includes(q);
 })
     .filter(x => !WATCH_ONLY || wlIsStarred(wlIdFromRow(x.r)))
-    .sort(sortComparator);
+    .sort(_compareTableSort);
   renderTable();
 }
 
@@ -1760,7 +1844,7 @@ function initModalWiring(){
     });
   }
 }
-document.addEventListener("DOMContentLoaded", initModalWiring);
+document.addEventListener("DOMContentLoaded", ()=>{ try{ initModalWiring(); }catch(e){} try{ initAthleteListHeaderSort(); }catch(e){} });
 
 
 // Search clear (X) button
