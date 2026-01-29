@@ -1,69 +1,12 @@
-(function () {
-  "use strict";
-  // Global namespace (single export surface)
-  const ACD = (window.ACD = window.ACD || {});
-  ACD.version = ACD.version || "1.0.123";
-
-  // Boot guard: prevents double-initialization if scripts are injected twice
-  if (ACD._booted) return;
-  ACD._booted = true;
-
 // FULL production build (v1.0.118 baseline)
 const IS_DEMO = false;
 
 
-// View modes: default FULL, optional view via ?view=public / ?view=media / ?view=pro
-// Softgate for Pro: client-side only (keeps honest people honest; not real security)
-const PRO_GATE_KEY = "acd_pro_unlocked_v1";
-const PRO_CODE = "KFLPRO"; // TODO: change this to your current Pro code
-
-function isProUnlocked(){
-  try{ return localStorage.getItem(PRO_GATE_KEY) === "1"; }catch(e){ return false; }
-}
-function setProUnlocked(on){
-  try{
-    if (on) localStorage.setItem(PRO_GATE_KEY, "1");
-    else localStorage.removeItem(PRO_GATE_KEY);
-  }catch(e){}
-}
-function unlockPro(promptText){
-  const code = String(window.prompt(promptText || "Enter Pro access code") || "").trim();
-  if (!code) return false;
-  const ok = code === PRO_CODE;
-  if (ok) setProUnlocked(true);
-  return ok;
-}
-
-// Resolve view params + optional unlock=1 flow (no bulk redirects; only touch URL when needed)
-const _qs = new URLSearchParams(window.location.search);
-let VIEW_MODE = String(_qs.get("view") || "").toLowerCase();
-const _wantsUnlock = _qs.get("unlock") === "1";
-
-// Secret URL unlock: ?unlock=1 (will prompt once, then clean the URL)
-if (_wantsUnlock){
-  const ok = unlockPro("Pro view is locked. Enter access code:");
-  _qs.delete("unlock");
-  if (ok) _qs.set("view", "pro");
-  const clean = window.location.pathname + (_qs.toString() ? ("?" + _qs.toString()) : "");
-  try{ window.history.replaceState({}, "", clean); }catch(e){}
-  VIEW_MODE = ok ? "pro" : String(_qs.get("view") || "").toLowerCase();
-}
-
-// Enforce softgate when someone tries ?view=pro
-let _effectiveView = VIEW_MODE;
-if (VIEW_MODE === "pro" && !isProUnlocked()){
-  const ok = unlockPro("Pro view is locked. Enter access code:");
-  if (!ok){
-    _effectiveView = "public";
-    _qs.set("view", "public");
-    const clean = window.location.pathname + (_qs.toString() ? ("?" + _qs.toString()) : "");
-    try{ window.history.replaceState({}, "", clean); }catch(e){}
-  }
-}
-
-const IS_PUBLIC_VIEW = _effectiveView === "public";
-const IS_MEDIA_VIEW = _effectiveView === "media";
-const IS_PRO_VIEW   = _effectiveView === "pro";
+// View modes: default FULL, optional public view via ?view=public
+const VIEW_MODE = (new URLSearchParams(window.location.search).get('view') || '').toLowerCase();
+const IS_PUBLIC_VIEW = VIEW_MODE === 'public';
+const IS_MEDIA_VIEW = VIEW_MODE === 'media';
+const IS_PRO_VIEW = VIEW_MODE === 'pro';
 
 // Guard: Media pill only for Media VIEW (?view=media), not Media Mode toggle
 try{
@@ -127,7 +70,7 @@ const COL = {
 };
 
 // Photo CDN (Bluehost) - expects filenames like 002.jpg
-const PHOTO_BASE_URL = "https://media.kkmsports.xyz/kfl2026/";
+const PHOTO_BASE_URL = "https://media.kkmsports.xyz/athletes/";
 
 function padId(id){
   const s = String(id).trim();
@@ -241,30 +184,7 @@ function wlGetNotes(id){
 
     // per row index: {best,pct,tier,score,strengths,flags}
 
-// Athletic Score weights (0-100 percentile blend)
-// Overall = balanced combine score (existing behavior)
 const SCORE_WEIGHTS = { dash40:30, broad:20, shuttle:20, cone:15, bench:15 };
-
-// Group scores (requested): Skill Players, Linemen, All Purpose
-// Note: these are still percentile blends (not position-normalized), tuned for typical combine emphasis.
-const SCORE_WEIGHTS_SKILL = { dash40:35, shuttle:25, cone:20, broad:15, bench:5 };
-const SCORE_WEIGHTS_LINEMEN = { bench:35, broad:20, dash40:20, shuttle:15, cone:10 };
-const SCORE_WEIGHTS_ALLPURPOSE = { dash40:25, broad:20, shuttle:20, cone:20, bench:15 };
-
-function athleticScoreWithWeights(pcts, weights){
-  let wSum = 0, sSum = 0;
-  METRICS.forEach(m=>{
-    const p = pcts[m.key];
-    if (p === null || p === undefined) return;
-    const w = (weights && weights[m.key]) ? weights[m.key] : 0;
-    if (!w) return;
-    wSum += w;
-    sSum += p * w;
-  });
-  if (!wSum) return null;
-  return Math.round(sSum / wSum);
-}
-
 
 function tierFromPercentile(p){
   if (p === null || p === undefined) return { label:"—", cls:"tier-avg" };
@@ -275,15 +195,67 @@ function tierFromPercentile(p){
 }
 
 function athleticScore(pcts){
-  return athleticScoreWithWeights(pcts, SCORE_WEIGHTS);
+  let wSum = 0, sSum = 0;
+  METRICS.forEach(m=>{
+    const p = pcts[m.key];
+    if (p === null || p === undefined) return;
+    const w = SCORE_WEIGHTS[m.key] || 0;
+    if (!w) return;
+    wSum += w;
+    sSum += p * w;
+  });
+  if (!wSum) return null;
+  return Math.round(sSum / wSum);
+}
+
+// --- Group scoring (Skill / Linemen / All-Purpose) ---
+// Uses suggested positions (suggestPosition) + manual overrides (posOverrides) to assign groups.
+function inferGroupFromPos(pos){
+  const p = String(pos || "").trim().toUpperCase();
+  if (p === "OL" || p === "DL") return "linemen";
+  if (p === "WR" || p === "RB" || p === "DB" || p === "QB" || p === "K/P") return "skill";
+  if (p === "LB" || p === "TE") return "allPurpose";
+  return "allPurpose";
+}
+function getEffectivePos(row){
+  try{
+    const athleteId = row?.[COL.id];
+    const manual = (athleteId && posOverrides && posOverrides.has(athleteId)) ? posOverrides.get(athleteId) : "";
+    if (manual) return manual;
+  }catch(e){}
+  try{
+    const auto = suggestPosition(row);
+    if (auto && auto.pos) return auto.pos;
+  }catch(e){}
+  return "—";
 }
 
 function recomputeIntelligence(){
-  // Build population arrays once per metric
+  // Build population arrays once per metric (overall + group)
   POP_CACHE = {};
+  const POP_CACHE_GROUP = { skill:{}, linemen:{}, allPurpose:{} };
+
+  // Precompute group assignment per row (based on suggested/manual position)
+  const groupByIdx = rows.map(r => inferGroupFromPos(getEffectivePos(r)));
+  const groupCounts = { skill:0, linemen:0, allPurpose:0 };
+  groupByIdx.forEach(g => { if (groupCounts[g] !== undefined) groupCounts[g]++; });
+
   METRICS.forEach(m => {
+    // overall
     POP_CACHE[m.key] = computePopulationBest(m); // uses bestAttemptValue over rows
+
+    // per group
+    ["skill","linemen","allPurpose"].forEach(g=>{
+      const vals = [];
+      rows.forEach((r, idx)=>{
+        if (groupByIdx[idx] !== g) return;
+        const v = bestAttemptValue(r, m);
+        if (v !== null) vals.push(v);
+      });
+      POP_CACHE_GROUP[g][m.key] = vals;
+    });
   });
+
 
   INTEL_CACHE = rows.map((r, idx) => {
     const best = {};
@@ -298,14 +270,20 @@ function recomputeIntelligence(){
       tier[m.key] = tierFromPercentile(pct[m.key]);
     });
 
-const score = athleticScore(pct);
+    const score = athleticScore(pct);
 
-const groupScores = {
-  overall: score,
-  skill: athleticScoreWithWeights(pct, SCORE_WEIGHTS_SKILL),
-  linemen: athleticScoreWithWeights(pct, SCORE_WEIGHTS_LINEMEN),
-  allPurpose: athleticScoreWithWeights(pct, SCORE_WEIGHTS_ALLPURPOSE),
-};
+    // Group score (within similar athletes; uses suggested/manual position)
+    const group = groupByIdx[idx] || "allPurpose";
+    let groupScore = null;
+    if ((groupCounts[group] || 0) >= 6){
+      const pctGroup = {};
+      METRICS.forEach(m=>{
+        const popG = (POP_CACHE_GROUP[group] && POP_CACHE_GROUP[group][m.key]) ? POP_CACHE_GROUP[group][m.key] : [];
+        const pG = percentileRank(popG, best[m.key], m.better);
+        pctGroup[m.key] = (pG === null ? null : Math.max(0, Math.min(100, pG)));
+      });
+      groupScore = athleticScore(pctGroup);
+    }
 
     // Strengths & Flags
     const strengths = [];
@@ -323,7 +301,8 @@ const groupScores = {
     return {
       best, pct, tier,
       score,
-      groupScores,
+      group,
+      groupScore,
       strengths: strengths.slice(0,3),
       flags: flags.slice(0,3),
     };
@@ -437,70 +416,6 @@ function formatWeightLbsRounded(v){
     : parseFloat(String(v ?? "").replace(",", "."));
   if (!Number.isFinite(n)) return "—";
   return `${Math.round(n)} lbs`;
-}
-
-function formatHeightFeetInches(v){
-  if (v === null || v === undefined) return "—";
-
-  const sRaw = String(v).trim();
-  if (!sRaw) return "—";
-
-  // If already formatted like 5'10" (or 5' 10"), keep as-is (trim only)
-  if (/[0-9]\s*'/.test(sRaw)) return sRaw;
-
-  const lower = sRaw.toLowerCase();
-
-  // Common human-entered patterns:
-  //  - 5-10, 5 10, 5ft 10in, 5’10 (curly)
-  //  - 5.10 meaning 5 feet 10 inches (common in spreadsheets)
-  //  - 70 (inches) / 178cm / 1.78m
-  const mDash = sRaw.match(/^\s*(\d)\s*[- ]\s*(\d{1,2})\s*$/);
-  if (mDash){
-    const ft = parseInt(mDash[1], 10);
-    const inch = parseInt(mDash[2], 10);
-    if (ft >= 3 && ft <= 8 && inch >= 0 && inch <= 11) return `${ft}'${inch}"`;
-  }
-
-  const mDot = sRaw.match(/^\s*(\d)\s*\.\s*(\d{1,2})\s*$/);
-  if (mDot){
-    const ft = parseInt(mDot[1], 10);
-    const inch = parseInt(mDot[2], 10);
-    // Treat 5.10 as 5'10" (only when it looks like feet + inches, not meters)
-    if (!lower.includes("m") && ft >= 3 && ft <= 8 && inch >= 0 && inch <= 11){
-      return `${ft}'${inch}"`;
-    }
-  }
-
-  // Extract first number (supports "70", "70 in", "178cm", "1.78m")
-  const numMatch = sRaw.match(/[-+]?[0-9]*\.?[0-9]+/);
-  if (!numMatch) return "—";
-  let n = parseFloat(numMatch[0]);
-  if (!Number.isFinite(n)) return "—";
-
-  // Heuristics for unit conversion (minimal & safe)
-  let inches = n;
-
-  // centimeters
-  if (lower.includes("cm") || (!lower.includes("in") && !lower.includes('"') && !lower.includes("ft") && n >= 120 && n <= 260)){
-    inches = n / 2.54;
-  } else if (lower.includes("m") && n > 1.2 && n < 2.6){
-    // meters to inches (e.g., 1.78m)
-    inches = (n * 100) / 2.54;
-  } else if (n >= 40 && n <= 96){
-    // looks like inches already (typical athlete range)
-    inches = n;
-  } else if (n >= 4 && n <= 8 && !lower.includes("m")){
-    // plain feet value like "6" -> 6'0"
-    inches = n * 12;
-  }
-
-  const totalIn = Math.round(inches);
-  if (!Number.isFinite(totalIn) || totalIn <= 0) return "—";
-
-  const ft = Math.floor(totalIn / 12);
-  const inch = totalIn % 12;
-  if (ft <= 0) return "—";
-  return `${ft}'${inch}"`;
 }
 
 function normalizeStr(s){
@@ -628,11 +543,7 @@ function applyFilter(){
   const q = normalizeStr($("search").value);
   filtered = rows
     .map((r, idx) => ({ r, idx }))
-    //.filter(x => normalizeStr(x.r[COL.name]).includes(q))
-    .filter(x => {
-  const hay = `${x.r[COL.name] ?? ""} ${x.r[COL.id] ?? ""}`;
-  return normalizeStr(hay).includes(q);
-})
+    .filter(x => normalizeStr(x.r[COL.name]).includes(q))
     .filter(x => !WATCH_ONLY || wlIsStarred(wlIdFromRow(x.r)))
     .sort(sortComparator);
   renderTable();
@@ -824,51 +735,22 @@ function selectAthlete(originalIdx){
 
   const photoUrl = photoUrlForRow(r);
   $("athleteName").textContent = safe(r[COL.name]);
-$("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${formatHeightFeetInches(r[COL.height])} • ${safe(r[COL.weight])} lb • ${safe(r[COL.school])}`;
+$("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height])} • ${safe(r[COL.weight])} lb • ${safe(r[COL.school])}`;
   updateLargePhoto(r);
   // Athletic Score pill (v1.0.121)
   const scorePill = document.getElementById("scorePill");
   if (scorePill){
     const s = intel && intel.score !== null && intel.score !== undefined ? String(intel.score) : "—";
-    scorePill.textContent = `Score ${s}`;
+    scorePill.textContent = (()=>{
+      let txt = `Score ${s}`;
+      if (intel && intel.groupScore !== null && intel.groupScore !== undefined){
+        const g = intel.group === "linemen" ? "Linemen" : (intel.group === "skill" ? "Skill" : "All-Purpose");
+        txt += ` • ${g} ${intel.groupScore}`;
+      }
+      return txt;
+    })();
     scorePill.style.display = (s === "—") ? "none" : "inline-flex";
   }
-// Group Score pills (Skill / Linemen / All Purpose)
-(function updateGroupScorePills(){
-  // Only show if we have an overall score displayed
-  const overallShown = scorePill && scorePill.style.display !== "none";
-  const gs = intel && intel.groupScores ? intel.groupScores : null;
-
-  function ensurePill(id){
-    let el = document.getElementById(id);
-    if (el) return el;
-    if (!scorePill || !scorePill.parentNode) return null;
-    el = document.createElement("span");
-    el.id = id;
-    el.className = "pill";
-    el.style.display = "none";
-    el.style.marginLeft = "6px";
-    scorePill.parentNode.insertBefore(el, scorePill.nextSibling);
-    return el;
-  }
-
-  const skillP = ensurePill("skillScorePill");
-  const lineP  = ensurePill("lineScorePill");
-  const allP   = ensurePill("allScorePill");
-
-  const set = (el, label, val) => {
-    if (!el) return;
-    const s = (val === null || val === undefined) ? "—" : String(val);
-    el.textContent = `${label} ${s}`;
-    el.style.display = (overallShown && s !== "—") ? "inline-flex" : "none";
-    // visually subtle by default
-    el.style.opacity = ".9";
-  };
-
-  set(skillP, "Skill", gs ? gs.skill : null);
-  set(lineP,  "Line",  gs ? gs.linemen : null);
-  set(allP,   "All",   gs ? gs.allPurpose : null);
-})();
 
 
   // ID badge
@@ -908,8 +790,7 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${formatHeightFeetIn
 
   setText("scoutDob", r[COL.dob]);
   setText("scoutAge", r[COL.age]);
-  //setText("scoutHeight", r[COL.height]);
-  setText("scoutHeight", formatHeightFeetInches(r[COL.height]));
+  setText("scoutHeight", r[COL.height]);
   //setText("scoutWeight", formatLbs(r[COL.weight]));
   setText("scoutWeight", formatWeightLbsRounded(r[COL.weight]));
   setText("scoutPhone", r[COL.phone]);
@@ -1025,6 +906,8 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${formatHeightFeetIn
   // Sync selection to Presenter
   try{ _pushToPresenter(r); }catch(e){}
 
+  // Sync selection to presenter window (if open)
+  _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
 }
 
 function renderRadar(r){
@@ -1571,23 +1454,6 @@ function initModalWiring(){
               <li><b>Coach Mode:</b> Scout Profile layout + keeps performance charts/sections below.</li>
             </ul>
           </div>
-          <hr style="border:0;border-top:1px solid rgba(255,255,255,.12);margin:8px 0">
-
-          <div style="font-weight:900;font-size:15px;margin-bottom:6px">Video Tutorial</div>
-          
-          <div style="position:relative;padding-top:56.25%;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.02)">
-            <iframe
-              src="https://www.youtube.com/embed/eJANWtnYrFQ"
-              title="Athlete Combine Dashboard – Video Tutorial"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-              style="position:absolute;top:0;left:0;width:100%;height:100%;">
-            </iframe>
-          </div>
-          
-          <div class="small muted">Tip: Watch this before using the tool.</div>
-
         
           <hr style="border:0;border-top:1px solid rgba(255,255,255,.12);margin:8px 0">
           <div style="font-weight:900;font-size:15px;margin-bottom:6px">What's in Pro Mode</div>
@@ -1787,60 +1653,3 @@ initResponsiveNav();
 
 setStatus("Ready");
 
-/* GitHub button: moved from inline onclick -> JS binding */
-try {
-  const gb = document.getElementById("githubBtn");
-  if (gb && !gb._bound) {
-    gb._bound = true;
-    gb.addEventListener("click", () => {
-      window.open("https://github.com/Eddy0412/athlete-dashboard", "_blank");
-    });
-  }
-} catch (e) {
-  console.warn("[ACD] githubBtn binding failed", e);
-}
-
-
-/* Pro softgate: Unlock button wiring (desktop + drawer) */
-try{
-  const ub = document.getElementById("unlockProBtn");
-  if (ub && !ub._bound){
-    ub._bound = true;
-
-    const syncLabel = ()=>{
-      try{
-        ub.textContent = isProUnlocked() ? "Pro Unlocked" : "Unlock Pro";
-        ub.style.opacity = isProUnlocked() ? ".85" : "1";
-      }catch(e){}
-    };
-    syncLabel();
-
-    ub.addEventListener("click", ()=>{
-      // If already unlocked, just jump to Pro
-      if (!isProUnlocked()){
-        const ok = unlockPro("Enter Pro access code:");
-        if (!ok) return;
-      }
-      const u = new URL(window.location.href);
-      u.searchParams.set("view","pro");
-      u.searchParams.delete("unlock");
-      window.location.href = u.toString();
-    });
-  }
-}catch(e){}
-
-
-  // ---- Public API (debug + safe external hooks) ----
-  ACD.selectAthlete = selectAthlete;
-  ACD.formatHeightFeetInches = formatHeightFeetInches;
-  ACD.applyFilter = applyFilter;
-  ACD.loadDefaultCsv = loadDefaultCsv;
-
-  ACD.isProUnlocked = isProUnlocked;
-  ACD.unlockPro = unlockPro;
-  ACD.setProUnlocked = setProUnlocked;
-
-  ACD.loadedAt = new Date().toISOString();
-  console.log("[ACD] loaded", ACD.version, ACD.loadedAt);
-
-})();
