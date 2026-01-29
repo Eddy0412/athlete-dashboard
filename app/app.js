@@ -241,7 +241,30 @@ function wlGetNotes(id){
 
     // per row index: {best,pct,tier,score,strengths,flags}
 
+// Athletic Score weights (0-100 percentile blend)
+// Overall = balanced combine score (existing behavior)
 const SCORE_WEIGHTS = { dash40:30, broad:20, shuttle:20, cone:15, bench:15 };
+
+// Group scores (requested): Skill Players, Linemen, All Purpose
+// Note: these are still percentile blends (not position-normalized), tuned for typical combine emphasis.
+const SCORE_WEIGHTS_SKILL = { dash40:35, shuttle:25, cone:20, broad:15, bench:5 };
+const SCORE_WEIGHTS_LINEMEN = { bench:35, broad:20, dash40:20, shuttle:15, cone:10 };
+const SCORE_WEIGHTS_ALLPURPOSE = { dash40:25, broad:20, shuttle:20, cone:20, bench:15 };
+
+function athleticScoreWithWeights(pcts, weights){
+  let wSum = 0, sSum = 0;
+  METRICS.forEach(m=>{
+    const p = pcts[m.key];
+    if (p === null || p === undefined) return;
+    const w = (weights && weights[m.key]) ? weights[m.key] : 0;
+    if (!w) return;
+    wSum += w;
+    sSum += p * w;
+  });
+  if (!wSum) return null;
+  return Math.round(sSum / wSum);
+}
+
 
 function tierFromPercentile(p){
   if (p === null || p === undefined) return { label:"—", cls:"tier-avg" };
@@ -252,17 +275,7 @@ function tierFromPercentile(p){
 }
 
 function athleticScore(pcts){
-  let wSum = 0, sSum = 0;
-  METRICS.forEach(m=>{
-    const p = pcts[m.key];
-    if (p === null || p === undefined) return;
-    const w = SCORE_WEIGHTS[m.key] || 0;
-    if (!w) return;
-    wSum += w;
-    sSum += p * w;
-  });
-  if (!wSum) return null;
-  return Math.round(sSum / wSum);
+  return athleticScoreWithWeights(pcts, SCORE_WEIGHTS);
 }
 
 function recomputeIntelligence(){
@@ -285,7 +298,14 @@ function recomputeIntelligence(){
       tier[m.key] = tierFromPercentile(pct[m.key]);
     });
 
-    const score = athleticScore(pct);
+const score = athleticScore(pct);
+
+const groupScores = {
+  overall: score,
+  skill: athleticScoreWithWeights(pct, SCORE_WEIGHTS_SKILL),
+  linemen: athleticScoreWithWeights(pct, SCORE_WEIGHTS_LINEMEN),
+  allPurpose: athleticScoreWithWeights(pct, SCORE_WEIGHTS_ALLPURPOSE),
+};
 
     // Strengths & Flags
     const strengths = [];
@@ -303,6 +323,7 @@ function recomputeIntelligence(){
     return {
       best, pct, tier,
       score,
+      groupScores,
       strengths: strengths.slice(0,3),
       flags: flags.slice(0,3),
     };
@@ -812,6 +833,42 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${formatHeightFeetIn
     scorePill.textContent = `Score ${s}`;
     scorePill.style.display = (s === "—") ? "none" : "inline-flex";
   }
+// Group Score pills (Skill / Linemen / All Purpose)
+(function updateGroupScorePills(){
+  // Only show if we have an overall score displayed
+  const overallShown = scorePill && scorePill.style.display !== "none";
+  const gs = intel && intel.groupScores ? intel.groupScores : null;
+
+  function ensurePill(id){
+    let el = document.getElementById(id);
+    if (el) return el;
+    if (!scorePill || !scorePill.parentNode) return null;
+    el = document.createElement("span");
+    el.id = id;
+    el.className = "pill";
+    el.style.display = "none";
+    el.style.marginLeft = "6px";
+    scorePill.parentNode.insertBefore(el, scorePill.nextSibling);
+    return el;
+  }
+
+  const skillP = ensurePill("skillScorePill");
+  const lineP  = ensurePill("lineScorePill");
+  const allP   = ensurePill("allScorePill");
+
+  const set = (el, label, val) => {
+    if (!el) return;
+    const s = (val === null || val === undefined) ? "—" : String(val);
+    el.textContent = `${label} ${s}`;
+    el.style.display = (overallShown && s !== "—") ? "inline-flex" : "none";
+    // visually subtle by default
+    el.style.opacity = ".9";
+  };
+
+  set(skillP, "Skill", gs ? gs.skill : null);
+  set(lineP,  "Line",  gs ? gs.linemen : null);
+  set(allP,   "All",   gs ? gs.allPurpose : null);
+})();
 
 
   // ID badge
