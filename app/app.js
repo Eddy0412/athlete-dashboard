@@ -1,69 +1,12 @@
-(function () {
-  "use strict";
-  // Global namespace (single export surface)
-  const ACD = (window.ACD = window.ACD || {});
-  ACD.version = ACD.version || "1.0.123";
-
-  // Boot guard: prevents double-initialization if scripts are injected twice
-  if (ACD._booted) return;
-  ACD._booted = true;
-
 // FULL production build (v1.0.118 baseline)
 const IS_DEMO = false;
 
 
-// View modes: default FULL, optional view via ?view=public / ?view=media / ?view=pro
-// Softgate for Pro: client-side only (keeps honest people honest; not real security)
-const PRO_GATE_KEY = "acd_pro_unlocked_v1";
-const PRO_CODE = "KFLPRO"; // TODO: change this to your current Pro code
-
-function isProUnlocked(){
-  try{ return localStorage.getItem(PRO_GATE_KEY) === "1"; }catch(e){ return false; }
-}
-function setProUnlocked(on){
-  try{
-    if (on) localStorage.setItem(PRO_GATE_KEY, "1");
-    else localStorage.removeItem(PRO_GATE_KEY);
-  }catch(e){}
-}
-function unlockPro(promptText){
-  const code = String(window.prompt(promptText || "Enter Pro access code") || "").trim();
-  if (!code) return false;
-  const ok = code === PRO_CODE;
-  if (ok) setProUnlocked(true);
-  return ok;
-}
-
-// Resolve view params + optional unlock=1 flow (no bulk redirects; only touch URL when needed)
-const _qs = new URLSearchParams(window.location.search);
-let VIEW_MODE = String(_qs.get("view") || "").toLowerCase();
-const _wantsUnlock = _qs.get("unlock") === "1";
-
-// Secret URL unlock: ?unlock=1 (will prompt once, then clean the URL)
-if (_wantsUnlock){
-  const ok = unlockPro("Pro view is locked. Enter access code:");
-  _qs.delete("unlock");
-  if (ok) _qs.set("view", "pro");
-  const clean = window.location.pathname + (_qs.toString() ? ("?" + _qs.toString()) : "");
-  try{ window.history.replaceState({}, "", clean); }catch(e){}
-  VIEW_MODE = ok ? "pro" : String(_qs.get("view") || "").toLowerCase();
-}
-
-// Enforce softgate when someone tries ?view=pro
-let _effectiveView = VIEW_MODE;
-if (VIEW_MODE === "pro" && !isProUnlocked()){
-  const ok = unlockPro("Pro view is locked. Enter access code:");
-  if (!ok){
-    _effectiveView = "public";
-    _qs.set("view", "public");
-    const clean = window.location.pathname + (_qs.toString() ? ("?" + _qs.toString()) : "");
-    try{ window.history.replaceState({}, "", clean); }catch(e){}
-  }
-}
-
-const IS_PUBLIC_VIEW = _effectiveView === "public";
-const IS_MEDIA_VIEW = _effectiveView === "media";
-const IS_PRO_VIEW   = _effectiveView === "pro";
+// View modes: default FULL, optional public view via ?view=public
+const VIEW_MODE = (new URLSearchParams(window.location.search).get('view') || '').toLowerCase();
+const IS_PUBLIC_VIEW = VIEW_MODE === 'public';
+const IS_MEDIA_VIEW = VIEW_MODE === 'media';
+const IS_PRO_VIEW = VIEW_MODE === 'pro';
 
 // Guard: Media pill only for Media VIEW (?view=media), not Media Mode toggle
 try{
@@ -127,7 +70,7 @@ const COL = {
 };
 
 // Photo CDN (Bluehost) - expects filenames like 002.jpg
-const PHOTO_BASE_URL = "https://media.kkmsports.xyz/kfl2026/";
+const PHOTO_BASE_URL = "https://media.kkmsports.xyz/athletes/";
 
 function padId(id){
   const s = String(id).trim();
@@ -265,29 +208,126 @@ function athleticScore(pcts){
   return Math.round(sSum / wSum);
 }
 
-function recomputeIntelligence(){
-  // Build population arrays once per metric
-  POP_CACHE = {};
-  METRICS.forEach(m => {
-    POP_CACHE[m.key] = computePopulationBest(m); // uses bestAttemptValue over rows
+
+// --- Group Scores (Skill / Linemen / All-Purpose) ---
+const GROUP_MIN_N = 6;
+const GROUPS = ["skill", "linemen", "allPurpose"];
+
+const GROUP_LABEL = {
+  skill: "Skill",
+  linemen: "Linemen",
+  allPurpose: "All-Purpose",
+};
+
+const GROUP_WEIGHTS = {
+  // speed + agility dominant
+  skill:     { dash40:35, shuttle:25, cone:20, broad:20, bench:0 },
+  // strength + short-area pop
+  linemen:   { bench:35, broad:25, dash40:10, shuttle:20, cone:10 },
+  // balanced / hybrid
+  allPurpose:{ dash40:25, bench:20, broad:20, shuttle:20, cone:15 },
+};
+
+function scoreFromPcts(pcts, weights){
+  let wSum = 0, sSum = 0;
+  METRICS.forEach(m=>{
+    const p = pcts[m.key];
+    if (p === null || p === undefined) return;
+    const w = (weights && weights[m.key]) ? weights[m.key] : 0;
+    if (!w) return;
+    wSum += w;
+    sSum += p * w;
   });
+  if (!wSum) return null;
+  return Math.round(sSum / wSum);
+}
+
+function normalizePos(pos){
+  return String(pos || "").trim().toUpperCase();
+}
+
+function inferGroupForRow(r){
+  // Use manual override if present; else suggested position.
+  let pos = "";
+  try{
+    const athleteId = String(r?.[COL.id] ?? "").trim();
+    const manual = athleteId && posOverrides && posOverrides.has(athleteId) ? posOverrides.get(athleteId) : "";
+    if (manual) pos = manual;
+    else {
+      const auto = (typeof suggestPosition === "function") ? suggestPosition(r) : { pos:"" };
+      pos = auto.pos || "";
+    }
+  }catch(e){ pos = ""; }
+
+  const p = normalizePos(pos);
+
+  // Linemen
+  if (["OL","OT","OG","C","G","T","DL","DE","DT","NT","NG"].includes(p)) return "linemen";
+
+  // Skill players
+  if (["WR","RB","DB","CB","S","FS","SS","QB","K/P","K","P"].includes(p)) return "skill";
+
+  // Hybrids / All-purpose
+  if (["LB","TE","FB","H","HB"].includes(p)) return "allPurpose";
+
+  return "allPurpose";
+}
+
+function buildGroupPopulation(){
+  const pop = { overall:{}, skill:{}, linemen:{}, allPurpose:{} };
+  // init arrays
+  ["overall", ...GROUPS].forEach(g=>{
+    METRICS.forEach(m=>{ pop[g][m.key] = []; });
+  });
+
+  rows.forEach(r=>{
+    const g = inferGroupForRow(r);
+    METRICS.forEach(m=>{
+      const v = bestAttemptValue(r, m);
+      if (v !== null){
+        pop.overall[m.key].push(v);
+        if (pop[g]) pop[g][m.key].push(v);
+      }
+    });
+  });
+
+  return pop;
+}
+function recomputeIntelligence(){
+  // Build population arrays once per metric (overall + groups)
+  const POP = buildGroupPopulation();
+  POP_CACHE = POP.overall;
 
   INTEL_CACHE = rows.map((r, idx) => {
     const best = {};
     const pct = {};
+    const pctGroup = {};
     const tier = {};
+
+    const group = inferGroupForRow(r);
+    const groupPop = (POP[group] || {});
+    const hasGroupN = METRICS.every(m => (groupPop[m.key] || []).length >= GROUP_MIN_N);
+
     METRICS.forEach(m=>{
       const b = bestAttemptValue(r, m);
       best[m.key] = b;
-      const pop = POP_CACHE[m.key] || [];
-      const p = percentileRank(pop, b, m.better);
-      pct[m.key] = (p === null ? null : Math.max(0, Math.min(100, p)));
+
+      // Overall percentiles (existing behavior)
+      const popO = POP_CACHE[m.key] || [];
+      const pO = percentileRank(popO, b, m.better);
+      pct[m.key] = (pO === null ? null : Math.max(0, Math.min(100, pO)));
       tier[m.key] = tierFromPercentile(pct[m.key]);
+
+      // Group percentiles (new; guarded by minimum group size)
+      const popG = hasGroupN ? (groupPop[m.key] || []) : [];
+      const pG = hasGroupN ? percentileRank(popG, b, m.better) : null;
+      pctGroup[m.key] = (pG === null ? null : Math.max(0, Math.min(100, pG)));
     });
 
-    const score = athleticScore(pct);
+    const score = athleticScore(pct); // existing Overall score
+    const groupScore = hasGroupN ? scoreFromPcts(pctGroup, GROUP_WEIGHTS[group]) : null;
 
-    // Strengths & Flags
+    // Strengths & Flags (based on overall, unchanged)
     const strengths = [];
     const flags = [];
     METRICS.forEach(m=>{
@@ -301,8 +341,10 @@ function recomputeIntelligence(){
     });
 
     return {
-      best, pct, tier,
+      best, pct, pctGroup, tier,
       score,
+      group,
+      groupScore,
       strengths: strengths.slice(0,3),
       flags: flags.slice(0,3),
     };
@@ -416,70 +458,6 @@ function formatWeightLbsRounded(v){
     : parseFloat(String(v ?? "").replace(",", "."));
   if (!Number.isFinite(n)) return "—";
   return `${Math.round(n)} lbs`;
-}
-
-function formatHeightFeetInches(v){
-  if (v === null || v === undefined) return "—";
-
-  const sRaw = String(v).trim();
-  if (!sRaw) return "—";
-
-  // If already formatted like 5'10" (or 5' 10"), keep as-is (trim only)
-  if (/[0-9]\s*'/.test(sRaw)) return sRaw;
-
-  const lower = sRaw.toLowerCase();
-
-  // Common human-entered patterns:
-  //  - 5-10, 5 10, 5ft 10in, 5’10 (curly)
-  //  - 5.10 meaning 5 feet 10 inches (common in spreadsheets)
-  //  - 70 (inches) / 178cm / 1.78m
-  const mDash = sRaw.match(/^\s*(\d)\s*[- ]\s*(\d{1,2})\s*$/);
-  if (mDash){
-    const ft = parseInt(mDash[1], 10);
-    const inch = parseInt(mDash[2], 10);
-    if (ft >= 3 && ft <= 8 && inch >= 0 && inch <= 11) return `${ft}'${inch}"`;
-  }
-
-  const mDot = sRaw.match(/^\s*(\d)\s*\.\s*(\d{1,2})\s*$/);
-  if (mDot){
-    const ft = parseInt(mDot[1], 10);
-    const inch = parseInt(mDot[2], 10);
-    // Treat 5.10 as 5'10" (only when it looks like feet + inches, not meters)
-    if (!lower.includes("m") && ft >= 3 && ft <= 8 && inch >= 0 && inch <= 11){
-      return `${ft}'${inch}"`;
-    }
-  }
-
-  // Extract first number (supports "70", "70 in", "178cm", "1.78m")
-  const numMatch = sRaw.match(/[-+]?[0-9]*\.?[0-9]+/);
-  if (!numMatch) return "—";
-  let n = parseFloat(numMatch[0]);
-  if (!Number.isFinite(n)) return "—";
-
-  // Heuristics for unit conversion (minimal & safe)
-  let inches = n;
-
-  // centimeters
-  if (lower.includes("cm") || (!lower.includes("in") && !lower.includes('"') && !lower.includes("ft") && n >= 120 && n <= 260)){
-    inches = n / 2.54;
-  } else if (lower.includes("m") && n > 1.2 && n < 2.6){
-    // meters to inches (e.g., 1.78m)
-    inches = (n * 100) / 2.54;
-  } else if (n >= 40 && n <= 96){
-    // looks like inches already (typical athlete range)
-    inches = n;
-  } else if (n >= 4 && n <= 8 && !lower.includes("m")){
-    // plain feet value like "6" -> 6'0"
-    inches = n * 12;
-  }
-
-  const totalIn = Math.round(inches);
-  if (!Number.isFinite(totalIn) || totalIn <= 0) return "—";
-
-  const ft = Math.floor(totalIn / 12);
-  const inch = totalIn % 12;
-  if (ft <= 0) return "—";
-  return `${ft}'${inch}"`;
 }
 
 function normalizeStr(s){
@@ -607,11 +585,7 @@ function applyFilter(){
   const q = normalizeStr($("search").value);
   filtered = rows
     .map((r, idx) => ({ r, idx }))
-    //.filter(x => normalizeStr(x.r[COL.name]).includes(q))
-    .filter(x => {
-  const hay = `${x.r[COL.name] ?? ""} ${x.r[COL.id] ?? ""}`;
-  return normalizeStr(hay).includes(q);
-})
+    .filter(x => normalizeStr(x.r[COL.name]).includes(q))
     .filter(x => !WATCH_ONLY || wlIsStarred(wlIdFromRow(x.r)))
     .sort(sortComparator);
   renderTable();
@@ -803,15 +777,19 @@ function selectAthlete(originalIdx){
 
   const photoUrl = photoUrlForRow(r);
   $("athleteName").textContent = safe(r[COL.name]);
-$("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${formatHeightFeetInches(r[COL.height])} • ${safe(r[COL.weight])} lb • ${safe(r[COL.school])}`;
+$("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${safe(r[COL.height])} • ${safe(r[COL.weight])} lb • ${safe(r[COL.school])}`;
   updateLargePhoto(r);
-  // Athletic Score pill (v1.0.121)
-  const scorePill = document.getElementById("scorePill");
-  if (scorePill){
-    const s = intel && intel.score !== null && intel.score !== undefined ? String(intel.score) : "—";
-    scorePill.textContent = `Score ${s}`;
-    scorePill.style.display = (s === "—") ? "none" : "inline-flex";
-  }
+  
+// Athletic Score pill (v1.0.121)
+const scorePill = document.getElementById("scorePill");
+if (scorePill){
+  const s = (intel && intel.score !== null && intel.score !== undefined) ? String(intel.score) : "—";
+  const gs = (intel && intel.groupScore !== null && intel.groupScore !== undefined) ? String(intel.groupScore) : null;
+  const gl = (intel && intel.group && typeof GROUP_LABEL !== "undefined") ? (GROUP_LABEL[intel.group] || "Group") : "Group";
+
+  scorePill.textContent = `Score ${s}` + (gs ? ` • ${gl} ${gs}` : "");
+  scorePill.style.display = (s === "—") ? "none" : "inline-flex";
+}
 
 
   // ID badge
@@ -851,8 +829,7 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${formatHeightFeetIn
 
   setText("scoutDob", r[COL.dob]);
   setText("scoutAge", r[COL.age]);
-  //setText("scoutHeight", r[COL.height]);
-  setText("scoutHeight", formatHeightFeetInches(r[COL.height]));
+  setText("scoutHeight", r[COL.height]);
   //setText("scoutWeight", formatLbs(r[COL.weight]));
   setText("scoutWeight", formatWeightLbsRounded(r[COL.weight]));
   setText("scoutPhone", r[COL.phone]);
@@ -968,6 +945,8 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${formatHeightFeetIn
   // Sync selection to Presenter
   try{ _pushToPresenter(r); }catch(e){}
 
+  // Sync selection to presenter window (if open)
+  _sendToPresenter({ type: "ac_athlete_update", athlete: rowToPresenter(r) });
 }
 
 function renderRadar(r){
@@ -1514,23 +1493,6 @@ function initModalWiring(){
               <li><b>Coach Mode:</b> Scout Profile layout + keeps performance charts/sections below.</li>
             </ul>
           </div>
-          <hr style="border:0;border-top:1px solid rgba(255,255,255,.12);margin:8px 0">
-
-          <div style="font-weight:900;font-size:15px;margin-bottom:6px">Video Tutorial</div>
-          
-          <div style="position:relative;padding-top:56.25%;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.02)">
-            <iframe
-              src="https://www.youtube.com/embed/eJANWtnYrFQ"
-              title="Athlete Combine Dashboard – Video Tutorial"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen
-              style="position:absolute;top:0;left:0;width:100%;height:100%;">
-            </iframe>
-          </div>
-          
-          <div class="small muted">Tip: Watch this before using the tool.</div>
-
         
           <hr style="border:0;border-top:1px solid rgba(255,255,255,.12);margin:8px 0">
           <div style="font-weight:900;font-size:15px;margin-bottom:6px">What's in Pro Mode</div>
@@ -1556,13 +1518,22 @@ function initModalWiring(){
     versionBtn.addEventListener("click", ()=>{
       openModal("Version & Changelog", `<div style="display:grid;gap:10px">
   <div style="font-weight:900">What’s new</div>
-  <div><b>v1.0.120</b> — Presenter Mode polish + best-results display (UI updates).</div>
+  <div><b>v1.0.123</b> — Refactor release: split CSS/JS files + safety guards, height formatted as feet/inches, and minimalist scrollbar.</div>
+<div><b>v1.0.120</b> — Presenter Mode polish + best-results display (UI updates).</div>
 
   <div style="margin-top:10px;font-weight:900">Changelog</div>
 
 
 
 
+
+<div style="margin-top:6px;font-weight:900">v1.0.123</div>
+<ul style="margin:6px 0 0 18px">
+  <li>Refactor: extracted CSS and JS into separate files (<span class="mono">styles.css</span>, <span class="mono">app.js</span>) for safer maintenance.</li>
+  <li>Added JS safety guards (<span class="mono">use strict</span>, single global namespace, double-init protection).</li>
+  <li>Height now displays as <b>feet &amp; inches</b> across Athlete / Scout / Media profiles.</li>
+  <li>UI polish: added a minimalist, theme-cohesive scrollbar (desktop browsers).</li>
+</ul>
 <div style="margin-top:6px;font-weight:900">v1.0.122</div>
 <ul style="margin:6px 0 0 18px">
   <li>Added Watchlist (★) and Notes (saved locally per athlete) for Admin + Pro workflows.</li>
@@ -1730,60 +1701,3 @@ initResponsiveNav();
 
 setStatus("Ready");
 
-/* GitHub button: moved from inline onclick -> JS binding */
-try {
-  const gb = document.getElementById("githubBtn");
-  if (gb && !gb._bound) {
-    gb._bound = true;
-    gb.addEventListener("click", () => {
-      window.open("https://github.com/Eddy0412/athlete-dashboard", "_blank");
-    });
-  }
-} catch (e) {
-  console.warn("[ACD] githubBtn binding failed", e);
-}
-
-
-/* Pro softgate: Unlock button wiring (desktop + drawer) */
-try{
-  const ub = document.getElementById("unlockProBtn");
-  if (ub && !ub._bound){
-    ub._bound = true;
-
-    const syncLabel = ()=>{
-      try{
-        ub.textContent = isProUnlocked() ? "Pro Unlocked" : "Unlock Pro";
-        ub.style.opacity = isProUnlocked() ? ".85" : "1";
-      }catch(e){}
-    };
-    syncLabel();
-
-    ub.addEventListener("click", ()=>{
-      // If already unlocked, just jump to Pro
-      if (!isProUnlocked()){
-        const ok = unlockPro("Enter Pro access code:");
-        if (!ok) return;
-      }
-      const u = new URL(window.location.href);
-      u.searchParams.set("view","pro");
-      u.searchParams.delete("unlock");
-      window.location.href = u.toString();
-    });
-  }
-}catch(e){}
-
-
-  // ---- Public API (debug + safe external hooks) ----
-  ACD.selectAthlete = selectAthlete;
-  ACD.formatHeightFeetInches = formatHeightFeetInches;
-  ACD.applyFilter = applyFilter;
-  ACD.loadDefaultCsv = loadDefaultCsv;
-
-  ACD.isProUnlocked = isProUnlocked;
-  ACD.unlockPro = unlockPro;
-  ACD.setProUnlocked = setProUnlocked;
-
-  ACD.loadedAt = new Date().toISOString();
-  console.log("[ACD] loaded", ACD.version, ACD.loadedAt);
-
-})();
