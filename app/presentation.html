@@ -769,6 +769,39 @@ function formatHeightFeetInches(v){
       return (decimals === 0) ? String(Math.round(n)) : n.toFixed(decimals);
     }
 
+// Broad Jump input normalizer:
+// - If value is already in inches (>=30), keep it.
+// - If value looks like feet.inches (e.g. 6.1 = 6 ft 1 in), convert to total inches.
+// - Also supports 6'1" formats.
+function parseBroadJumpToInches(v){
+  if(v === undefined || v === null) return null;
+  const sRaw = String(v).trim();
+  if(!sRaw) return null;
+
+  const mFtIn = sRaw.match(/^\s*(\d+)\s*'\s*(\d{1,2})\s*(?:"|in)?\s*$/);
+  if(mFtIn){
+    const ft = parseInt(mFtIn[1],10);
+    const inch = parseInt(mFtIn[2],10);
+    if(Number.isFinite(ft) && Number.isFinite(inch)) return (ft*12)+inch;
+  }
+
+  const n = toNumber(sRaw);
+  if(n === null) return null;
+
+  if(n >= 30) return Math.round(n);
+
+  const mDot = sRaw.replace(",",".").match(/^\s*(\d+)\s*\.\s*(\d{1,2})\s*$/);
+  if(mDot){
+    const ft = parseInt(mDot[1],10);
+    const inch = parseInt(mDot[2],10);
+    if(Number.isFinite(ft) && Number.isFinite(inch)) return (ft*12)+inch;
+  }
+
+  if(n >= 3 && n <= 20) return Math.round(n * 12);
+  return Math.round(n);
+}
+
+
     function formatFeetInches(raw){
       const s = String(raw ?? "").trim();
       if(!s) return "";
@@ -866,7 +899,10 @@ function formatHeightFeetInches(v){
     cards.push(statCard("Weight", wDisp ? (wDisp + " lbs") : ""));
 
     if(best40) cards.push(statCard("40yds", addUnit(formatTime(best40), "s")));
-    if(bestBroad) cards.push(statCard("Broad Jump", addUnit(formatNumber(bestBroad, 0), "in")));
+    if(bestBroad){
+      const bjIn = parseBroadJumpToInches(bestBroad);
+      cards.push(statCard("Broad Jump", bjIn ? (bjIn + " in") : addUnit(formatNumber(bestBroad, 0), "in")));
+    }
     if(best5105) cards.push(statCard("5-10-5", addUnit(formatTime(best5105), "s")));
     if(best3Cone) cards.push(statCard("3-Cone", addUnit(formatTime(best3Cone), "s")));
     if(bestBench) cards.push(statCard("Bench", addUnit(formatNumber(bestBench, 0), "reps")));
@@ -937,6 +973,35 @@ function formatHeightFeetInches(v){
       if(n === null) return s;
       return (decimals === 0) ? String(Math.round(n)) : n.toFixed(decimals);
     }
+
+// Broad Jump normalizer (shared logic with dashboard)
+function parseBroadJumpToInches(v){
+  if(v === undefined || v === null) return null;
+  const sRaw = String(v).trim();
+  if(!sRaw) return null;
+
+  const mFtIn = sRaw.match(/^\s*(\d+)\s*'\s*(\d{1,2})\s*(?:"|in)?\s*$/);
+  if(mFtIn){
+    const ft = parseInt(mFtIn[1],10);
+    const inch = parseInt(mFtIn[2],10);
+    if(Number.isFinite(ft) && Number.isFinite(inch)) return (ft*12)+inch;
+  }
+
+  const n = toNumber(sRaw);
+  if(n === null) return null;
+  if(n >= 30) return Math.round(n);
+
+  const mDot = sRaw.replace(",",".").match(/^\s*(\d+)\s*\.\s*(\d{1,2})\s*$/);
+  if(mDot){
+    const ft = parseInt(mDot[1],10);
+    const inch = parseInt(mDot[2],10);
+    if(Number.isFinite(ft) && Number.isFinite(inch)) return (ft*12)+inch;
+  }
+
+  if(n >= 3 && n <= 20) return Math.round(n * 12);
+  return Math.round(n);
+}
+
     function bestExplicit(keys){
       for(const k of keys){
         if(Object.prototype.hasOwnProperty.call(r, k) && String(r[k]??"").trim() !== ""){
@@ -1008,7 +1073,10 @@ function formatHeightFeetInches(v){
     pushIf("40 YARDS DASH", best40 ? (formatTime(best40) + " s") : "—");
     pushIf("5-10-5 SHUTTLE", best5105 ? (formatTime(best5105) + " s") : "—");
     pushIf("3-CONE DRILL", best3Cone ? (formatTime(best3Cone) + " s") : "—");
-    pushIf("LONG JUMP", bestBroad ? (formatNumber(bestBroad, 0) + ' in') : "—");
+    if(bestBroad){
+      const bjIn = parseBroadJumpToInches(bestBroad);
+      pushIf("LONG JUMP", bjIn ? (String(bjIn) + " in") : (formatNumber(bestBroad, 0) + " in"));
+    }
     pushIf("BENCH PRESS", bestBench ? (formatNumber(bestBench, 0)) : "—");
     if (kflEl.perf) {
       kflEl.perf.innerHTML = cells.join("");
