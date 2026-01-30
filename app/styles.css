@@ -248,7 +248,22 @@ html.mediaView #mediaTemplateSelect, body.mediaMode #mediaTemplateSelect{display
       letter-spacing:.5px;
       user-select:none;
     }
+/* ===== Athlete list avatars: force consistent square sizing ===== */
+.avatarBox{
+  width:34px;
+  height:34px;
+  flex:0 0 34px;           /* never shrink */
+  border-radius:999px;
+  overflow:hidden;
+}
 
+.avatarBox img{
+  width:100%;
+  height:100%;
+  display:block;           /* prevents baseline weirdness */
+  object-fit:cover;        /* fills square consistently */
+  object-position:center;
+}
 
 /* Link-style controls (from v1.0.118 look) */
 .linkBtn{
