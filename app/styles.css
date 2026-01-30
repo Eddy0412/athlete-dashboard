@@ -1,9 +1,5 @@
     :root{
-      
-  --scrollbar-track: rgba(255,255,255,.04);
-  --scrollbar-thumb: rgba(138,160,182,.30);
-  --scrollbar-thumb-hover: rgba(138,160,182,.52);
---bg:#0b0f17;
+      --bg:#0b0f17;
       --card:#121a27;
       --muted:#8aa0b6;
       --text:#e8f0ff;
@@ -544,51 +540,116 @@ html.mediaView #watchCountPill{ display:none !important; }
 
 #watchCountPill.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
 
-/* ================= MINIMAL SCROLLBARS =================
-   Notes:
-   - Chromium (Chrome/Edge) uses ::-webkit-scrollbar
-   - Firefox uses scrollbar-width / scrollbar-color
-   - Applied to the athlete list scroll container + modal/drawer scroll areas
+/* ================= MINIMAL SCROLLBAR (v1.0.123) =================
+   - WebKit (Chrome/Edge/Safari): ::-webkit-scrollbar*
+   - Firefox: scrollbar-width + scrollbar-color
+   Keep subtle + cohesive with dark UI.
 */
+:root{
+  /* Scrollbar tokens (tweak here only) */
+  --scrollbar-track: rgba(255,255,255,.04);
+  --scrollbar-thumb: rgba(138,160,182,.28);
+  --scrollbar-thumb-hover: rgba(138,160,182,.42);
+}
 
 /* Firefox */
-.athleteTableScroll,
-#modalContent,
-.drawerBody{
+*{
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
-/* Chromium/WebKit */
-.athleteTableScroll::-webkit-scrollbar,
-#modalContent::-webkit-scrollbar,
-.drawerBody::-webkit-scrollbar{
-  width: 8px;
-  height: 8px;
+/* WebKit */
+::-webkit-scrollbar{
+  width: 10px;
+  height: 10px;
 }
-
-.athleteTableScroll::-webkit-scrollbar-track,
-#modalContent::-webkit-scrollbar-track,
-.drawerBody::-webkit-scrollbar-track{
+::-webkit-scrollbar-track{
   background: var(--scrollbar-track);
-  border-radius: 999px;
 }
-
-.athleteTableScroll::-webkit-scrollbar-thumb,
-#modalContent::-webkit-scrollbar-thumb,
-.drawerBody::-webkit-scrollbar-thumb{
+::-webkit-scrollbar-thumb{
   background: var(--scrollbar-thumb);
   border-radius: 999px;
-  border: 2px solid var(--scrollbar-track); /* subtle inset */
+  border: 3px solid var(--scrollbar-track); /* creates the minimalist "pill" thumb */
+}
+::-webkit-scrollbar-thumb:hover{
+  background: var(--scrollbar-thumb-hover);
 }
 
-.athleteTableScroll::-webkit-scrollbar-thumb:hover,
-#modalContent::-webkit-scrollbar-thumb:hover,
-.drawerBody::-webkit-scrollbar-thumb:hover{
+/* ================= MINIMAL SCROLLBAR (v1.0.123) =================
+   Subtle, dark, UI-consistent scrollbar
+   - WebKit: Chrome / Edge / Safari
+   - Firefox: scrollbar-width / scrollbar-color
+*/
+
+/* Scrollbar theme tokens */
+:root{
+  --scrollbar-track: rgba(255,255,255,.04);
+  --scrollbar-thumb: rgba(138,160,182,.28);
+  --scrollbar-thumb-hover: rgba(138,160,182,.42);
+}
+
+/* Firefox */
+*{
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* WebKit browsers */
+::-webkit-scrollbar{
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track{
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb{
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 3px solid var(--scrollbar-track); /* creates pill-style thumb */
+}
+
+::-webkit-scrollbar-thumb:hover{
   background: var(--scrollbar-thumb-hover);
 }
 
 
-/* Softgate: hide Pro unlock control in Public/Media views */
-html.publicView #unlockProBtn,
-html.mediaView #unlockProBtn{ display:none !important; }
+/* ===== Athlete list column sort: minimalist chevrons (no arrows when inactive) ===== */
+.thSort{
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color: transparent;
+}
+.thSort:focus,
+.thSort:focus-visible{
+  outline:none !important;
+  box-shadow:none !important;
+}
+
+/* The arrow element is shown/hidden by JS via display:none/inline-block */
+.thArrow{
+  display:none;
+  width:10px;
+  height:10px;
+  margin-left:2px;
+  position:relative;
+  color: rgba(138,160,182,.9); /* muted */
+}
+
+/* Draw a slick chevron using borders */
+.thArrow::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  margin:auto;
+  width:6px;
+  height:6px;
+  border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;
+  transform: rotate(45deg); /* default: down */
+}
+
+/* Up/Down states */
+.thArrow.asc::before{ transform: rotate(-135deg); } /* up */
+.thArrow.desc::before{ transform: rotate(45deg); }  /* down */

@@ -161,92 +161,7 @@ const posOverrides = new Map();
 
 /** ---------- Intelligence (v1.0.121) ---------- **/
 let SORT_KEY = "name";
-
-// Athlete list header sorting (Name/Age/Weight) — tri-state: none -> asc -> desc -> none
-let TABLE_SORT = { key: "", dir: "" }; // dir: "asc" | "desc" | ""
-
-function _tableSortValue(r, key){
-  if (!r) return null;
-  if (key === "name") return normalizeStr(r[COL.name]);
-  if (key === "age") return toNum(r[COL.age]);
-  if (key === "weight") return toNum(r[COL.weight]);
-  return null;
-}
-
-function _compareTableSort(a, b){
-  // a/b are {r, idx}
-  const key = TABLE_SORT.key;
-  const dir = TABLE_SORT.dir;
-  if (!key || !dir) return sortComparator(a, b);
-
-  const av = _tableSortValue(a.r, key);
-  const bv = _tableSortValue(b.r, key);
-
-  // Nulls last
-  const aNull = (av === null || av === undefined || av === "");
-  const bNull = (bv === null || bv === undefined || bv === "");
-  if (aNull && bNull) return 0;
-  if (aNull) return 1;
-  if (bNull) return -1;
-
-  let cmp = 0;
-  if (typeof av === "number" && typeof bv === "number") cmp = av - bv;
-  else cmp = String(av).localeCompare(String(bv));
-
-  return dir === "desc" ? -cmp : cmp;
-}
-
-function _setHeaderArrows(){
-  try{
-    const keys = ["name","age","weight"];
-    keys.forEach(k=>{
-      const el = document.querySelector(`.thArrow[data-arrow-for="${k}"]`);
-      if (!el) return;
-
-      el.classList.remove("asc","desc");
-
-      if (TABLE_SORT.key !== k || !TABLE_SORT.dir){
-        el.style.opacity = "0";
-        return;
-      }
-
-      el.style.opacity = "1";
-      el.classList.add(TABLE_SORT.dir); // asc | desc
-    });
-  }catch(e){}
-}
-
-function initAthleteListHeaderSort(){
-  try{
-    const els = document.querySelectorAll(".thSort[data-sortcol]");
-    if (!els || !els.length) return;
-    els.forEach(el=>{
-      if (el._bound) return;
-      el._bound = true;
-      const key = String(el.getAttribute("data-sortcol") || "").trim();
-      const toggle = ()=>{
-        if (!key) return;
-        if (TABLE_SORT.key !== key){
-          TABLE_SORT = { key, dir:"asc" };
-        } else if (TABLE_SORT.dir === "asc"){
-          TABLE_SORT = { key, dir:"desc" };
-        } else if (TABLE_SORT.dir === "desc"){
-          TABLE_SORT = { key:"", dir:"" }; // reset to default sortSelect behavior
-        } else {
-          TABLE_SORT = { key, dir:"asc" };
-        }
-        _setHeaderArrows();
-        applyFilter();
-      };
-      el.addEventListener("click", toggle);
-      el.addEventListener("keydown", (e)=>{ if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
-    });
-    _setHeaderArrows();
-  }catch(e){}
-}
-
 let POP_CACHE = {};      // metricKey -> array of best values across population
-let POP_CACHE_GROUP = { skill:{}, linemen:{}, allPurpose:{} }; // group -> metricKey -> array
 let INTEL_CACHE = [];
 
 /** ---------- Watchlist + Notes (v1.0.122) ---------- **/
@@ -326,48 +241,7 @@ function wlGetNotes(id){
 
     // per row index: {best,pct,tier,score,strengths,flags}
 
-// Athletic Score weights (0-100 percentile blend)
-// Overall = balanced combine score (existing behavior)
 const SCORE_WEIGHTS = { dash40:30, broad:20, shuttle:20, cone:15, bench:15 };
-
-// Group scores (requested): Skill Players, Linemen, All Purpose
-// Note: these are still percentile blends (not position-normalized), tuned for typical combine emphasis.
-const SCORE_WEIGHTS_SKILL = { dash40:35, shuttle:25, cone:20, broad:15, bench:5 };
-const SCORE_WEIGHTS_LINEMEN = { bench:35, broad:20, dash40:20, shuttle:15, cone:10 };
-const SCORE_WEIGHTS_ALLPURPOSE = { dash40:25, broad:20, shuttle:20, cone:20, bench:15 };
-// Position -> Group mapping for group-scoped percentiles
-function inferAthleteGroup(pos){
-  const p = String(pos || "").toUpperCase().trim();
-  if (!p) return "allPurpose";
-  // Linemen
-  if (["OL","OT","OG","G","C","CENTER","T","TACKLE","GUARD","DL","DE","DT","NT","NG"].includes(p)) return "linemen";
-  // Skill
-  if (["WR","RB","DB","CB","S","FS","SS","SAFETY","CORNER","QB","HB"].includes(p)) return "skill";
-  // All-purpose / hybrid
-  if (["LB","ILB","OLB","TE","FB","H","ATH"].includes(p)) return "allPurpose";
-  return "allPurpose";
-}
-
-function groupLabel(g){
-  if (g === "skill") return "Skill";
-  if (g === "linemen") return "Linemen";
-  return "All-Purpose";
-}
-
-function athleticScoreWithWeights(pcts, weights){
-  let wSum = 0, sSum = 0;
-  METRICS.forEach(m=>{
-    const p = pcts[m.key];
-    if (p === null || p === undefined) return;
-    const w = (weights && weights[m.key]) ? weights[m.key] : 0;
-    if (!w) return;
-    wSum += w;
-    sSum += p * w;
-  });
-  if (!wSum) return null;
-  return Math.round(sSum / wSum);
-}
-
 
 function tierFromPercentile(p){
   if (p === null || p === undefined) return { label:"—", cls:"tier-avg" };
@@ -378,88 +252,42 @@ function tierFromPercentile(p){
 }
 
 function athleticScore(pcts){
-  return athleticScoreWithWeights(pcts, SCORE_WEIGHTS);
+  let wSum = 0, sSum = 0;
+  METRICS.forEach(m=>{
+    const p = pcts[m.key];
+    if (p === null || p === undefined) return;
+    const w = SCORE_WEIGHTS[m.key] || 0;
+    if (!w) return;
+    wSum += w;
+    sSum += p * w;
+  });
+  if (!wSum) return null;
+  return Math.round(sSum / wSum);
 }
 
 function recomputeIntelligence(){
-  // Build overall population arrays once per metric
+  // Build population arrays once per metric
   POP_CACHE = {};
   METRICS.forEach(m => {
-    POP_CACHE[m.key] = computePopulationBest(m); // best values across all athletes
+    POP_CACHE[m.key] = computePopulationBest(m); // uses bestAttemptValue over rows
   });
-
-  // Determine each athlete's effective position (manual override > suggestion) and group
-  const groupsByIdx = rows.map((r)=>{
-    let pos = "";
-    try{
-      const athleteId = String(r[COL.id] ?? "").trim();
-      if (athleteId && typeof posOverrides !== "undefined" && posOverrides && posOverrides.has(athleteId)){
-        pos = String(posOverrides.get(athleteId) || "").trim();
-      } else {
-        pos = String((suggestPosition(r) || {}).pos || "").trim();
-      }
-    }catch(e){ pos = ""; }
-    return inferAthleteGroup(pos);
-  });
-
-  // Build group-scoped population arrays per metric
-  POP_CACHE_GROUP = { skill:{}, linemen:{}, allPurpose:{} };
-  ["skill","linemen","allPurpose"].forEach(g=>{
-    METRICS.forEach(m=>{ POP_CACHE_GROUP[g][m.key] = []; });
-  });
-
-  rows.forEach((r, idx)=>{
-    const g = groupsByIdx[idx] || "allPurpose";
-    METRICS.forEach(m=>{
-      const v = bestAttemptValue(r, m);
-      if (v !== null && v !== undefined) POP_CACHE_GROUP[g][m.key].push(v);
-    });
-  });
-
-  const groupCounts = {
-    skill: groupsByIdx.filter(g=>g==="skill").length,
-    linemen: groupsByIdx.filter(g=>g==="linemen").length,
-    allPurpose: groupsByIdx.filter(g=>g==="allPurpose").length
-  };
 
   INTEL_CACHE = rows.map((r, idx) => {
     const best = {};
-    const pct = {};       // overall percentiles (existing behavior)
+    const pct = {};
     const tier = {};
-
     METRICS.forEach(m=>{
       const b = bestAttemptValue(r, m);
       best[m.key] = b;
-
       const pop = POP_CACHE[m.key] || [];
       const p = percentileRank(pop, b, m.better);
       pct[m.key] = (p === null ? null : Math.max(0, Math.min(100, p)));
       tier[m.key] = tierFromPercentile(pct[m.key]);
     });
 
-    const score = athleticScore(pct); // existing overall score
+    const score = athleticScore(pct);
 
-    // Group-scoped percentiles + group score
-    const group = groupsByIdx[idx] || "allPurpose";
-    const pctGroup = {};
-    METRICS.forEach(m=>{
-      const b = best[m.key];
-      const popG = (POP_CACHE_GROUP[group] && POP_CACHE_GROUP[group][m.key]) ? POP_CACHE_GROUP[group][m.key] : [];
-      const pg = percentileRank(popG, b, m.better);
-      pctGroup[m.key] = (pg === null ? null : Math.max(0, Math.min(100, pg)));
-    });
-
-    // Guard: avoid noisy group score when the group is too small
-    const gCount = groupCounts[group] || 0;
-    let groupScore = null;
-    if (gCount >= 6){
-      const weights = (group === "skill") ? SCORE_WEIGHTS_SKILL
-                    : (group === "linemen") ? SCORE_WEIGHTS_LINEMEN
-                    : SCORE_WEIGHTS_ALLPURPOSE;
-      groupScore = athleticScoreWithWeights(pctGroup, weights);
-    }
-
-    // Strengths & Flags (overall percentiles)
+    // Strengths & Flags
     const strengths = [];
     const flags = [];
     METRICS.forEach(m=>{
@@ -475,9 +303,6 @@ function recomputeIntelligence(){
     return {
       best, pct, tier,
       score,
-      group,
-      groupLabel: groupLabel(group),
-      groupScore,
       strengths: strengths.slice(0,3),
       flags: flags.slice(0,3),
     };
@@ -788,7 +613,7 @@ function applyFilter(){
   return normalizeStr(hay).includes(q);
 })
     .filter(x => !WATCH_ONLY || wlIsStarred(wlIdFromRow(x.r)))
-    .sort(_compareTableSort);
+    .sort(sortComparator);
   renderTable();
 }
 
@@ -984,15 +809,10 @@ $("athleteMeta").textContent = `Age ${safe(r[COL.age])} • ${formatHeightFeetIn
   const scorePill = document.getElementById("scorePill");
   if (scorePill){
     const s = intel && intel.score !== null && intel.score !== undefined ? String(intel.score) : "—";
-    let extra = "";
-    try{
-      const gs = (intel && intel.groupScore !== null && intel.groupScore !== undefined) ? String(intel.groupScore) : "";
-      const gl = (intel && intel.groupLabel) ? String(intel.groupLabel) : "";
-      if (gs && gl) extra = ` • ${gl} ${gs}`;
-    }catch(e){}
-    scorePill.textContent = `Score ${s}${extra}`;
+    scorePill.textContent = `Score ${s}`;
     scorePill.style.display = (s === "—") ? "none" : "inline-flex";
   }
+
 
   // ID badge
   const idBadge = document.getElementById("athleteIdBadge");
@@ -1269,10 +1089,6 @@ if (posSel){
 
     const explain = document.getElementById("posExplain");
     if (explain) explain.textContent = v ? "(manual)" : `(auto: ${auto.reason})`;
-
-// Recompute intelligence so Group Score stays in sync with manual position overrides
-try{ recomputeIntelligence(); }catch(e){}
-try{ if (typeof selectAthlete === "function") selectAthlete(activeIndex); }catch(e){}
   });
 }
 
@@ -1844,7 +1660,7 @@ function initModalWiring(){
     });
   }
 }
-document.addEventListener("DOMContentLoaded", ()=>{ try{ initModalWiring(); }catch(e){} try{ initAthleteListHeaderSort(); }catch(e){} });
+document.addEventListener("DOMContentLoaded", initModalWiring);
 
 
 // Search clear (X) button
