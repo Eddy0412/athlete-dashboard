@@ -588,18 +588,39 @@ html.mediaView #watchCountPill{ display:none !important; }
   background: var(--scrollbar-thumb-hover);
 }
 
+/* ===== Athlete list sort chevrons (cosmetic only) =====
+   Goals:
+   - Smaller, subtle chevrons
+   - No header text shifting
+   - Avoid horizontal scrollbar in athlete list
+   Note: app.js controls arrow visibility by setting the span text to ▲ / ▼ / "".
+*/
+.athleteTableScroll{ overflow-x:hidden !important; overflow-y:auto !important; }
+
+.thSort{
+  display:inline-flex;
+  align-items:center;
+  cursor:pointer;
+  user-select:none;
+  position:relative;
+  padding-right:8px; /* arrow is absolutely positioned */
+}
+.thSort:focus{ outline:none !important; box-shadow:none !important; }
+
+.thArrow{
+  position:absolute;
+  right:0;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:7px;
+  line-height:1;
+  opacity:.40;
+  display:none; /* no layout impact */
+  pointer-events:none;
+  padding: 2px 2px 0;
+}
+.thArrow:not(:empty){ display:inline-block; }
 
 /* Softgate: hide Pro unlock control in Public/Media views */
 html.publicView #unlockProBtn,
 html.mediaView #unlockProBtn{ display:none !important; }
-
-/* Athlete list header sort (minimal) */
-.thArrow{ font-size:10px; line-height:1; margin-left:4px; opacity:.65; }
-.thSort, .thSort:focus{ outline:none !important; box-shadow:none !important; }
-
-
-/* Athlete list header sort: minimalist chevrons (no layout shift) */
-.thSort { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; }
-.thSort:focus { outline: none; }
-.thSort:active { outline: none; }
-.thArrow { display: inline-block; width: 10px; font-size: 9px; line-height: 1; opacity: .55; visibility: hidden; }
