@@ -203,15 +203,19 @@ function _setHeaderArrows(){
       const el = document.querySelector(`.thArrow[data-arrow-for="${k}"]`);
       if (!el) return;
 
+      // Keep a fixed-width placeholder so headers don't "jump" when arrows appear/disappear.
+      el.style.display = "inline-block";
+      el.style.width = "10px";
+
       if (TABLE_SORT.key !== k || !TABLE_SORT.dir){
         el.textContent = "";
-        el.style.display = "none";
+        el.style.visibility = "hidden"; // no arrow visible, but reserves space
         return;
       }
 
-      el.style.display = "inline-block";
+      el.style.visibility = "visible";
       el.textContent = (TABLE_SORT.dir === "asc") ? "▲" : "▼";
-      el.style.opacity = ".65";
+      el.style.opacity = ".55";
     });
   }catch(e){}
 }

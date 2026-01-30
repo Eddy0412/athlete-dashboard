@@ -596,3 +596,10 @@ html.mediaView #unlockProBtn{ display:none !important; }
 /* Athlete list header sort (minimal) */
 .thArrow{ font-size:10px; line-height:1; margin-left:4px; opacity:.65; }
 .thSort, .thSort:focus{ outline:none !important; box-shadow:none !important; }
+
+
+/* Athlete list header sort: minimalist chevrons (no layout shift) */
+.thSort { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; }
+.thSort:focus { outline: none; }
+.thSort:active { outline: none; }
+.thArrow { display: inline-block; width: 10px; font-size: 9px; line-height: 1; opacity: .55; visibility: hidden; }
