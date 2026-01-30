@@ -592,3 +592,7 @@ html.mediaView #watchCountPill{ display:none !important; }
 /* Softgate: hide Pro unlock control in Public/Media views */
 html.publicView #unlockProBtn,
 html.mediaView #unlockProBtn{ display:none !important; }
+
+/* Athlete list header sort (minimal) */
+.thArrow{ font-size:10px; line-height:1; margin-left:4px; opacity:.65; }
+.thSort, .thSort:focus{ outline:none !important; box-shadow:none !important; }

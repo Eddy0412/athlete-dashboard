@@ -203,15 +203,15 @@ function _setHeaderArrows(){
       const el = document.querySelector(`.thArrow[data-arrow-for="${k}"]`);
       if (!el) return;
 
-      el.classList.remove("asc","desc");
-
       if (TABLE_SORT.key !== k || !TABLE_SORT.dir){
-        el.style.opacity = "0";
+        el.textContent = "";
+        el.style.display = "none";
         return;
       }
 
-      el.style.opacity = "1";
-      el.classList.add(TABLE_SORT.dir); // asc | desc
+      el.style.display = "inline-block";
+      el.textContent = (TABLE_SORT.dir === "asc") ? "▲" : "▼";
+      el.style.opacity = ".65";
     });
   }catch(e){}
 }
