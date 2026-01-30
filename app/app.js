@@ -589,7 +589,44 @@ function toNum(v){
   return Number.isFinite(n) ? n : null;
 }
 
-function formatWeightLbsRounded(v){
+
+function parseBroadJumpToInches(v){
+  // Accepts:
+  // - inches already (e.g., 84)
+  // - feet.inches from CSV (e.g., 6.1 -> 6 ft 1 in)
+  // - optional ft/in text (e.g., 6'1")
+  if (v === null || v === undefined) return null;
+  const s0 = String(v).trim();
+  if (!s0) return null;
+
+  // Normalize decimal comma
+  const s = s0.replace(",", ".").toLowerCase();
+
+  // If already written as 6'1" (or similar), convert to inches
+  const m = s.match(/^(\d{1,2})\s*'\s*(\d{1,2})/);
+  if (m){
+    const ft = parseInt(m[1], 10);
+    const inch = parseInt(m[2], 10);
+    if (!Number.isFinite(ft) || !Number.isFinite(inch)) return null;
+    return (ft * 12) + inch;
+  }
+
+  // Plain number path
+  const n = Number(s);
+  if (!Number.isFinite(n)) return null;
+
+  // If it looks like real inches already (typical broad jump inches is ~60-140)
+  if (n >= 30) return n;
+
+  // Otherwise interpret as feet.inches where decimals are literal inches, not fractions.
+  const parts = s.split(".");
+  const ft = parseInt(parts[0] || "0", 10);
+  const inch = parseInt(parts[1] || "0", 10);
+  if (!Number.isFinite(ft) || !Number.isFinite(inch)) return null;
+  return (ft * 12) + inch;
+}
+
+unction formatWeightLbsRounded(v){
   const n = typeof v === "number"
     ? v
     : parseFloat(String(v ?? "").replace(",", "."));
@@ -720,8 +757,13 @@ function parseCsvText(csvText, label){
       // Clean up: convert numeric metric columns to numbers
       rows.forEach(r => {
         METRICS.forEach(m => {
-          r[m.a1] = toNum(r[m.a1]);
-          r[m.a2] = toNum(r[m.a2]);
+          if (m.key === "broad"){
+            r[m.a1] = parseBroadJumpToInches(r[m.a1]);
+            r[m.a2] = parseBroadJumpToInches(r[m.a2]);
+          } else {
+            r[m.a1] = toNum(r[m.a1]);
+            r[m.a2] = toNum(r[m.a2]);
+          }
         });
         r[COL.age] = toNum(r[COL.age]);
         r[COL.weight] = toNum(r[COL.weight]);
