@@ -766,6 +766,10 @@ function setSource(text){
 
 function parseCsvText(csvText, label){
   // Keep last-loaded CSV for Pro export (client-side only)
+  // IMPORTANT: lastCsvText must always remain RAW.
+  // Do NOT export processed/normalized values.
+  // Pro value = intelligence layer, not CSV output.
+
   lastCsvText = String(csvText || "");
   lastCsvName = String(label || "results.csv");
   setStatus("Parsing…");
