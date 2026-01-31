@@ -498,6 +498,18 @@ html.proView #toggleMedia{ display:none !important; }
 
 html.proView #presentBtn{ display:none !important; }
 html.proView #versionBtn{ display:none !important; }
+
+/* Pro-only export button (keeps layout stable in other views) */
+#exportCsvBtn{ display:none; }
+html.proView #exportCsvBtn{
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  padding:9px 10px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+#exportCsvBtn svg{ width:16px; height:16px; opacity:.9; }
 /* Public View: hide advanced controls */
 .publicView #photosLabel,
 .publicView #csvLabel,
