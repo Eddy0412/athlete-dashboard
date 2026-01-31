@@ -12,7 +12,7 @@
 const IS_DEMO = false;
 
 
-// View modes: default FULL, optional view via ?view=public / ?view=media / ?view=pro
+// View modes: default FULL, optional view via ?view=public / ?view=media / ?view=pro / ?view=user
 // Softgate for Pro: client-side only (keeps honest people honest; not real security)
 const PRO_GATE_KEY = "acd_pro_unlocked_v1";
 const PRO_CODE = "KFLPRO"; // TODO: change this to your current Pro code
@@ -64,6 +64,7 @@ if (VIEW_MODE === "pro" && !isProUnlocked()){
 const IS_PUBLIC_VIEW = _effectiveView === "public";
 const IS_MEDIA_VIEW = _effectiveView === "media";
 const IS_PRO_VIEW   = _effectiveView === "pro";
+const IS_USER_VIEW  = _effectiveView === "user";
 
 // Guard: Media pill only for Media VIEW (?view=media), not Media Mode toggle
 try{
@@ -91,6 +92,10 @@ if (IS_PRO_VIEW) {
   document.documentElement.classList.add('proView');
   const pr = document.getElementById('proPill');
   if (pr) pr.style.display = 'inline-flex';
+}
+
+if (IS_USER_VIEW) {
+  document.documentElement.classList.add('userView');
 }
 // Admin pill (default view)
 try{
@@ -877,29 +882,79 @@ function initialsForRow(r){
 function renderTable(){
   const tb = $("athleteTable");
   tb.innerHTML = "";
+
+  // Helper: in user view, try to display a "Draft" value if the CSV contains it.
+  function draftValueForRow(r, originalIdx){
+    try{
+      const keys = Object.keys(r || {});
+      const k = keys.find(k0=>{
+        const kk = String(k0 || "").trim().toLowerCase();
+        return kk === "draft" || kk === "pick" || kk === "equipo" || kk === "team" || kk.includes("draft");
+      });
+      if (k) return safe(r[k]);
+    }catch(e){}
+    // fallback: overall athletic score (so the column is never blank)
+    const intel = INTEL_CACHE[originalIdx] || null;
+    return (intel && intel.score !== null && intel.score !== undefined) ? String(Math.round(intel.score)) : "—";
+  }
+
   filtered.forEach((x, i) => {
     const r = x.r;
     const tr = document.createElement("tr");
     tr.dataset.idx = x.idx;
     if (x.idx === activeIndex) tr.classList.add("active");
+
     const url = photoUrlForRow(r);
-    tr.innerHTML = `
-      <td>
-        <div style="display:flex;gap:10px;align-items:center">
-          <div class="avatarBox" style="width:34px;height:34px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)">
-            ${url ? `<img class="avatarImg" data-initials="${initialsForRow(r)}" src="${url}" style="width:100%;height:100%;object-fit:cover" />` : `<div class="avatarInitials">${initialsForRow(r)}</div>`}
+
+    if (IS_USER_VIEW){
+      const avatarSize = 44;
+      const best40 = bestAttemptValue(r, METRICS.find(m=>m.key==="dash40"));
+      const bestBroad = bestAttemptValue(r, METRICS.find(m=>m.key==="broad"));
+      const bestSh = bestAttemptValue(r, METRICS.find(m=>m.key==="shuttle"));
+      const bestCone = bestAttemptValue(r, METRICS.find(m=>m.key==="cone"));
+      const bestBench = bestAttemptValue(r, METRICS.find(m=>m.key==="bench"));
+
+      tr.innerHTML = `
+        <td>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="avatarBox" style="width:${avatarSize}px;height:${avatarSize}px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)">
+              ${url ? `<img class="avatarImg" data-initials="${initialsForRow(r)}" src="${url}" style="width:100%;height:100%;object-fit:cover" />` : `<div class="avatarInitials">${initialsForRow(r)}</div>`}
+            </div>
+            <strong>${safe(r[COL.name])}</strong>
           </div>
-          <strong>${safe(r[COL.name])}</strong>
-        </div>
-      </td>
-      <td data-label="Age">${safe(r[COL.age])}</td>
-      <td data-label="Weight">${safe(r[COL.weight])}</td>
-      <td data-label="School">${safe(r[COL.school])}</td>
-    `;
+        </td>
+        <td data-label="Age">${safe(r[COL.age])}</td>
+        <td data-label="Weight">${safe(r[COL.weight])}</td>
+        <td data-label="Height">${formatHeightFeetInches(r[COL.height])}</td>
+        <td data-label="40yd">${formatMetric(METRICS.find(m=>m.key==="dash40"), best40)}</td>
+        <td data-label="Broad">${formatMetric(METRICS.find(m=>m.key==="broad"), bestBroad)}</td>
+        <td data-label="5-10-5">${formatMetric(METRICS.find(m=>m.key==="shuttle"), bestSh)}</td>
+        <td data-label="3-Cone">${formatMetric(METRICS.find(m=>m.key==="cone"), bestCone)}</td>
+        <td data-label="Bench">${formatMetric(METRICS.find(m=>m.key==="bench"), bestBench)}</td>
+        <td data-label="Draft">${draftValueForRow(r, x.idx)}</td>
+      `;
+    } else {
+      tr.innerHTML = `
+        <td>
+          <div style="display:flex;gap:10px;align-items:center">
+            <div class="avatarBox" style="width:34px;height:34px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)">
+              ${url ? `<img class="avatarImg" data-initials="${initialsForRow(r)}" src="${url}" style="width:100%;height:100%;object-fit:cover" />` : `<div class="avatarInitials">${initialsForRow(r)}</div>`}
+            </div>
+            <strong>${safe(r[COL.name])}</strong>
+          </div>
+        </td>
+        <td data-label="Age">${safe(r[COL.age])}</td>
+        <td data-label="Weight">${safe(r[COL.weight])}</td>
+        <td data-label="School">${safe(r[COL.school])}</td>
+      `;
+    }
+
     tr.addEventListener("click", () => selectAthlete(x.idx));
     tb.appendChild(tr);
   });
-  applyAvatarFallback();  initWatchlistPillBtn();
+
+  applyAvatarFallback();
+  initWatchlistPillBtn();
 }
 
 
@@ -1977,6 +2032,44 @@ function applyPublicViewMode(){
 }
 if (IS_PUBLIC_VIEW){
   applyPublicViewMode();
+}
+
+
+// User view mode (?view=user): athlete/parent scoreboard table only
+function applyUserViewMode(){
+  // Hide controls not meant for participants
+  const hideIds = [
+    "toggleScout","toggleCoach","toggleMedia","mediaTemplateSelect",
+    "unlockProBtn","photosLabel","csvLabel","githubBtn","versionBtn","presentBtn","exportCsvBtn"
+  ];
+  hideIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  });
+
+  // Hide right-side details (CSS also handles layout)
+  const dc = document.getElementById("detailCard");
+  if (dc) dc.style.display = "none";
+
+  // Expand athlete table headers for scoreboard view
+  const headRow = document.querySelector('.athleteTableScroll table thead tr');
+  if (headRow){
+    headRow.innerHTML = `
+      <th style="width:22%"><span class="thSort" data-sortcol="name" role="button" tabindex="0">Name<span class="thArrow" data-arrow-for="name"></span></span></th>
+      <th style="width:6%"><span class="thSort" data-sortcol="age" role="button" tabindex="0">Age<span class="thArrow" data-arrow-for="age"></span></span></th>
+      <th style="width:8%"><span class="thSort" data-sortcol="weight" role="button" tabindex="0">Weight<span class="thArrow" data-arrow-for="weight"></span></span></th>
+      <th style="width:8%">Height</th>
+      <th style="width:8%">40yd</th>
+      <th style="width:8%">Broad</th>
+      <th style="width:8%">5-10-5</th>
+      <th style="width:8%">3-Cone</th>
+      <th style="width:8%">Bench</th>
+      <th style="width:16%">Draft</th>
+    `;
+  }
+}
+if (IS_USER_VIEW){
+  applyUserViewMode();
 }
 
 

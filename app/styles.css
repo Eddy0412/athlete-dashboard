@@ -651,3 +651,8 @@ html.mediaView #watchCountPill{ display:none !important; }
 /* Softgate: hide Pro unlock control in Public/Media views */
 html.publicView #unlockProBtn,
 html.mediaView #unlockProBtn{ display:none !important; }
+
+
+/* User view (?view=user): table-only layout */
+.userView .row{ grid-template-columns: 1fr; }
+.userView #detailCard{ display:none; }
