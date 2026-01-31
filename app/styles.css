@@ -1,5 +1,9 @@
     :root{
-      --bg:#0b0f17;
+      
+  --scrollbar-track: rgba(255,255,255,.04);
+  --scrollbar-thumb: rgba(138,160,182,.30);
+  --scrollbar-thumb-hover: rgba(138,160,182,.52);
+--bg:#0b0f17;
       --card:#121a27;
       --muted:#8aa0b6;
       --text:#e8f0ff;
@@ -244,7 +248,22 @@ html.mediaView #mediaTemplateSelect, body.mediaMode #mediaTemplateSelect{display
       letter-spacing:.5px;
       user-select:none;
     }
+/* ===== Athlete list avatars: force consistent square sizing ===== */
+.avatarBox{
+  width:34px;
+  height:34px;
+  flex:0 0 34px;           /* never shrink */
+  border-radius:999px;
+  overflow:hidden;
+}
 
+.avatarBox img{
+  width:100%;
+  height:100%;
+  display:block;           /* prevents baseline weirdness */
+  object-fit:cover;        /* fills square consistently */
+  object-position:center;
+}
 
 /* Link-style controls (from v1.0.118 look) */
 .linkBtn{
@@ -479,6 +498,18 @@ html.proView #toggleMedia{ display:none !important; }
 
 html.proView #presentBtn{ display:none !important; }
 html.proView #versionBtn{ display:none !important; }
+
+/* Pro-only export button (keeps layout stable in other views) */
+#exportCsvBtn{ display:none; }
+html.proView #exportCsvBtn{
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  padding:9px 10px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+#exportCsvBtn svg{ width:16px; height:16px; opacity:.9; }
 /* Public View: hide advanced controls */
 .publicView #photosLabel,
 .publicView #csvLabel,
@@ -540,16 +571,83 @@ html.mediaView #watchCountPill{ display:none !important; }
 
 #watchCountPill.watchOn{ background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.35); }
 
+/* ================= MINIMAL SCROLLBARS =================
+   Notes:
+   - Chromium (Chrome/Edge) uses ::-webkit-scrollbar
+   - Firefox uses scrollbar-width / scrollbar-color
+   - Applied to the athlete list scroll container + modal/drawer scroll areas
+*/
 
-/* ===== User View (?view=user) ===== */
-html.userView #detailCard,
-html.userView #twoColWrap{
-  display:none !important;
+/* Firefox */
+.athleteTableScroll,
+#modalContent,
+.drawerBody{
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
-html.userView .row{
-  grid-template-columns: 1fr !important;
+
+/* Chromium/WebKit */
+.athleteTableScroll::-webkit-scrollbar,
+#modalContent::-webkit-scrollbar,
+.drawerBody::-webkit-scrollbar{
+  width: 8px;
+  height: 8px;
 }
-html.userView .athleteTableScroll{
-  max-height: 72vh;
-  overflow-x: auto;
+
+.athleteTableScroll::-webkit-scrollbar-track,
+#modalContent::-webkit-scrollbar-track,
+.drawerBody::-webkit-scrollbar-track{
+  background: var(--scrollbar-track);
+  border-radius: 999px;
 }
+
+.athleteTableScroll::-webkit-scrollbar-thumb,
+#modalContent::-webkit-scrollbar-thumb,
+.drawerBody::-webkit-scrollbar-thumb{
+  background: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--scrollbar-track); /* subtle inset */
+}
+
+.athleteTableScroll::-webkit-scrollbar-thumb:hover,
+#modalContent::-webkit-scrollbar-thumb:hover,
+.drawerBody::-webkit-scrollbar-thumb:hover{
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* ===== Athlete list sort chevrons (cosmetic only) =====
+   Goals:
+   - Smaller, subtle chevrons
+   - No header text shifting
+   - Avoid horizontal scrollbar in athlete list
+   Note: app.js controls arrow visibility by setting the span text to ▲ / ▼ / "".
+*/
+.athleteTableScroll{ overflow-x:hidden !important; overflow-y:auto !important; }
+
+.thSort{
+  display:inline-flex;
+  align-items:center;
+  cursor:pointer;
+  user-select:none;
+  position:relative;
+  padding-right:8px; /* arrow is absolutely positioned */
+}
+.thSort:focus{ outline:none !important; box-shadow:none !important; }
+
+.thArrow{
+  position:absolute;
+  right:0;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:7px;
+  line-height:1;
+  opacity:.40;
+  display:none; /* no layout impact */
+  pointer-events:none;
+  padding: 0 3px;
+}
+.thArrow:not(:empty){ display:inline-block; }
+
+/* Softgate: hide Pro unlock control in Public/Media views */
+html.publicView #unlockProBtn,
+html.mediaView #unlockProBtn{ display:none !important; }
