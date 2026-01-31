@@ -154,6 +154,9 @@ let filtered = [];
 let activeIndex = -1;
 let sourceLabel = "—";
 
+let lastCsvText = "";
+let lastCsvName = "results.csv";
+
 let radarChart = null;
 let barChart = null;
 
@@ -762,6 +765,9 @@ function setSource(text){
 }
 
 function parseCsvText(csvText, label){
+  // Keep last-loaded CSV for Pro export (client-side only)
+  lastCsvText = String(csvText || "");
+  lastCsvName = String(label || "results.csv");
   setStatus("Parsing…");
   Papa.parse(csvText, {
     header: true,
@@ -1985,6 +1991,44 @@ try {
   }
 } catch (e) {
   console.warn("[ACD] githubBtn binding failed", e);
+}
+
+
+/* Pro-only: Export current CSV (last loaded) */
+try {
+  const eb = document.getElementById("exportCsvBtn");
+  if (eb && !eb._bound) {
+    eb._bound = true;
+
+    // Visibility is primarily controlled by CSS + html.proView.
+    // Still hide it in non-pro views to avoid accidental use.
+    if (!IS_PRO_VIEW) eb.style.display = "none";
+
+    eb.addEventListener("click", () => {
+      if (!IS_PRO_VIEW) return;
+
+      const csv = String(lastCsvText || "");
+      if (!csv.trim()) {
+        alert("No CSV loaded yet.");
+        return;
+      }
+
+      const filename = (lastCsvName && /\.csv$/i.test(lastCsvName)) ? lastCsvName : "results.csv";
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 500);
+    });
+  }
+} catch (e) {
+  console.warn("[ACD] exportCsvBtn binding failed", e);
 }
 
 
