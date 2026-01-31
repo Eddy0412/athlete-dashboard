@@ -592,6 +592,57 @@ function toNum(v){
   return Number.isFinite(n) ? n : null;
 }
 
+// Broad Jump normalization:
+// Some CSVs store Broad Jump as feet.inches (e.g., 6.1 = 6 ft 1 in; 11.5 = 11 ft 5 in).
+// We normalize to total inches (e.g., 6.0 -> 72 in) so scoring/percentiles/charts stay consistent.
+function parseBroadJumpToInches(v){
+  if (v === null || v === undefined) return null;
+
+  // If it's already a number and looks like inches (typical broad jump 60–150), keep it.
+  if (typeof v === "number" && Number.isFinite(v)){
+    if (v >= 30) return v; // assume inches
+    // treat <30 as feet.inches
+    const s = String(v);
+    // fall through to string parsing
+    v = s;
+  }
+
+  const sRaw = String(v).trim();
+  if (!sRaw) return null;
+
+  // Support formats like 6'1", 6' 1, 6ft 1in
+  const mFtIn = sRaw.match(/^(\d{1,2})\s*(?:'|ft)\s*(\d{1,2})?/i);
+  if (mFtIn){
+    const ft = parseInt(mFtIn[1], 10);
+    const inch = mFtIn[2] ? parseInt(mFtIn[2], 10) : 0;
+    if (Number.isFinite(ft) && ft >= 0 && ft <= 30 && Number.isFinite(inch) && inch >= 0 && inch <= 11){
+      return (ft * 12) + inch;
+    }
+  }
+
+  // Plain numeric string
+  // If it contains a decimal, treat as feet.inches when the whole value is < 30.
+  const s = sRaw.replace(",", ".");
+  const n = Number(s);
+  if (!Number.isFinite(n)) return null;
+
+  if (n >= 30){
+    return n; // inches
+  }
+
+  // feet.inches (inches are the digits after the dot, not tenths)
+  const parts = s.split(".");
+  const ft = parseInt(parts[0] || "0", 10);
+  const inch = parseInt((parts[1] || "0").slice(0,2), 10);
+
+  if (!Number.isFinite(ft) || ft < 0) return null;
+  if (!Number.isFinite(inch) || inch < 0) return null;
+
+  // If inch is out of range (e.g., 6.12), clamp safely to 11.
+  const inchClamped = Math.max(0, Math.min(11, inch));
+  return (ft * 12) + inchClamped;
+}
+
 function formatWeightLbsRounded(v){
   const n = typeof v === "number"
     ? v
