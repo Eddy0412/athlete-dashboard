@@ -68,7 +68,7 @@ Formulario#,Nombre,Edad,Fecha de Nacimiento,Peso,Estatura,Email,Celular,Direccio
 066,Sergey Enriquez,18,4/12/2008,135.6,174,,64437409,"Tocumen, Torre Molino",UTP,,7.7,5.38,,,,,,,,,
 068,Angel Vasquez,17,4/7/2009,188,179,,64845997,12 Octubre,COLEGIO LA SALLE,,7,5.28,,,,,,,,,
 069,Elimelet Glass,18,12/28/2007,173,180,,65673044,Sabanita,UIP,,9.2,4.69,,,,5.05,,,,,
-070,Aizar Bula,17,4/13/2009,183,166,,62921070,"Colon, 4 Altos La Cresta",CENTRO ACADEMICO PALABRA DE VIDA,,9.5,4.95,,19,,,,,,,
+070,Aizar Bula,17,4/13/2009,183,166,,62921070,"Colon, 4 Altos La Cresta",CENTRO ACADEMICO PALABRA DE VIDA,4.80,9.5,4.95,,19,,,,,,,
 071,Adolfo Booth,17,1/29/2009,295,179,,67355031,"Colon, San Martin",CENTRO ACADEMICO PALABRA DE VIDA,,6.6,5.45,,6,,,,,,,
 072,Alexander Delgado,18,5/16/2008,350,190,,63984598,"Villa De San Jose, San Miguelito",IPTC NICOLAS DEL ROSARIO,,5.11,6.2,,25,,7.81,,,,,
 073,Maximo Aja,17,2/16/2009,147,188,,63651990,Costa Del Este,MET,4.97,7.6,4.8,,0,,,,,,,
@@ -109,6 +109,7 @@ Formulario#,Nombre,Edad,Fecha de Nacimiento,Peso,Estatura,Email,Celular,Direccio
 110,Roy Montenegro,17,11/3/2008,157,176,,67795518,Chanis,LA SALLE,5.44,,,,0,,,,,,,
 111,Luis Guevara,17,8/21/2008,148,180,,63434573,Villa Lucre,LA SALLE,5.5,,,,0,,,,,,,
 112,Luis Jimenez,18,11/26/2007,162,167,,64601286,Arraijan,UTP,4.85,,,,6,,,,,,,
+
 
 
 
