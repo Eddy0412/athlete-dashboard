@@ -2172,3 +2172,15 @@ try{
   console.log("[ACD] loaded", ACD.version, ACD.loadedAt);
 
 })();
+
+
+// User-view only header button (safe, additive)
+;(function(){
+  try{
+    const btn = document.getElementById('kkmSolutionsBtn');
+    if(!btn) return;
+    btn.addEventListener('click', () => {
+      window.open('https://kreativekingdommedia.com', '_blank', 'noopener');
+    });
+  }catch(e){}
+})();

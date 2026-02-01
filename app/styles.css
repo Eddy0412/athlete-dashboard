@@ -656,3 +656,11 @@ html.mediaView #unlockProBtn{ display:none !important; }
 /* User view (?view=user): table-only layout */
 .userView .row{ grid-template-columns: 1fr; }
 .userView #detailCard{ display:none; }
+
+
+/* User view header tweaks (scoped to ?view=user only) */
+#kkmSolutionsBtn{display:none;}
+html.userView #kkmSolutionsBtn{display:inline-flex !important;}
+html.userView #aboutBtn{display:none !important;}
+html.userView #watchCountPill{display:none !important;}
+html.userView #proPill{display:none !important;}
