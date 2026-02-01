@@ -674,5 +674,42 @@ html.userView #kflCombinePill{ display:inline-flex !important; }
 html.userView #defaultTip{ display:none !important; }
 html.userView #userTip{ display:block !important; }
 
-html.userView #loadDefault{ display:none !important; }
+/* ================= USER VIEW: MOBILE HORIZONTAL SCROLL =================
+   In ?view=user, we want athletes/parents to swipe horizontally to see all result columns.
+   This overrides the global mobile "photo + name only" compression at <=720px.
+*/
+html.userView .athleteTableScroll{
+  overflow-x:auto !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+html.userView .athleteTableScroll table{
+  min-width: 980px; /* keeps columns readable; swipe to see the rest */
+}
 
+@media (max-width: 720px){
+  html.userView thead{ display:table-header-group !important; }
+  html.userView tbody tr{
+    display:table-row !important;
+    padding:0 !important;
+    border-bottom:0 !important;
+  }
+  html.userView tbody td{
+    display:table-cell !important;
+    padding:10px 10px !important;
+    border-bottom:1px solid rgba(30,42,60,.7) !important;
+  }
+  html.userView tbody td:nth-child(n+2){
+    display:table-cell !important;
+  }
+  html.userView tbody td:first-child{
+    min-width:240px; /* ensures Name cell doesn't crush */
+  }
+  html.userView tbody td:first-child strong{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    display:block;
+    max-width:220px;
+  }
+}
