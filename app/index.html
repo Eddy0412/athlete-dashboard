@@ -109,13 +109,14 @@
 <div class="small" id="athleteCount">0 loaded</div>
 </div>
 <button class="pill" id="watchCountPill" type="button" style="margin-right:6px;cursor:pointer;border:1px solid rgba(255,215,0,.25);background:rgba(255,215,0,.08);">☆ Watchlist: 0</button>
-      <span class="pill" id="dataSourcePill" style="margin-right:6px">—</span><span class="pill" id="statusPill">No data</span>
+      <span class="pill" id="dataSourcePill" style="margin-right:6px">—</span><span class="pill" id="kflCombinePill" style="margin-right:6px;display:none">KFL Combine 2026</span><span class="pill" id="statusPill">No data</span>
 </div>
 <div class="bd">
 <div class="drop" id="dropZone">
-<div class="hint">
+<div class="hint" id="defaultTip">
 <strong>Tip:</strong> Load your <span class="mono">results.csv</span> (or any CSV) and optionally load an <strong>images folder</strong> named by <span class="mono">Formulario#</span> (e.g., <span class="mono">5.jpg</span>, <span class="mono">19.png</span>).
           </div>
+<div class="hint" id="userTip" style="display:none"><strong>Tip:</strong> The results provide are a reflection of your best attempts during the combine tryouts.</div>
 </div>
 <div style="height:12px"></div>
 <div class="athleteTableScroll" style="max-height:560px;overflow:auto;border:1px solid rgba(30,42,60,.9);border-radius:14px">

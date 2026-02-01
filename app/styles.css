@@ -664,3 +664,13 @@ html.userView #kkmSolutionsBtn{display:inline-flex !important;}
 html.userView #aboutBtn{display:none !important;}
 html.userView #watchCountPill{display:none !important;}
 html.userView #proPill{display:none !important;}
+/* User view: simplify athlete list header + tip text */
+html.userView .sortWrap{ display:none !important; }
+html.userView #adminPill{ display:none !important; }
+
+html.userView #dataSourcePill{ display:none !important; }
+html.userView #kflCombinePill{ display:inline-flex !important; }
+
+html.userView #defaultTip{ display:none !important; }
+html.userView #userTip{ display:block !important; }
+
