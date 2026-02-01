@@ -2070,6 +2070,18 @@ function applyUserViewMode(){
 }
 if (IS_USER_VIEW){
   applyUserViewMode();
+
+  // User view convenience: auto-load results.csv on first paint
+  // (keeps existing manual controls untouched in other views)
+  try{
+    setTimeout(() => {
+      try{
+        if (!Array.isArray(rows) || rows.length === 0){
+          loadDefaultCsv();
+        }
+      }catch(e){}
+    }, 50);
+  }catch(e){}
 }
 
 
