@@ -678,6 +678,13 @@ html.userView #loadDefault{ display:none !important; }
 
 
 
+
+/* Right side end-group (keeps Draft Mode + Last Refresh pinned to far right) */
+.controlsRight{ display:flex; align-items:center; gap:10px; }
+.controlsRightEnd{ margin-left:auto; display:inline-flex; align-items:center; gap:10px; }
+
+/* Undrafted label subtle */
+.undrafted{ opacity:.75; }
 /* ================= Draft Mode (v1.0.124) ================= */
 #draftModeBtn, #saveDraftBtn{ display:none; }
 
@@ -748,8 +755,8 @@ html.draftMode table{
 /* Tighter column spacing in Draft Mode */
 html.draftMode thead th,
 html.draftMode tbody td{
-  padding: 8px 8px !important;
-  font-size: 12.5px;
+  padding: 6px 6px !important;
+  font-size: 12.2px;
 }
 
 /* Draft status pill */
@@ -826,4 +833,12 @@ html.draftMode.proView tr.draftedRow:hover td{
 html.draftMode.proView tr.draftedRow td,
 html.draftMode.proView tr.draftedRow td *{
   pointer-events: none;
+}
+
+
+/* Pro Draft Mode: show a subtle X indicator on drafted rows */
+html.draftMode.proView tr.draftedRow:hover td:first-child strong::after{
+  content:"  ✕";
+  opacity:.55;
+  font-weight:900;
 }

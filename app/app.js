@@ -111,7 +111,7 @@ const DRAFT_CSV_NAME = "draft.csv"; // stored alongside results.csv (manual down
 const DRAFT_MODE_KEY = "acd_draft_mode_on_v1";
 let DRAFT_MODE_ON = false;
 let DRAFT_REFRESH_TIMER = null; // setInterval handle
-let DRAFT_REFRESH_MS = 30000;
+let DRAFT_REFRESH_MS = 10000;
 let DRAFT_MAP = new Map();      // id -> { status, round, pick, team }
 let DRAFT_DIRTY = new Map();    // id -> edited object (admin)
 let DRAFT_EDITING = false;      // admin safety: pause refresh while editing
@@ -1264,7 +1264,7 @@ function renderTable(){
 
         const roundCell = safe(d.round || "—");
         const pickCell  = safe(d.pick || "—");
-        const draftCell = safe((d.team && String(d.team).trim()) ? d.team : "Undrafted");
+        const draftCell = (d.team && String(d.team).trim()) ? safe(d.team) : `<span class="undrafted">Undrafted</span>`;
 
         tr.innerHTML = `
           <td>
@@ -2143,6 +2143,7 @@ function initResponsiveNav(){
     document.getElementById("photosLabel"),
     document.getElementById("csvLabel"),
     document.getElementById("draftModeBtn"),
+    document.getElementById("draftLastRefresh"),
     document.getElementById("saveDraftBtn"),
   ].filter(Boolean);
 
