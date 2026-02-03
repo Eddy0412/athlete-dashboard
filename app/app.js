@@ -1119,16 +1119,20 @@ function parseCsvText(csvText, label){
       setStatus("Loaded");
       recomputeIntelligence();
 
-      // Draft Mode: load and merge draft.csv before rendering the table.
-      if (DRAFT_MODE_ON && (IS_PRO_VIEW || IS_ADMIN_VIEW)){
+      // Draft Mode (Pro/Admin) OR User View: load and merge draft.csv before rendering.
+      const afterRender = () => {
+        render();
+        // Auto-select first athlete (non-user views only)
+        if (!IS_USER_VIEW && rows.length) selectAthlete(0);
+      };
+
+      if ((DRAFT_MODE_ON && (IS_PRO_VIEW || IS_ADMIN_VIEW)) || IS_USER_VIEW){
         loadDraftCsv().then(()=>{
           applyDraftToRows();
-          render();
+          afterRender();
         });
       } else {
-        render();
-        // Auto-select first athlete
-        if (rows.length) selectAthlete(0);
+        afterRender();
       }
     },
     error: (err) => {
@@ -1299,6 +1303,42 @@ function renderTable(){
 
   // Helper: in user view, try to display a "Draft" value if the CSV contains it.
   function draftValueForRow(r, originalIdx){
+    // User view: show draft.csv team (or Undrafted) + a small subline with round/pick + score.
+    if (IS_USER_VIEW){
+      const d = getDraftForRow(r);
+      const team = String(d.team || "").trim();
+      const round = String(d.round || "").trim();
+      const pick  = String(d.pick || "").trim();
+
+      // score (from existing intelligence cache)
+      let score = "—";
+      try{
+        const intel = INTEL_CACHE[originalIdx] || null;
+        if (intel && intel.score !== null && intel.score !== undefined && Number.isFinite(+intel.score)){
+          score = String(Math.round(+intel.score));
+        }
+      }catch(e){}
+
+      const top = team ? safe(team) : `<span class="undrafted">Undrafted</span>`;
+
+      // Subline rules:
+      // - drafted: RND x PK y - SCORE n
+      // - undrafted: SCORE n
+      let sub = "";
+      if (team){
+        const parts = [];
+        if (round) parts.push(`RND ${safe(round)}`);
+        if (pick) parts.push(`PK ${safe(pick)}`);
+        const rp = parts.length ? (parts.join(" ") + " - ") : "";
+        sub = `<div class="draftSub">${rp}SCORE ${safe(score)}</div>`;
+      } else {
+        sub = `<div class="draftSub">SCORE ${safe(score)}</div>`;
+      }
+
+      return `<div class="draftCell">${top}${sub}</div>`;
+    }
+
+    // Other views: keep prior behavior (prefer any existing Draft/Team column; fallback to score)
     try{
       const keys = Object.keys(r || {});
       const k = keys.find(k0=>{
@@ -1307,7 +1347,6 @@ function renderTable(){
       });
       if (k) return safe(r[k]);
     }catch(e){}
-    // fallback: overall athletic score (so the column is never blank)
     const intel = INTEL_CACHE[originalIdx] || null;
     return (intel && intel.score !== null && intel.score !== undefined) ? String(Math.round(intel.score)) : "—";
   }

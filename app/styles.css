@@ -685,6 +685,8 @@ html.userView #loadDefault{ display:none !important; }
 
 /* Undrafted label subtle */
 .undrafted{ opacity:.5; font-style:italic; }
+.draftCell{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.draftSub{ font-size:10px; opacity:.70; line-height:1.15; }
 /* ================= Draft Mode (v1.0.124) ================= */
 #draftModeBtn, #saveDraftBtn{ display:none; }
 
