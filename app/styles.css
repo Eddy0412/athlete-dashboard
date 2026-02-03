@@ -288,7 +288,7 @@ html.mediaView #mediaTemplateSelect, body.mediaMode #mediaTemplateSelect{display
 
 .kv .k, .contactLabel{font-weight:800;}
 
-.controlsRight{display:flex;gap:10px;align-items:center;}
+.controlsRight{display:flex;gap:10px;align-items:center;flex:1 1 auto;min-width:0;justify-content:flex-end;}
   .controlsRight #menuBtn{margin-right:auto;}
 
 
@@ -680,11 +680,11 @@ html.userView #loadDefault{ display:none !important; }
 
 
 /* Right side end-group (keeps Draft Mode + Last Refresh pinned to far right) */
-.controlsRight{ display:flex; align-items:center; gap:10px; }
+.controlsRight{ display:flex; align-items:center; gap:10px; flex:1 1 auto; min-width:0; justify-content:flex-end; }
 .controlsRightEnd{ margin-left:auto; display:inline-flex; align-items:center; gap:10px; }
 
 /* Undrafted label subtle */
-.undrafted{ opacity:.75; }
+.undrafted{ opacity:.5; font-style:italic; }
 /* ================= Draft Mode (v1.0.124) ================= */
 #draftModeBtn, #saveDraftBtn{ display:none; }
 
@@ -824,18 +824,14 @@ html.draftMode tr.draftedRow .avatarBox img{
 }
 
 /* Pro Draft Mode: drafted rows look/feel disabled (no hover lift) */
-html.draftMode.proView tr.draftedRow{
-  cursor: not-allowed;
+html.draftMode.proView tr.draftedRow,
+html.draftMode.proView tr.draftedRow td,
+html.draftMode.proView tr.draftedRow td *{
+  cursor: not-allowed !important;
 }
 html.draftMode.proView tr.draftedRow:hover td{
   background: rgba(255,255,255,.04);
 }
-html.draftMode.proView tr.draftedRow td,
-html.draftMode.proView tr.draftedRow td *{
-  pointer-events: none;
-}
-
-
 /* Pro Draft Mode: show a subtle X indicator on drafted rows */
 html.draftMode.proView tr.draftedRow:hover td:first-child strong::after{
   content:"  ✕";
