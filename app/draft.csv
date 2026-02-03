@@ -1,16 +1,26 @@
 Formulario#,Status,Round,Pick,Drafted Team
 001,Drafted,1,1,Eagles
 007,Drafted,1,5,Owls
+008,Drafted,5,25,Owls
 010,Drafted,2,8,Raiders
 013,Drafted,1,3,Raiders
+028,Drafted,4,17,Dragons
 031,Drafted,3,15,Owls
+032,Drafted,5,23,Raiders
 034,Drafted,1,2,Dragons
 035,Drafted,2,10,Owls
 036,Drafted,2,9,Kolts
+040,Drafted,4,19,Kolts
+042,Drafted,5,21,Eagles
 043,Drafted,3,13,Raiders
 054,Drafted,1,4,Kolts
+055,Drafted,4,20,Owls
 069,Drafted,2,7,Dragons
 070,Drafted,2,6,Eagles
 071,Drafted,3,14,Kolts
+072,Drafted,4,16,Eagles
+073,Drafted,5,22,Dragons
+078,Drafted,5,24,Kolts
+079,Drafted,4,18,Raiders
 090,Drafted,3,12,Dragons
 103,Drafted,3,11,Eagles
