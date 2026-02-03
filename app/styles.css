@@ -880,3 +880,33 @@ html.proView tr.draftedRow:hover,
 html.proView tr:has(.draftPill.drafted):hover{
   filter: none !important;
 }
+
+/* ================= PRO DRAFT MODE: hard right-align Draft controls ================= */
+
+/* Desktop only */
+@media (min-width: 981px){
+
+  /* Keep header controls on ONE row in Pro Draft Mode */
+  html.proView.draftMode .controls{
+    flex-wrap: nowrap !important;
+  }
+
+  /* Spacer still consumes middle space */
+  html.proView.draftMode .controlsSpacer{
+    flex: 1 1 auto !important;
+  }
+
+  /* ControlsRight becomes the true right edge */
+  html.proView.draftMode .controlsRight{
+    flex: 0 0 auto !important;
+    justify-content: flex-end !important;
+    margin-left: 0 !important;
+  }
+
+  /* Ensure Draft Mode + Last Refresh stay grouped */
+  html.proView.draftMode .controlsRightEnd{
+    display: inline-flex !important;
+    align-items: center;
+    gap: 10px;
+  }
+}
