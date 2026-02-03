@@ -766,3 +766,37 @@ html.draftMode table{ min-width: 1180px; }
   color:#fff !important;
   border-radius:12px !important;
 }
+
+
+/* ================= Draft Mode Tweaks (v1.0.124d) ================= */
+
+/* Show last-refresh indicator only while Draft Mode is on */
+#draftLastRefresh{ display:none; }
+html.draftMode #draftLastRefresh{
+  display:inline-flex !important;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:#dfeaff;
+}
+
+/* Different table widths per Draft Mode view */
+html.draftMode.proView table{ min-width: 1180px; } /* includes metrics */
+html.draftMode:not(.publicView):not(.mediaView):not(.proView):not(.userView) table{ min-width: 980px; } /* admin: no metrics */
+
+/* Drafted row highlight + grayscale avatar */
+html.draftMode tr.draftedRow td{
+  background: rgba(255,255,255,.04);
+}
+html.draftMode tr.draftedRow:hover td{
+  background: rgba(255,255,255,.06);
+}
+html.draftMode tr.draftedRow .avatarBox img{
+  filter: grayscale(1) brightness(.85) contrast(.95);
+  opacity: .72;
+}

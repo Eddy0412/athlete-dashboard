@@ -2,7 +2,7 @@
   "use strict";
   // Global namespace (single export surface)
   const ACD = (window.ACD = window.ACD || {});
-  ACD.version = ACD.version || "1.0.123";
+  ACD.version = ACD.version || "1.0.124d";
 
   // Boot guard: prevents double-initialization if scripts are injected twice
   if (ACD._booted) return;
@@ -116,6 +116,26 @@ let DRAFT_MAP = new Map();      // id -> { status, round, pick, team }
 let DRAFT_DIRTY = new Map();    // id -> edited object (admin)
 let DRAFT_EDITING = false;      // admin safety: pause refresh while editing
 let _theadOriginalHtml = null;
+let _draftLastRefreshTs = null;
+
+function fmtTimeHHMMSS(d){
+  try{
+    const hh = String(d.getHours()).padStart(2,"0");
+    const mm = String(d.getMinutes()).padStart(2,"0");
+    const ss = String(d.getSeconds()).padStart(2,"0");
+    return `${hh}:${mm}:${ss}`;
+  }catch(e){ return "—"; }
+}
+function setDraftLastRefresh(ts){
+  _draftLastRefreshTs = ts || Date.now();
+  const el = document.getElementById("draftLastRefresh");
+  if (!el) return;
+  const t = fmtTimeHHMMSS(new Date(_draftLastRefreshTs));
+  el.textContent = "Last Refresh: " + t;
+  // Only show while draft mode is on (CSS also enforces)
+  el.style.display = DRAFT_MODE_ON ? "inline-flex" : "none";
+}
+
 
 /** Draft CSV columns (keep flexible matching) */
 const DRAFT_COL = {
@@ -211,6 +231,8 @@ function setDraftMode(on){
   // Update button text + visibility helpers
   const b = document.getElementById("draftModeBtn");
   if (b) b.textContent = "Draft Mode: " + (DRAFT_MODE_ON ? "On" : "Off");
+  // Last refresh indicator
+  if (!DRAFT_MODE_ON) setDraftLastRefresh(null);
 
   const save = document.getElementById("saveDraftBtn");
   if (save) save.style.display = (IS_ADMIN_VIEW && DRAFT_MODE_ON) ? "inline-flex" : "none";
@@ -232,7 +254,7 @@ function setDraftMode(on){
   }
   if (DRAFT_MODE_ON){
     // Ensure draft CSV is loaded once
-    loadDraftCsv().then(()=>{ applyDraftToRows(); render(); });
+    loadDraftCsv().then(()=>{ applyDraftToRows(); render(); setDraftLastRefresh(Date.now()); });
 
     DRAFT_REFRESH_TIMER = setInterval(() => {
       // Admin safety: do not overwrite active edits
@@ -240,7 +262,7 @@ function setDraftMode(on){
 
       // In draft mode, always refresh results + draft file
       // (results.csv is the baseline data source in this tool)
-      loadDefaultCsv().then(()=>loadDraftCsv().then(()=>{ applyDraftToRows(); render(); }));
+      loadDefaultCsv().then(()=>loadDraftCsv().then(()=>{ applyDraftToRows(); render(); setDraftLastRefresh(Date.now()); }));
     }, DRAFT_REFRESH_MS);
   }
 }
@@ -254,8 +276,23 @@ function swapTableHeaderForMode(){
   }
 
   if (DRAFT_MODE_ON && (IS_PRO_VIEW || IS_ADMIN_VIEW)){
+    if (IS_ADMIN_VIEW){
+      headRow.innerHTML = `
+        <th style="width:34%"><span class="thSort" data-sortcol="name" role="button" tabindex="0">Name<span class="thArrow" data-arrow-for="name"></span></span></th>
+        <th style="width:7%"><span class="thSort" data-sortcol="age" role="button" tabindex="0">Age<span class="thArrow" data-arrow-for="age"></span></span></th>
+        <th style="width:9%"><span class="thSort" data-sortcol="weight" role="button" tabindex="0">Weight<span class="thArrow" data-arrow-for="weight"></span></span></th>
+        <th style="width:9%"><span class="thSort" data-sortcol="height" role="button" tabindex="0">Height<span class="thArrow" data-arrow-for="height"></span></span></th>
+        <th style="width:18%"><span class="thSort" data-sortcol="school" role="button" tabindex="0">School<span class="thArrow" data-arrow-for="school"></span></span></th>
+        <th style="width:8%">Status</th>
+        <th style="width:5%">Round</th>
+        <th style="width:5%">Pick</th>
+        <th style="width:10%">Draft</th>
+      `;
+      return;
+    }
+    // Pro draft mode (read-only): no Status column, tighter Name column
     headRow.innerHTML = `
-      <th style="width:24%"><span class="thSort" data-sortcol="name" role="button" tabindex="0">Name<span class="thArrow" data-arrow-for="name"></span></span></th>
+      <th style="width:20%"><span class="thSort" data-sortcol="name" role="button" tabindex="0">Name<span class="thArrow" data-arrow-for="name"></span></span></th>
       <th style="width:6%"><span class="thSort" data-sortcol="age" role="button" tabindex="0">Age<span class="thArrow" data-arrow-for="age"></span></span></th>
       <th style="width:8%"><span class="thSort" data-sortcol="weight" role="button" tabindex="0">Weight<span class="thArrow" data-arrow-for="weight"></span></span></th>
       <th style="width:8%"><span class="thSort" data-sortcol="height" role="button" tabindex="0">Height<span class="thArrow" data-arrow-for="height"></span></span></th>
@@ -264,7 +301,6 @@ function swapTableHeaderForMode(){
       <th style="width:7%"><span class="thSort" data-sortcol="shuttle" role="button" tabindex="0">5-10-5<span class="thArrow" data-arrow-for="shuttle"></span></span></th>
       <th style="width:7%"><span class="thSort" data-sortcol="cone" role="button" tabindex="0">3-cone<span class="thArrow" data-arrow-for="cone"></span></span></th>
       <th style="width:6%"><span class="thSort" data-sortcol="bench" role="button" tabindex="0">Bench<span class="thArrow" data-arrow-for="bench"></span></span></th>
-      <th style="width:7%">Status</th>
       <th style="width:6%">Round</th>
       <th style="width:6%">Pick</th>
       <th style="width:10%">Draft</th>
@@ -439,6 +475,27 @@ function _tableSortValue(r, key){
   if (key === "name") return normalizeStr(r[COL.name]);
   if (key === "age") return toNum(r[COL.age]);
   if (key === "weight") return toNum(r[COL.weight]);
+  if (key === "school") return normalizeStr(r[COL.school] || "");
+  if (key === "height"){
+    // convert to inches for sorting (uses existing formatting heuristics)
+    const s = formatHeightFeetInches(r[COL.height]);
+    const m = String(s || "").match(/(\d)\s*'\s*(\d{1,2})/);
+    if (m){
+      const ft = parseInt(m[1],10);
+      const inch = parseInt(m[2],10);
+      return (ft*12) + inch;
+    }
+    const n = toNum(r[COL.height]);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  // Combine metrics (best attempt)
+  if (key === "dash40") return bestAttemptValue(r, METRICS.find(m=>m.key==="dash40"));
+  if (key === "broad") return bestAttemptValue(r, METRICS.find(m=>m.key==="broad"));
+  if (key === "shuttle") return bestAttemptValue(r, METRICS.find(m=>m.key==="shuttle"));
+  if (key === "cone") return bestAttemptValue(r, METRICS.find(m=>m.key==="cone"));
+  if (key === "bench") return bestAttemptValue(r, METRICS.find(m=>m.key==="bench"));
+
   return null;
 }
 
@@ -467,7 +524,7 @@ function _compareTableSort(a, b){
 
 function _setHeaderArrows(){
   try{
-    const keys = ["name","age","weight"];
+    const keys = ["name","age","weight","height","dash40","broad","shuttle","cone","bench","school"];
     keys.forEach(k=>{
       const el = document.querySelector(`.thArrow[data-arrow-for="${k}"]`);
       if (!el) return;
@@ -1151,72 +1208,87 @@ function initialsForRow(r){
 
 function renderTable(){
   const tb = $("athleteTable");
-  tb.innerHTML = "";
-
-  // Draft Mode: Pro/Admin wide table (list-only, merges draft.csv)
+  tb.innerHTML = "";  // Draft Mode: Pro/Admin table (list-only, merges draft.csv)
   if (DRAFT_MODE_ON && (IS_PRO_VIEW || IS_ADMIN_VIEW)){
+    const isAdminDraft = IS_ADMIN_VIEW;
+
     filtered.forEach((x) => {
       const r = x.r;
       const tr = document.createElement("tr");
       tr.dataset.idx = x.idx;
 
       const url = photoUrlForRow(r);
-      const avatarSize = 40;
-
-      const best40 = bestAttemptValue(r, METRICS.find(m=>m.key==="dash40"));
-      const bestBroad = bestAttemptValue(r, METRICS.find(m=>m.key==="broad"));
-      const bestSh = bestAttemptValue(r, METRICS.find(m=>m.key==="shuttle"));
-      const bestCone = bestAttemptValue(r, METRICS.find(m=>m.key==="cone"));
-      const bestBench = bestAttemptValue(r, METRICS.find(m=>m.key==="bench"));
+      const avatarSize = isAdminDraft ? 44 : 40;
 
       const d = getDraftForRow(r);
+      const isDrafted = (String(d.team || "").trim() || d.status === "Drafted");
 
-      // Admin mode: editable draft fields
-      const isAdminDraft = IS_ADMIN_VIEW;
+      if (isDrafted) tr.classList.add("draftedRow");
 
-      const statusCell = isAdminDraft
-        ? `<select class="input draftInput" data-draft-field="status" data-draft-id="${safe(r[COL.id])}" style="width:110px;padding:7px 8px">
+      if (isAdminDraft){
+        // Admin: compact draft-entry table (no combine metrics)
+        const statusCell = `<select class="input draftInput" data-draft-field="status" data-draft-id="${safe(r[COL.id])}" style="width:110px;padding:7px 8px">
              <option value="Drafted" ${d.status==="Drafted" ? "selected":""}>Drafted</option>
              <option value="Undrafted" ${d.status!=="Drafted" ? "selected":""}>Undrafted</option>
-           </select>`
-        : `<span class="draftPill ${d.status==="Drafted" ? "drafted": "undrafted"}">${safe(d.status)}</span>`;
+           </select>`;
 
-      const roundCell = isAdminDraft
-        ? `<input class="input draftInput" data-draft-field="round" data-draft-id="${safe(r[COL.id])}" value="${safe(d.round)}" placeholder="—" style="width:64px;padding:7px 8px" />`
-        : safe(d.round || "—");
+        const roundCell = `<input class="input draftInput" data-draft-field="round" data-draft-id="${safe(r[COL.id])}" value="${safe(d.round)}" placeholder="—" style="width:64px;padding:7px 8px" />`;
+        const pickCell  = `<input class="input draftInput" data-draft-field="pick" data-draft-id="${safe(r[COL.id])}" value="${safe(d.pick)}" placeholder="—" style="width:64px;padding:7px 8px" />`;
+        const teamCell  = `<input class="input draftInput" data-draft-field="team" data-draft-id="${safe(r[COL.id])}" value="${safe(d.team)}" placeholder="Team…" style="min-width:180px;padding:7px 8px" />`;
 
-      const pickCell = isAdminDraft
-        ? `<input class="input draftInput" data-draft-field="pick" data-draft-id="${safe(r[COL.id])}" value="${safe(d.pick)}" placeholder="—" style="width:64px;padding:7px 8px" />`
-        : safe(d.pick || "—");
-
-      const teamCell = isAdminDraft
-        ? `<input class="input draftInput" data-draft-field="team" data-draft-id="${safe(r[COL.id])}" value="${safe(d.team)}" placeholder="Team…" style="min-width:180px;padding:7px 8px" />`
-        : safe(d.team || "—");
-
-      tr.innerHTML = `
-        <td>
-          <div style="display:flex;gap:10px;align-items:center">
-            <div class="avatarBox" style="width:${avatarSize}px;height:${avatarSize}px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)">
-              ${url ? `<img class="avatarImg" data-initials="${initialsForRow(r)}" src="${url}" style="width:100%;height:100%;object-fit:cover" />` : `<div class="avatarInitials">${initialsForRow(r)}</div>`}
+        tr.innerHTML = `
+          <td>
+            <div style="display:flex;gap:10px;align-items:center">
+              <div class="avatarBox" style="width:${avatarSize}px;height:${avatarSize}px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)">
+                ${url ? `<img class="avatarImg" data-initials="${initialsForRow(r)}" src="${url}" style="width:100%;height:100%;object-fit:cover" />` : `<div class="avatarInitials">${initialsForRow(r)}</div>`}
+              </div>
+              <strong>${safe(r[COL.name])}</strong>
             </div>
-            <strong>${safe(r[COL.name])}</strong>
-          </div>
-        </td>
-        <td data-label="Age">${safe(r[COL.age])}</td>
-        <td data-label="Weight">${safe(r[COL.weight])}</td>
-        <td data-label="Height">${formatHeightFeetInches(r[COL.height])}</td>
-        <td data-label="40yd">${formatMetric(METRICS.find(m=>m.key==="dash40"), best40)}</td>
-        <td data-label="Broad">${formatMetric(METRICS.find(m=>m.key==="broad"), bestBroad)}</td>
-        <td data-label="5-10-5">${formatMetric(METRICS.find(m=>m.key==="shuttle"), bestSh)}</td>
-        <td data-label="3-Cone">${formatMetric(METRICS.find(m=>m.key==="cone"), bestCone)}</td>
-        <td data-label="Bench">${formatMetric(METRICS.find(m=>m.key==="bench"), bestBench)}</td>
-        <td data-label="Status">${statusCell}</td>
-        <td data-label="Round">${roundCell}</td>
-        <td data-label="Pick">${pickCell}</td>
-        <td data-label="Draft">${teamCell}</td>
-      `;
+          </td>
+          <td data-label="Age">${safe(r[COL.age])}</td>
+          <td data-label="Weight">${safe(r[COL.weight])}</td>
+          <td data-label="Height">${formatHeightFeetInches(r[COL.height])}</td>
+          <td data-label="School">${safe(r[COL.school] || "—")}</td>
+          <td data-label="Status">${statusCell}</td>
+          <td data-label="Round">${roundCell}</td>
+          <td data-label="Pick">${pickCell}</td>
+          <td data-label="Draft">${teamCell}</td>
+        `;
+      } else {
+        // Pro: full table + Round/Pick/Draft only (Status hidden)
+        const best40   = bestAttemptValue(r, METRICS.find(m=>m.key==="dash40"));
+        const bestBroad= bestAttemptValue(r, METRICS.find(m=>m.key==="broad"));
+        const bestSh   = bestAttemptValue(r, METRICS.find(m=>m.key==="shuttle"));
+        const bestCone = bestAttemptValue(r, METRICS.find(m=>m.key==="cone"));
+        const bestBench= bestAttemptValue(r, METRICS.find(m=>m.key==="bench"));
 
-      // List-only behavior: do not change selected athlete
+        const roundCell = safe(d.round || "—");
+        const pickCell  = safe(d.pick || "—");
+        const draftCell = safe((d.team && String(d.team).trim()) ? d.team : "Undrafted");
+
+        tr.innerHTML = `
+          <td>
+            <div style="display:flex;gap:10px;align-items:center">
+              <div class="avatarBox" style="width:${avatarSize}px;height:${avatarSize}px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)">
+                ${url ? `<img class="avatarImg" data-initials="${initialsForRow(r)}" src="${url}" style="width:100%;height:100%;object-fit:cover" />` : `<div class="avatarInitials">${initialsForRow(r)}</div>`}
+              </div>
+              <strong>${safe(r[COL.name])}</strong>
+            </div>
+          </td>
+          <td data-label="Age">${safe(r[COL.age])}</td>
+          <td data-label="Weight">${safe(r[COL.weight])}</td>
+          <td data-label="Height">${formatHeightFeetInches(r[COL.height])}</td>
+          <td data-label="40yd">${formatMetric(METRICS.find(m=>m.key==="dash40"), best40)}</td>
+          <td data-label="Broad">${formatMetric(METRICS.find(m=>m.key==="broad"), bestBroad)}</td>
+          <td data-label="5-10-5">${formatMetric(METRICS.find(m=>m.key==="shuttle"), bestSh)}</td>
+          <td data-label="3-Cone">${formatMetric(METRICS.find(m=>m.key==="cone"), bestCone)}</td>
+          <td data-label="Bench">${formatMetric(METRICS.find(m=>m.key==="bench"), bestBench)}</td>
+          <td data-label="Round">${roundCell}</td>
+          <td data-label="Pick">${pickCell}</td>
+          <td data-label="Draft">${draftCell}</td>
+        `;
+      }
+
       tb.appendChild(tr);
     });
 
