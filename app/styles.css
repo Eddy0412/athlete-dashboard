@@ -680,8 +680,15 @@ html.userView #loadDefault{ display:none !important; }
 
 
 /* Right side end-group (keeps Draft Mode + Last Refresh pinned to far right) */
-.controlsRight{ display:flex; align-items:center; gap:10px; flex:1 1 auto; min-width:0; justify-content:flex-end; }
-.controlsRightEnd{ margin-left:auto; display:inline-flex; align-items:center; gap:10px; }
+.controlsRight{ display:flex; align-items:center; gap:10px; flex:1 1 auto; min-width:0; }
+.controlsRightStart{ display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.controlsRightEnd{ display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+/* Desktop: push Draft Mode + Last Refresh to the far right of the controls row */
+@media (min-width: 981px){
+  .controlsRight{ justify-content:space-between; }
+  .controlsRightEnd{ margin-left:0; }
+}
 
 /* Undrafted label subtle */
 .undrafted{ opacity:.5; font-style:italic; }
