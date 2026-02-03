@@ -278,21 +278,21 @@ function swapTableHeaderForMode(){
   if (DRAFT_MODE_ON && (IS_PRO_VIEW || IS_ADMIN_VIEW)){
     if (IS_ADMIN_VIEW){
       headRow.innerHTML = `
-        <th style="width:34%"><span class="thSort" data-sortcol="name" role="button" tabindex="0">Name<span class="thArrow" data-arrow-for="name"></span></span></th>
-        <th style="width:7%"><span class="thSort" data-sortcol="age" role="button" tabindex="0">Age<span class="thArrow" data-arrow-for="age"></span></span></th>
-        <th style="width:9%"><span class="thSort" data-sortcol="weight" role="button" tabindex="0">Weight<span class="thArrow" data-arrow-for="weight"></span></span></th>
-        <th style="width:9%"><span class="thSort" data-sortcol="height" role="button" tabindex="0">Height<span class="thArrow" data-arrow-for="height"></span></span></th>
+        <th style="width:38%"><span class="thSort" data-sortcol="name" role="button" tabindex="0">Name<span class="thArrow" data-arrow-for="name"></span></span></th>
+        <th style="width:6%"><span class="thSort" data-sortcol="age" role="button" tabindex="0">Age<span class="thArrow" data-arrow-for="age"></span></span></th>
+        <th style="width:7%"><span class="thSort" data-sortcol="weight" role="button" tabindex="0">Weight<span class="thArrow" data-arrow-for="weight"></span></span></th>
+        <th style="width:7%"><span class="thSort" data-sortcol="height" role="button" tabindex="0">Height<span class="thArrow" data-arrow-for="height"></span></span></th>
         <th style="width:18%"><span class="thSort" data-sortcol="school" role="button" tabindex="0">School<span class="thArrow" data-arrow-for="school"></span></span></th>
         <th style="width:8%">Status</th>
         <th style="width:5%">Round</th>
         <th style="width:5%">Pick</th>
-        <th style="width:10%">Draft</th>
+        <th style="width:6%">Draft</th>
       `;
       return;
     }
     // Pro draft mode (read-only): no Status column, tighter Name column
     headRow.innerHTML = `
-      <th style="width:20%"><span class="thSort" data-sortcol="name" role="button" tabindex="0">Name<span class="thArrow" data-arrow-for="name"></span></span></th>
+      <th style="width:16%"><span class="thSort" data-sortcol="name" role="button" tabindex="0">Name<span class="thArrow" data-arrow-for="name"></span></span></th>
       <th style="width:6%"><span class="thSort" data-sortcol="age" role="button" tabindex="0">Age<span class="thArrow" data-arrow-for="age"></span></span></th>
       <th style="width:8%"><span class="thSort" data-sortcol="weight" role="button" tabindex="0">Weight<span class="thArrow" data-arrow-for="weight"></span></span></th>
       <th style="width:8%"><span class="thSort" data-sortcol="height" role="button" tabindex="0">Height<span class="thArrow" data-arrow-for="height"></span></span></th>

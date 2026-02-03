@@ -720,12 +720,15 @@ html.draftMode:not(.publicView):not(.mediaView):not(.proView):not(.userView) #de
   display:none !important;
 }
 
-/* Draft Mode: enable horizontal scrolling for the wide table */
+/* Draft Mode: keep the table compact on desktop (avoid unnecessary horizontal scroll) */
 html.draftMode .athleteTableScroll{
-  overflow-x:auto !important;
+  overflow-x:hidden !important;
   overflow-y:auto !important;
 }
-html.draftMode table{ min-width: 1180px; }
+html.draftMode table{
+  min-width: 0;
+  width: 100%;
+}
 
 /* Draft Mode: keep table headers + normal rows even on small screens (override compact mobile list) */
 @media (max-width: 720px){
@@ -733,6 +736,20 @@ html.draftMode table{ min-width: 1180px; }
   html.draftMode tbody tr{ display:table-row !important; }
   html.draftMode tbody td{ display:table-cell !important; padding:10px 10px !important; border-bottom:1px solid rgba(30,42,60,.7) !important; }
   html.draftMode tbody td:nth-child(n+2){ display:table-cell !important; }
+}
+
+/* Allow horizontal scrolling only on smaller screens */
+@media (max-width: 980px){
+  html.draftMode .athleteTableScroll{ overflow-x:auto !important; }
+  html.draftMode.proView table{ min-width: 1120px; } /* includes metrics */
+  html.draftMode:not(.publicView):not(.mediaView):not(.proView):not(.userView) table{ min-width: 900px; } /* admin: no metrics */
+}
+
+/* Tighter column spacing in Draft Mode */
+html.draftMode thead th,
+html.draftMode tbody td{
+  padding: 8px 8px !important;
+  font-size: 12.5px;
 }
 
 /* Draft status pill */
@@ -785,9 +802,7 @@ html.draftMode #draftLastRefresh{
   color:#dfeaff;
 }
 
-/* Different table widths per Draft Mode view */
-html.draftMode.proView table{ min-width: 1180px; } /* includes metrics */
-html.draftMode:not(.publicView):not(.mediaView):not(.proView):not(.userView) table{ min-width: 980px; } /* admin: no metrics */
+/* Different table widths per Draft Mode view (mobile only via media query above) */
 
 /* Drafted row highlight + grayscale avatar */
 html.draftMode tr.draftedRow td{
@@ -799,4 +814,16 @@ html.draftMode tr.draftedRow:hover td{
 html.draftMode tr.draftedRow .avatarBox img{
   filter: grayscale(1) brightness(.85) contrast(.95);
   opacity: .72;
+}
+
+/* Pro Draft Mode: drafted rows look/feel disabled (no hover lift) */
+html.draftMode.proView tr.draftedRow{
+  cursor: not-allowed;
+}
+html.draftMode.proView tr.draftedRow:hover td{
+  background: rgba(255,255,255,.04);
+}
+html.draftMode.proView tr.draftedRow td,
+html.draftMode.proView tr.draftedRow td *{
+  pointer-events: none;
 }
