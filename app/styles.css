@@ -674,42 +674,95 @@ html.userView #kflCombinePill{ display:inline-flex !important; }
 html.userView #defaultTip{ display:none !important; }
 html.userView #userTip{ display:block !important; }
 
-/* ================= USER VIEW: MOBILE HORIZONTAL SCROLL =================
-   In ?view=user, we want athletes/parents to swipe horizontally to see all result columns.
-   This overrides the global mobile "photo + name only" compression at <=720px.
-*/
-html.userView .athleteTableScroll{
-  overflow-x:auto !important;
-  overflow-y:auto !important;
-  -webkit-overflow-scrolling: touch;
-}
-html.userView .athleteTableScroll table{
-  min-width: 980px; /* keeps columns readable; swipe to see the rest */
+html.userView #loadDefault{ display:none !important; }
+
+
+
+/* ================= Draft Mode (v1.0.124) ================= */
+#draftModeBtn, #saveDraftBtn{ display:none; }
+
+html.proView #draftModeBtn,
+html.draftMode.proView #draftModeBtn{
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  padding:9px 10px;
+  border-radius:999px;
+  white-space:nowrap;
 }
 
+html:not(.publicView):not(.mediaView):not(.proView):not(.userView) #draftModeBtn{
+  /* Default admin view */
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  padding:9px 10px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+
+html:not(.publicView):not(.mediaView):not(.proView):not(.userView).draftMode #saveDraftBtn{
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  padding:9px 10px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+
+/* Draft Mode layout: list-only like user view */
+html.draftMode.proView .row,
+html.draftMode:not(.publicView):not(.mediaView):not(.proView):not(.userView) .row{
+  grid-template-columns: 1fr;
+}
+html.draftMode.proView #detailCard,
+html.draftMode:not(.publicView):not(.mediaView):not(.proView):not(.userView) #detailCard{
+  display:none !important;
+}
+
+/* Draft Mode: enable horizontal scrolling for the wide table */
+html.draftMode .athleteTableScroll{
+  overflow-x:auto !important;
+  overflow-y:auto !important;
+}
+html.draftMode table{ min-width: 1180px; }
+
+/* Draft Mode: keep table headers + normal rows even on small screens (override compact mobile list) */
 @media (max-width: 720px){
-  html.userView thead{ display:table-header-group !important; }
-  html.userView tbody tr{
-    display:table-row !important;
-    padding:0 !important;
-    border-bottom:0 !important;
-  }
-  html.userView tbody td{
-    display:table-cell !important;
-    padding:10px 10px !important;
-    border-bottom:1px solid rgba(30,42,60,.7) !important;
-  }
-  html.userView tbody td:nth-child(n+2){
-    display:table-cell !important;
-  }
-  html.userView tbody td:first-child{
-    min-width:240px; /* ensures Name cell doesn't crush */
-  }
-  html.userView tbody td:first-child strong{
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    display:block;
-    max-width:220px;
-  }
+  html.draftMode thead{ display:table-header-group !important; }
+  html.draftMode tbody tr{ display:table-row !important; }
+  html.draftMode tbody td{ display:table-cell !important; padding:10px 10px !important; border-bottom:1px solid rgba(30,42,60,.7) !important; }
+  html.draftMode tbody td:nth-child(n+2){ display:table-cell !important; }
+}
+
+/* Draft status pill */
+.draftPill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:#dfeaff;
+}
+.draftPill.drafted{
+  border-color:rgba(61,220,151,.35);
+  background:rgba(61,220,151,.10);
+  color:#c9ffe8;
+}
+.draftPill.undrafted{
+  border-color:rgba(255,209,102,.28);
+  background:rgba(255,209,102,.10);
+  color:#fff1c2;
+}
+
+/* Editable inputs in Admin Draft Mode */
+.draftInput{
+  background:rgba(255,255,255,.04) !important;
+  border:1px solid rgba(255,255,255,.14) !important;
+  color:#fff !important;
+  border-radius:12px !important;
 }
