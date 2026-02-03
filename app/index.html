@@ -10,7 +10,7 @@
 <!-- Libraries (CDN) -->
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="styles.css?v=1.0.124d">
+<link rel="stylesheet" href="styles.css?v=1.0.123c">
 <style>
   /* Athlete list header sort affordance (safe, local-only) */
   .thSort:hover { opacity: .92; }
@@ -21,7 +21,7 @@
 <header>
 <div class="wrap title"><div class="titleBar">
 <div>
-<h1>Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.124d</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillPro" id="proPill" style="display:none;margin-left:6px">Pro</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span><span class="pill pillAdmin" id="adminPill" style="display:none;margin-left:6px">Admin</span></h1>
+<h1>Athlete Combine Dashboard <span class="small muted" style="font-weight:700;margin-left:8px">v1.0.123</span><span class="pill pillPublic" id="publicPill" style="display:none;margin-left:8px">Public</span><span class="pill pillPro" id="proPill" style="display:none;margin-left:6px">Pro</span><span class="pill pillMedia" id="mediaPill" style="display:none;margin-left:6px">Media</span><span class="pill pillAdmin" id="adminPill" style="display:none;margin-left:6px">Admin</span></h1>
 <div class="sub">Load your CSV → browse athletes → click an athlete to view best attempts, percentiles, and charts.</div>
 </div><div class="topRightControls"><button class="linkBtn btnIcon" id="loadDefault" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24">
 <path d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-14.9-2M4 16a8 8 0 0014.9 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
@@ -77,31 +77,15 @@
 <input accept=".csv,text/csv" id="file" style="display:none" type="file"/>
 <div class="controlsSpacer"></div>
 <div class="controlsRight">
-<span class="controlsRightStart">
 <button class="linkBtn btnIcon" id="exportCsvBtn" title="Download current CSV" type="button" style="display:none">
 <svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24">
   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v10m0 0l3-3m-3 3l-3-3M4 17v3h16v-3"></path>
 </svg><span>Export</span></button>
-<button class="linkBtn btnIcon" id="saveDraftBtn" title="Download draft.csv to upload back to the repo" type="button" style="display:none">
-  <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v10m0 0l3-3m-3 3l-3-3M4 17v3h16v-3"></path>
-  </svg><span>Save Draft CSV</span>
-</button>
-
 <button aria-label="Open menu" class="linkBtn btnIcon" id="menuBtn" title="Menu" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span>Menu</span></button>
 
-</span>
 
-<span class="controlsRightEnd">
-<button class="linkBtn btnIcon" id="draftModeBtn" title="Toggle Draft Mode" type="button" style="display:none">
-  <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a4 4 0 100 8 4 4 0 000-8zm6 6h2m-2 0a8 8 0 11-16 0 8 8 0 0116 0z"></path>
-  </svg><span>Draft Mode: Off</span>
-</button>
-<span class="pill" id="draftLastRefresh" style="display:none">Last Refresh: —</span>
-</span>
 
-</div>
+
 </div>
 </div>
 </div>
@@ -345,6 +329,6 @@
 <div id="modalContent" style="padding:14px"></div>
 </div>
 </div>
-<script src="app.js?v=1.0.124d" defer></script>
+<script src="app.js?v=1.0.123c" defer></script>
 </body>
 </html>
