@@ -838,3 +838,45 @@ html.draftMode.proView tr.draftedRow:hover td:first-child strong::after{
   opacity:.55;
   font-weight:900;
 }
+
+/* === Pro Draft Mode: force Draft controls to far-right (cosmetic only) === */
+@media (min-width: 981px){
+  html.proView .controlsRight{
+    /* make this area take remaining width so the end group can reach the edge */
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    justify-content: flex-end !important;
+  }
+
+  /* push the end group (Draft Mode + Last Refresh) to the far right */
+  html.proView .controlsRightStart{
+    margin-right: auto !important;
+  }
+
+  /* this rule sometimes creates a gap; neutralize it in Pro */
+  html.proView #menuBtn{
+    margin-right: 0 !important;
+  }
+}
+
+/* === Pro Draft Mode: drafted rows show not-pickable cursor (cosmetic only) === */
+html.proView tr.draftedRow,
+html.proView tr:has(.draftPill.drafted){
+  cursor: not-allowed !important;
+}
+
+html.proView tr.draftedRow td,
+html.proView tr:has(.draftPill.drafted) td{
+  cursor: not-allowed !important;
+}
+
+html.proView tr.draftedRow td *,
+html.proView tr:has(.draftPill.drafted) td *{
+  cursor: not-allowed !important;
+}
+
+/* Optional: remove hover glow/highlight on drafted rows */
+html.proView tr.draftedRow:hover,
+html.proView tr:has(.draftPill.drafted):hover{
+  filter: none !important;
+}
