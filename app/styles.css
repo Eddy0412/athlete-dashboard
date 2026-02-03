@@ -288,7 +288,7 @@ html.mediaView #mediaTemplateSelect, body.mediaMode #mediaTemplateSelect{display
 
 .kv .k, .contactLabel{font-weight:800;}
 
-.controlsRight{display:flex;gap:10px;align-items:center;}
+.controlsRight{display:flex;gap:10px;align-items:center;flex:1 1 auto;min-width:0;justify-content:flex-end;}
   .controlsRight #menuBtn{margin-right:auto;}
 
 
@@ -677,13 +677,171 @@ html.userView #userTip{ display:block !important; }
 html.userView #loadDefault{ display:none !important; }
 
 
-/* --- Draft Mode cosmetics: pin Draft controls to far-right in Pro view --- */
-/* The header controls row is a flex-wrap container; make the right button group expand so
-   Draft Mode + Last Refresh can sit flush to the far right while Export stays left. */
-html.proView .controlsRight{
-  flex: 1 1 auto;
-  min-width: 320px;
+
+
+/* Right side end-group (keeps Draft Mode + Last Refresh pinned to far right) */
+.controlsRight{ display:flex; align-items:center; gap:10px; flex:1 1 auto; min-width:0; }
+.controlsRightStart{ display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.controlsRightEnd{ display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; }
+
+/* Desktop: push Draft Mode + Last Refresh to the far right of the controls row */
+@media (min-width: 981px){
+  .controlsRight{ justify-content:space-between; }
+  .controlsRightEnd{ margin-left:0; }
 }
-html.proView .controlsRightEnd{
-  margin-left: auto;
+
+/* Undrafted label subtle */
+.undrafted{ opacity:.5; font-style:italic; }
+/* ================= Draft Mode (v1.0.124) ================= */
+#draftModeBtn, #saveDraftBtn{ display:none; }
+
+html.proView #draftModeBtn,
+html.draftMode.proView #draftModeBtn{
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  padding:9px 10px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+
+html:not(.publicView):not(.mediaView):not(.proView):not(.userView) #draftModeBtn{
+  /* Default admin view */
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  padding:9px 10px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+
+html:not(.publicView):not(.mediaView):not(.proView):not(.userView).draftMode #saveDraftBtn{
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  padding:9px 10px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+
+/* Draft Mode layout: list-only like user view */
+html.draftMode.proView .row,
+html.draftMode:not(.publicView):not(.mediaView):not(.proView):not(.userView) .row{
+  grid-template-columns: 1fr;
+}
+html.draftMode.proView #detailCard,
+html.draftMode:not(.publicView):not(.mediaView):not(.proView):not(.userView) #detailCard{
+  display:none !important;
+}
+
+/* Draft Mode: keep the table compact on desktop (avoid unnecessary horizontal scroll) */
+html.draftMode .athleteTableScroll{
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+}
+html.draftMode table{
+  min-width: 0;
+  width: 100%;
+}
+
+/* Draft Mode: keep table headers + normal rows even on small screens (override compact mobile list) */
+@media (max-width: 720px){
+  html.draftMode thead{ display:table-header-group !important; }
+  html.draftMode tbody tr{ display:table-row !important; }
+  html.draftMode tbody td{ display:table-cell !important; padding:10px 10px !important; border-bottom:1px solid rgba(30,42,60,.7) !important; }
+  html.draftMode tbody td:nth-child(n+2){ display:table-cell !important; }
+}
+
+/* Allow horizontal scrolling only on smaller screens */
+@media (max-width: 980px){
+  html.draftMode .athleteTableScroll{ overflow-x:auto !important; }
+  html.draftMode.proView table{ min-width: 1120px; } /* includes metrics */
+  html.draftMode:not(.publicView):not(.mediaView):not(.proView):not(.userView) table{ min-width: 900px; } /* admin: no metrics */
+}
+
+/* Tighter column spacing in Draft Mode */
+html.draftMode thead th,
+html.draftMode tbody td{
+  padding: 6px 6px !important;
+  font-size: 12.2px;
+}
+
+/* Draft status pill */
+.draftPill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:#dfeaff;
+}
+.draftPill.drafted{
+  border-color:rgba(61,220,151,.35);
+  background:rgba(61,220,151,.10);
+  color:#c9ffe8;
+}
+.draftPill.undrafted{
+  border-color:rgba(255,209,102,.28);
+  background:rgba(255,209,102,.10);
+  color:#fff1c2;
+}
+
+/* Editable inputs in Admin Draft Mode */
+.draftInput{
+  background:rgba(255,255,255,.04) !important;
+  border:1px solid rgba(255,255,255,.14) !important;
+  color:#fff !important;
+  border-radius:12px !important;
+}
+
+
+/* ================= Draft Mode Tweaks (v1.0.124d) ================= */
+
+/* Show last-refresh indicator only while Draft Mode is on */
+#draftLastRefresh{ display:none; }
+html.draftMode #draftLastRefresh{
+  display:inline-flex !important;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.06);
+  color:#dfeaff;
+}
+
+/* Different table widths per Draft Mode view (mobile only via media query above) */
+
+/* Drafted row highlight + grayscale avatar */
+html.draftMode tr.draftedRow td{
+  background: rgba(255,255,255,.04);
+}
+html.draftMode tr.draftedRow:hover td{
+  background: rgba(255,255,255,.06);
+}
+html.draftMode tr.draftedRow .avatarBox img{
+  filter: grayscale(1) brightness(.85) contrast(.95);
+  opacity: .72;
+}
+
+/* Pro Draft Mode: drafted rows look/feel disabled (no hover lift) */
+html.draftMode.proView tr.draftedRow,
+html.draftMode.proView tr.draftedRow td,
+html.draftMode.proView tr.draftedRow td *{
+  cursor: not-allowed !important;
+}
+html.draftMode.proView tr.draftedRow:hover td{
+  background: rgba(255,255,255,.04);
+}
+/* Pro Draft Mode: show a subtle X indicator on drafted rows */
+html.draftMode.proView tr.draftedRow:hover td:first-child strong::after{
+  content:"  ✕";
+  opacity:.55;
+  font-weight:900;
 }
