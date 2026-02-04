@@ -912,3 +912,36 @@ html.proView tr:has(.draftPill.drafted):hover{
     gap: 10px;
   }
 }
+
+
+
+/* ================= USER VIEW MOBILE H-SCROLL FIX =================
+   Goal: In ?view=user on phones, allow horizontal scrolling inside the athlete list
+   so athletes/parents can see all result columns (no "locked" table).
+   This overrides the global mobile "compact list" rules.
+*/
+html.userView .athleteTableScroll{
+  overflow-x:auto !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+html.userView table{
+  min-width: 1100px; /* ensures columns exist to scroll on small screens */
+}
+
+@media (max-width: 720px){
+  html.userView thead{ display:table-header-group !important; }
+  html.userView tbody tr{
+    display:table-row !important;
+    align-items:unset !important;
+    padding:0 !important;
+    border-bottom:0 !important;
+  }
+  html.userView tbody td{
+    display:table-cell !important;
+    padding:10px 10px !important;
+    border-bottom:1px solid rgba(30,42,60,.7) !important;
+  }
+  html.userView tbody td:nth-child(n+2){ display:table-cell !important; }
+}
